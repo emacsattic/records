@@ -53,7 +53,7 @@ often. Bind it to a simple key.
 (define-key global-map [?\C-x ?n ?t] 'records-goto-today)
 (define-key global-map [?\C-x ?n ?r] 'records-insert-record-region)
 (define-key global-map [?\C-x ?n ?b] 'records-insert-record-buffer)
-
+(define-key global-map [?\C-x ?n ?f] 'records-insert-file-link)
 
 ; Hook up to the calendar mode
 (add-hook 'calendar-load-hook 

@@ -224,7 +224,7 @@ often. Bind the function to a simple key.
 (define-key global-map [?\C-x ?n ?t] 'records-goto-today)
 (define-key global-map [?\C-x ?n ?r] 'records-insert-record-region)
 (define-key global-map [?\C-x ?n ?b] 'records-insert-record-buffer)
-
+(define-key global-map [?\C-x ?n ?f] 'records-insert-file-link)
 
 ; Hook up to the calendar mode
 (add-hook 'calendar-load-hook 
@@ -518,6 +518,24 @@ Key @kbd{C-c return}. Underline the current line to the length of the
 line. This function is not really specific to records. You can use it to 
 underline any text.
 @kindex C-c return
+
+@item records-insert-record-region
+
+Key @kbd{C-x n r} Insert the region in the current buffer into today's
+record. Prompts for subject.
+
+@item records-insert-record-buffer
+
+Key @kbd{C-x n b} Insert the current buffer into today's record. Prompts
+for subject.
+
+@item records-insert-file-link
+
+Key @kbd{C-x n f} Write the current buffer file name as a records link
+at the end of today's record and inserts a user-specified comment. This
+function can be used to bookmark files in your records file. Currently,
+this function is not bound to any key. You should bind it to a global
+key.
 
 @end ftable
 
