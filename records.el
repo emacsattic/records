@@ -1,7 +1,7 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.32 2000/01/18 11:27:39 ashvin Exp $
+;;; $Id: records.el,v 1.33 2000/01/31 21:23:09 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -17,7 +17,7 @@
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
 ;;;
-(defconst records-version "1.4.7")
+(defconst records-version "1.4.8")
 
 (defvar records-mode-menu-map nil
   "Records Menu Map. Internal variable.")
@@ -993,7 +993,7 @@ The key-bindings of this mode are:
   ;; imenu stuff 
   (if (locate-library "imenu")
       (progn
-	(require 'imenu)
+	(eval-when-compile (require 'imenu))
 	(make-variable-buffer-local 'imenu-prev-index-position-function)
 	(make-variable-buffer-local 'imenu-extract-index-name-function)
 	(setq imenu-prev-index-position-function 'records-goto-up-record)
@@ -1007,14 +1007,18 @@ The key-bindings of this mode are:
     (records-initialize)
     (setq records-initialize t))
   ;; fontification code by Robert Mihram
-  (if (and (not font-lock-auto-fontify) records-mode-use-font-lock)
-      (progn
-        (eval-when-compile (require 'font-lock))
-        (make-local-variable 'font-lock-keywords)
-        (setq font-lock-keywords records-mode-font-lock-keywords)
-        (font-lock-mode 1)))
+  (if (and (or (not (boundp 'font-lock-auto-fontify)) 
+               (not font-lock-auto-fontify))
+           records-mode-use-font-lock)
+      (progn (eval-when-compile (require 'font-lock))
+             (make-local-variable 'font-lock-defaults)
+             (setq font-lock-defaults '(records-mode-font-lock-keywords))
+             (font-lock-mode 1)))
   (run-hooks 'records-mode-hooks)
   )
+
+;; for xemacs
+(put 'records-mode 'font-lock-defaults '(records-mode-font-lock-keywords))
 
 (run-hooks 'records-load-hooks)
 (provide 'records)

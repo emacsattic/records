@@ -1,7 +1,7 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.12 2000/01/27 21:26:47 ashvin Exp $
+;;; $Id: records-util.el,v 1.13 2000/01/31 21:23:09 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -319,19 +319,24 @@ Prompts for subject."
   "Writes the current buffer file name, url or message id
 at the end of today's record and inserts a comment."
   (interactive "scomment: ")
+  (eval-when-compile (require 'url))
   (save-excursion
-    (let 
-        ((flink (cond ((not (null buffer-file-name));; 1. normal file 
-                       buffer-file-name)
-                      ((and (boundp 'url-current-object) 
-                            (not (null url-current-object)));; 2. url page
-                       (concat (aref url-current-object 0) "://" 
-                               (aref url-current-object 3)
-                               (aref url-current-object 5)))
-                      ((eq major-mode 'gnus-summary-mode);; 3. gnus page
-                       (mail-strip-quoted-names 
-                        (mail-header-message-id gnus-current-headers)))
-                      (t (error "Couldn't create link.")))))
+    (let ((flink 
+           (cond ((not (null buffer-file-name));; 1. normal file 
+                  buffer-file-name)
+                 ((not (null url-current-object));; 2. url page
+                  (concat (aref url-current-object 0) "://" 
+                          (aref url-current-object 3)
+                          (aref url-current-object 5)))
+                 ((eq major-mode 'gnus-summary-mode);; 3. gnus page
+                  (progn
+                    ;; silence byte compilation
+                    (eval-when-compile (require 'mail-utils))
+                    (eval-when-compile (require 'gnus))
+                    (defvar gnus-current-headers)
+                    (mail-strip-quoted-names 
+                     (mail-header-message-id gnus-current-headers))))
+                 (t (error "Couldn't create link.")))))
       (message "%s" flink)
        ;;; now we need to visit the buffer records-goto-today
       (if (one-window-p t) 
