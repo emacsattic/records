@@ -1,9 +1,13 @@
 Make sure that you read the README file first.
 
-1. Run ./configure
-This program is provided in the source (do not run your own configure).
-If you want to specify the directory in which recordsadmin should be installed,
-you could say something like
+1. Run ./configure or ./configure --enable-xemacs
+
+The --enable-xemacs flag ensures that the elisp files are compiled using
+xemacs. Use this option if you use xemacs.
+
+The configure program is provided in the source (do not run your own
+configure). If you want to specify the directory in which recordsadmin should
+be installed, you could say something like
 
 ./configure --prefix $HOME
 

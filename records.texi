@@ -155,9 +155,12 @@ you wish to move the records software to some other emacs-related
 directory, now is the time to do it.
 
 @item
-Run @code{./configure}
+Run @code{./configure} or @code{./configure --enable-xemacs}
 
-This program is provided in the source directory (do not run your own
+The @code{--enable-xemacs} flag ensures that the elisp files are
+compiled using @code{xemacs}. Use this option if you use @code{xemacs}.
+
+The configure is provided in the source directory (do not run your own
 configure).  If you want to specify the directory in which
 @file{recordsadmin} (a Perl script) should be installed, you should run
 
