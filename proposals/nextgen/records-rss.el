@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.19 2001/09/25 06:37:39 burtonator Exp $
+;; $Id: records-rss.el,v 1.20 2002/04/05 19:37:53 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -113,11 +113,13 @@
   :type 'string
   :group 'records-rss)
 
-
 ;;FIXME: maybe I should move this to use some generic metainfo on each subject.
 (defcustom records-rss-images-subjects-alist '()
   "Associated list for storing subject to image mappings."
-  :type '(alist (cons 'string 'string))
+  :type '(repeat
+          (cons
+           (string :tag "Subject")
+           (string :tag "URL")))
   :group 'records-rss)
 
 (defcustom records-rss-item-default-url "http://www.sourceforge.net/projects/records"
@@ -126,7 +128,12 @@ as RSS but don't want to provide a URL.  Use the default if you just want to
 export your activity."
   :type 'string
   :group 'records-rss)
-  
+
+;; (defcustom records-rss-auto-export nil
+;;   "*Automatically export the current buffer when we mark a record as rss."
+;;   :type 'boolean
+;;   :group 'records-rss)
+
 (defvar records-rss-index-file (concat records-rss-export-directory "/index.rss")
   "File used for RSS index output.")
 
@@ -236,7 +243,6 @@ containing all records for this date."
       (records-rss-init-buffer buffer)
 
       ;;go over each date and export the records...
-      
 
       (setq day-index records-rss-export-days)
       
@@ -257,7 +263,6 @@ containing all records for this date."
             (setq count (+ count (records-rss-export-current-buffer))))
           
           (setq day-index (1- day-index))))
-
 
       (message "Exported %i total RSS record(s) over the last %i days."
                count
@@ -296,9 +301,13 @@ the .bak. "
 
   ;;save the index buffer
   (save-excursion
-    (set-buffer (find-file-noselect records-rss-index-file))
+    (let((buffer (find-file-noselect records-rss-index-file)))
+    
+      (set-buffer buffer)
 
-    (save-buffer)))
+      (save-buffer)
+
+      (kill-buffer buffer))))
 
 (defun records-rss-export-record(record-link
                                  subject
@@ -327,7 +336,6 @@ the .bak. "
   ;;add a dublin core 'date' item so that we know when this record was created.
 
   ;;insert the 'created' date
-  
 
   (records-rss-insert-element "dc:date" created 1)
 
@@ -435,6 +443,8 @@ the value.  "
           (insert "\n         ")
           (insert "xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" ")
           (insert "\n         ")
+          (insert "xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" ")
+          (insert "\n         ")
           (insert "xmlns=\"http://purl.org/rss/1.0/\"")
           (insert ">")
           (insert "\n\n")
@@ -470,6 +480,64 @@ the value.  "
 
   (re-search-forward records-rss-tag-begin-items)
   (forward-line 1))
+
+(defun records-rss-xhtmlify(content)
+  "Given some `content', assume you want to turn this into XHTML.  This will be
+  done by taking logical paragraphs, making them XHTML <p> elements, etc.  When
+  complete, return the XHTML content."
+
+  (let((temp-buffer "*records-rss-xhtmlify-temp-buffer*"))
+
+    (save-excursion
+      (set-buffer (get-buffer-create temp-buffer))
+      
+      (erase-buffer)
+      
+      (insert content)
+      
+      (beginning-of-buffer)
+
+      )))
+
+(defun records-rss-xhtmlify--para()
+  "Turn all text paragraphs into XHTML paragraphs"
+  (interactive)
+  
+  (save-excursion
+
+    (let((begin nil)
+         (end nil)
+         (regexp "^[ ]*$"))
+      (while (re-search-forward regexp nil t)
+        
+        (setq begin (match-beginning 0))
+
+        (forward-line 1)
+        
+        (when (and (re-search-forward "[^ ]" nil t)
+                   (re-search-forward regexp nil t))
+
+          (setq end (match-end 0))
+
+          (when (> (- end begin) 0)
+          
+            (save-restriction
+
+              (narrow-to-region begin end)
+
+              (beginning-of-buffer)
+            
+              (insert "<p>")
+
+              (end-of-buffer)
+            
+              (insert "</p>"))))
+
+        (if end 
+            (goto-char end)
+          (goto-char (match-end 0)))
+
+        (forward-line 1)))))
 
 (provide 'records-rss)
 

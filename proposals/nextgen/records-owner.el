@@ -1,6 +1,6 @@
 ;;; records-status.el --- record status information
 
-;; $Id: records-owner.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-owner.el,v 1.2 2002/04/05 19:37:53 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -24,9 +24,20 @@
 ;;; Commentary:
 
 
+;;; History:
+;; 
 
-(defvar records-owner-name "unknown" "Full name of the owner of this set of records.")
+;;; Code:
+(defcustom records-owner-name "unknown"
+  "Full name of the owner of this set of records."
+  :type 'string
+  :group 'records-owner)
 
-(defvar records-owner-email "unknown" "Email address of the records owner.")
+(defcustom records-owner-email "unknown"
+  "Email address of the records owner."
+  :type 'string
+  :group 'records-owner)
 
 (provide 'records-owner)
+
+;;; records-owner.el ends here

@@ -1,6 +1,6 @@
 ;;; records-calendar.el --- Calendar integration for records.
 
-;; $Id: records-calendar.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-calendar.el,v 1.2 2002/04/05 19:37:53 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -33,7 +33,10 @@
 
 (defvar records-calendar-buffer-name "*Calendar*" "Name of buffer used with the calendar.")
 
-(defvar records-calendar-show-auto t "If true show the calendar when we enter records.")
+(defcustom records-calendar-show-auto t
+  "If true show the calendar when we enter records."
+  :type 'boolean
+  :group 'records)
 
 (defun records-show-calendar-auto()
   "If the variable `records-calendar-show-auto' is true then the calendar will
