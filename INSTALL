@@ -1,0 +1,13 @@
+Make sure that you read the README file first.
+
+Run
+
+1. ./configure
+
+This program is provided in the source (do not run your own configure).
+
+2. make install (or just make)
+
+install just puts notesadmin in your bin path.
+
+
