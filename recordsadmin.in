@@ -2,7 +2,7 @@
 
 ### recordsadmin.in
 ###
-### $Id: recordsadmin.in,v 1.14 2001/04/11 18:14:12 ashvin Exp $
+### $Id: recordsadmin.in,v 1.15 2003/05/20 05:05:08 dmasterson Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
@@ -16,7 +16,7 @@ use File::Basename;
 # global - should be set by makefile
 
 $homedir="$ENV{HOME}";
-$records_srcdirpath="@srcdirpath@";
+$records_srcdirpath="@lispdir@";
 
 # handle cygwin windows environment
 # probably flaky right now

@@ -1,7 +1,7 @@
 ;;;
 ;;; records-autoloads.el
 ;;;
-;;; $Id: records-autoloads.el,v 1.2 2001/04/12 18:25:10 ashvin Exp $
+;;; $Id: records-autoloads.el,v 1.3 2003/05/20 05:05:08 dmasterson Exp $
 ;;;
 ;;; Copyright (C) 1996-2000 by Ashvin Goel
 ;;;
@@ -10,8 +10,11 @@
 ;;; For maintainers:
 ;;; Run the function update-autoloads-from-directory to update this file.
 ;;; This function will update the file only when the *.el files are 
-;;; newer than this file so you may have to touch all OTHER *.el files.
+;;; newer than this file.
 
+;;; Local Variables:
+;;; generated-autoload-file:"records-autoloads.el"
+;;; End:
 
 ;;;### (autoloads (records-index-mode) "records-index" "records/records-index.el")
 
@@ -52,7 +55,7 @@ will output all the past records on the subject!" t nil)
 
 ;;;***
 
-;;;### (autoloads (records-outline-mode records-insert-link records-insert-record-buffer records-insert-record-region records-calendar-to-record records-goto-calendar records-concatenate-record-files records-concatenate-records records-decrypt-record records-encrypt-record records-get-todo records-create-todo) "records-util" "records/records-util.el")
+;;;### (autoloads (records-insert-link records-insert-record-buffer records-insert-record-region records-calendar-to-record records-goto-calendar records-concatenate-record-files records-concatenate-records records-decrypt-record records-encrypt-record records-get-todo records-create-todo) "records-util" "records/records-util.el")
 
 (autoload 'records-create-todo "records-util" "\
 Create a records todo entry in the current record" t nil)
@@ -104,11 +107,6 @@ Prompts for subject." t nil)
 Writes the current buffer file name, url or message id
 at the end of today's record and inserts a comment." t nil)
 
-(autoload 'records-outline-mode "records-util" "\
-Toggle outline minor mode for a records file.
-With arg, turn outline minor mode on if arg is positive, off otherwise.
-See the command `outline-mode' for more information on this mode." t nil)
-
 ;;;***
 
 ;;;### (autoloads (homepage-records-to-html batch-generate-homepage) "records-w3" "records/records-w3.el")
@@ -138,10 +136,5 @@ Returns the new (date, tag) if found." t nil)
 Go to the records file of today." t nil)
 
 ;;;***
-
+
 (provide 'records-autoloads)
-
-;;; Local Variables:
-;;; generated-autoload-file: "records-autoloads.el"
-;;; End:
-

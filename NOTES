@@ -1,7 +1,0 @@
-A fresh checkout:
-cd ~/elisp
-cvs checkout -d records ashvin/records
-cd records
-autoconf
-./configure --enable-xemacs
-make

@@ -10,9 +10,7 @@
 
 @syncodeindex fn cp
 
-@set EDITION 1.0
-@set VERSION 1.4
-@set UPDATED January 2000
+@include version.texi
 
 @iftex
 @finalout
@@ -21,7 +19,7 @@
 @ifinfo
 @format
 START-INFO-DIR-ENTRY
-*  Records: (records).        Records: personal diary software
+* Records: (records).        Records: personal diary software
 END-INFO-DIR-ENTRY
 @end format
 @end ifinfo
@@ -104,6 +102,9 @@ quitting school two months back! Records provides a reminder service by
 collecting your list of 'to do' things. A simple integration with the
 Emacs calendar is also available.
 
+This is edition @value{EDITION} of the documentation for records-mode
+version @value{VERSION} and was last updated on @value{UPDATED}.
+
 @menu
 * Location::                    Where to find records.
 * Installation::                Installing records.
@@ -122,8 +123,6 @@ Emacs calendar is also available.
 @cindex Download
 
 You can get the latest version of records from
-
-@noindent
 @uref{http://www.cse.ogi.edu/~ashvin/software.html}. Soon this project
 will be migrating to @uref{http://sourceforge.net}. Then the latest
 version will be available from

@@ -1,7 +1,7 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.16 2001/04/12 18:25:10 ashvin Exp $
+;;; $Id: records-util.el,v 1.17 2003/05/20 05:05:08 dmasterson Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -387,9 +387,36 @@ at the end of today's record and inserts a comment."
       (insert "" comment-string "\n")
       (other-window -1))))
 
+(defun records-insert-template (&optional arg)
+  "Insert a template into the current record based on the subject and the
+association list records-template-alist (see the variable). Suitable for
+calling from records-make-record-hook. Inserts template at end of record.
+With non-null argument, inserts at beginning of record body.
+
+Example hook:
+ (add-hook 'records-make-record-hook 
+          (function (lambda ()
+                      (records-insert-template current-prefix-arg))))
+"
+  (interactive "P")
+  (eval-when-compile (require 'tempo))
+  (let ((subject nil)
+        (tmpl nil)
+        point-pair)
+    (save-excursion
+      (setq subject (records-goto-subject)))
+    (setq tmpl (cdr (assoc subject records-template-alist)))
+    (if tmpl
+        (progn
+          (setq point-pair (records-record-region t))
+          (if arg
+              (goto-char (first point-pair))
+            (goto-char (second point-pair)))
+          (tempo-insert-template 'tmpl nil)
+          ))))
+
 (defvar records-saved-subject-read-only nil)
 
-;;;###autoload
 (defun records-outline-mode (&optional arg)
   "Toggle outline minor mode for a records file.
 With arg, turn outline minor mode on if arg is positive, off otherwise.

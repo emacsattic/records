@@ -1,7 +1,7 @@
 ;;;
 ;;; records-w3.html --- code to generate web pages from records
 ;;;
-;;; $Id: records-w3.el,v 1.2 2001/04/11 18:14:12 ashvin Exp $
+;;; $Id: records-w3.el,v 1.1 2003/05/20 05:05:09 dmasterson Exp $
 ;;;
 ;;; Copyright (C) 2000 John Wiegley
 ;;;
