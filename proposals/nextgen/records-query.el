@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-query.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -8,7 +8,7 @@
 ;; Author: Kevin A. Burton (burton@openprivacy.org)
 ;; Maintainer: Kevin A. Burton (burton@openprivacy.org)
 ;; Location: http://relativity.yi.org
-;; Keywords: 
+;; Keywords:
 ;; Version: 1.0.0
 
 ;; This file is [not yet] part of GNU Emacs.
@@ -34,7 +34,7 @@
 ;;
 ;; - Use a full elisp widgetized buffer.
 ;;
-;; - Specify all or specific subjects via a pulldown.  
+;; - Specify all or specific subjects via a pulldown.
 ;;
 ;; - Sort by date... this will probably be the default.
 ;;
@@ -55,11 +55,6 @@
 ;;
 ;; - Don't use functions that change windows when running queries.
 ;;
-;; - Maybe get rid of the <link> in the buffer or hide it.  This should be very
-;;   easy to do.. 
-;;
-;; - Setup key bindings.
-;;
 ;; - Change the default number of days.
 ;;
 ;; - Remove any buffers created by query so that we don't pollute the buffer
@@ -67,11 +62,22 @@
 ;;
 ;; - We should make links "optionally" hidden.
 ;; 
+
+;;; History:
+;;
+;; - Sat May 12 2001 09:05 PM (burton@relativity.yi.org): Maybe get rid of the
+;; <link> in the buffer or hide it.  This should be very easy to do..
+;;
+;; - Sat May 12 2001 09:06 PM (burton@relativity.yi.org): Setup key bindings.
+;;
+
+
+;;; Code:
 (defvar records-query-results-buffer-name "*records-query-results*"
   "Buffer name to use for records query results.")
 
-(defvar records-query-default-days 14 
-  "Number of days by default to run this query on. ")
+(defvar records-query-default-days 14
+  "Number of days by default to run this query on.")
 
 
 (defvar records-query-width-created 30)
@@ -109,18 +115,30 @@ query across.  "
   (records-query-setup-results-buffer)
 
   (catch 'error
-    (let(subject header body current-day-index)
+    (let(subject header body current-day-index date ndate)
 
+      
+      ;;date should be a raw date (12052001), ndate should be normalized.  We
+      ;;need to make sure these are always synched up.
+
+      (setq date (records-todays-date))
+      
+      (setq ndate (records-normalize-date date))
+      
+      
       (save-window-excursion
         
         ;;start off at 0 and keep going until we hit num-days.
         (setq current-day-index 0)
         
         ;;go to the end of this buffer.
-        (records-goto-today)
+        ;;(records-goto-today)
+
+        ;;the first date should start with today
+        
+        (set-buffer (find-file-noselect (records-util-get-filename date)))
         
         (end-of-buffer)
-        
         
         (while (< current-day-index num-days)
           (while (re-search-backward "\\(^\\* \\)\\(.*$\\)" nil t)
@@ -184,8 +202,12 @@ query across.  "
 
           (setq current-day-index (1+ current-day-index))
 
-          (records-goto-prev-day)
+          ;;recompute the dates
+          (setq ndate (records-add-date ndate -1))
+          (setq date (records-denormalize-date ndate))
 
+          (set-buffer (find-file-noselect (records-util-get-filename date)))
+          
           ;; need to require format version 1.0.1 in all records files.
           (records-format-require-version "1.0.1")
           
@@ -197,7 +219,7 @@ query across.  "
 (defun records-query-get-excerpt(string)
   "From a string get an excerpt."
 
-  (let(end max-length excerpt ) 
+  (let(end max-length excerpt )
 
     (setq max-length 100)
     
@@ -263,14 +285,13 @@ right of `value' to equal `width'."
     (insert value)
     
     ;;FIXME: this will break if the length of the value is greater than the width
-    (if width 
+    (if width
         (insert (make-string (- width (length value) ) ? )))
 
     (setq end (point))
 
     (if hidden
         (progn
-          (message "FIXME (debug): invisible...")
           (put-text-property start end 'invisible t)
           (put-text-property start end 'intangible t)))))
   
@@ -373,3 +394,5 @@ right of `value' to equal `width'."
                                                        (0 'font-lock-constant-face append))))
 
 (provide 'records-query)
+
+;;; records-query.el ends here

@@ -1,6 +1,6 @@
 ;;; records-util.el --- util
 
-;; $Id: records-util.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-util.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -461,5 +461,14 @@ at the end of today's record and inserts a comment."
   (completing-read "Subject: " 
                           records-subject-table))
   
+(defun records-util-get-filename(date)
+  "Given a date, get the filename which holds its records."
+
+  ;;if ndate is a list assume it is an ndate
+
+  (if (listp date)
+      (setq date (concat (elt date 2) (elt date 1) (elt date 3))))
+  
+  (concat (records-directory-path date t) "/" date))
 
 (provide 'records-util)

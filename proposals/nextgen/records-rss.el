@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-rss.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -98,7 +98,7 @@
   
   (insert "</item>\n"))
 
-(defun record-rss-insert-element(name value)
+(defun records-rss-insert-element(name value)
   "Build an XML element and insert it into the current buffer."
 
   (insert "<" name ">")

@@ -1,6 +1,6 @@
 ;;; records.el --- records
 
-;; $Id: records.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -36,6 +36,7 @@
 (require 'records-status)
 (require 'records-rss)
 (require 'records-hs)
+(require 'records-query)
 
 ;;;
 ;;; Internal variables - users shouldn't change
