@@ -2,13 +2,16 @@
 
 ### recordsadmin.in
 ###
-### $Id: recordsadmin.in,v 1.9 1997/05/01 21:21:27 ashvin Exp $
+### $Id: recordsadmin.in,v 1.10 1998/11/05 16:13:54 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
+# Revision 1.10  1998/11/05 16:13:54  ashvin
+# Fix a quote problem with perl highlighting.
+#
 # Revision 1.9  1997/05/01 21:21:27  ashvin
 # Changed names from notes to record.
 #
@@ -141,7 +144,7 @@ MORE_MESG
 ;
 
 #
-# Start the bang bang
+# Start the bang bang '
 #
  
 if (!getopts('hdvicn')) {
@@ -154,7 +157,6 @@ if (!getopts('hdvicn')) {
 # &records_initialize_vars(0, $alternate);
 # &records_update_links("/home/asgoel/records/96/961209", $alternate);
 # exit(0);
-
 
 &usage() if ($opt_h);
 $debug = 1 if ($opt_d);
@@ -169,9 +171,13 @@ if ($opt_c) {
 }
 
 if (!$opt_n) {
-   print "Indexing all your records...\n";
+   print "Indexing all records...\n";
    &records_recreate_indexes();
 }
+
+print "If you already have an emacs running with records mode loaded, run
+M-x records-initialize (C-c C-z) in a record buffer\n";
+
 exit(0);
 
 sub usage {
