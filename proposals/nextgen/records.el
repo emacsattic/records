@@ -1,6 +1,6 @@
 ;;; records.el --- records
 
-;; $Id: records.el,v 1.3 2001/05/14 06:10:30 burtonator Exp $
+;; $Id: records.el,v 1.4 2001/05/26 18:37:18 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -38,6 +38,9 @@
 (require 'records-hs)
 (require 'records-query)
 (require 'records-type)
+(require 'records-ref)
+(require 'records-sm)
+
 
 ;;;
 ;;; Internal variables - users shouldn't change
@@ -519,8 +522,13 @@ ring."
     (insert "* " subject "\n")
     
     (insert-char ?- (+ (length subject) 2))
-    (insert (concat "\n" (records-make-link subject date tag) "\n"))
 
+    (insert (concat "\n" (records-make-link subject date tag) "\n"))
+    
+    (insert "reference: "
+            (records-ref-get-record-uri date tag subject))
+    (insert "\n")
+    
     (insert "created: "
             (records-timestamp))
 

@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.4 2001/05/19 18:41:24 burtonator Exp $
+;; $Id: records-mode.el,v 1.5 2001/05/26 18:37:18 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -212,6 +212,13 @@ The key-bindings of this mode are:
          ["Browse URL" records-util-browse-url t]
          ["iSpell check" records-ispell-current-record t])
         "--"
+        ("MetaInfo"
+         ["Set MetaInfo" records-metainfo-set t]
+         ["Delete MetaInfo" records-metainfo-delete t]
+         ["Set Status" records-status-set t])
+        ("Subject MetaInfo"
+         ["Set Image" records-sm-set-image t])
+        "--"
         ["Insert Record" records-insert-record t]
         ["Delete Record" records-delete-record t]
         ["Rename Record" records-rename-record t]
@@ -235,10 +242,6 @@ The key-bindings of this mode are:
         "--"
         ["Search Forward" records-search-forward t]
         ["Search Backward" records-search-backward t]
-        "--"
-        ["Set MetaInfo" records-metainfo-set t]
-        ["Delete MetaInfo" records-metainfo-delete t]
-        ["Set Status" records-status-set t]
         "--"
         ["Show Calendar" records-show-calendar t]
         ["Mark Record"  records-mark-record t]

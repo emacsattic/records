@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.11 2001/05/19 18:41:24 burtonator Exp $
+;; $Id: records-rss.el,v 1.12 2001/05/26 18:37:18 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -61,19 +61,18 @@
 
 ;;; TODO:
 ;;
-;; - If a record ALREADY exists in the RSS index delete it and insert a new
-;;   record.  This is necessary because if we update a record we want the index
-;;   to reflect this.
-;;
 ;; - Is it possible to export RSS in the background???  Maybe when specific
 ;;   operations are performed.  It only takes a second.
 ;;
-;; - Support images for RSS items.  This might be tough because RSS doesn't
-;;   support this and there isn't really an additional namespace I can use.
-;;
-;; - include additional 'subject' metainfo under a special records namespace.
 
 ;;;History:
+;;
+;; - Sat May 19 2001 12:50 PM (burton@relativity.yi.org): include additional
+;; 'subject' metainfo under a special records namespace.
+;;
+;; - Sat May 19 2001 12:50 PM (burton@relativity.yi.org): Support images for RSS
+;; items.  This might be tough because RSS doesn't support this and there isn't
+;; really an additional namespace I can use.
 ;;
 ;; - Fri May 18 2001 10:47 PM (burton@relativity.yi.org): Use the link so that
 ;;   RSS records are not exported multiple times.
@@ -211,6 +210,9 @@ export your activity."
   (interactive)
 
   (message "Exporting RSS records... ")
+
+  ;;backup files first...
+  (records-rss-export-backup)
   
   (save-excursion
     (let(buffer day-index)
@@ -250,7 +252,25 @@ export your activity."
           (setq day-index (1- day-index))))))
 
   (message "Exporting RSS records... done"))
+
+(defun records-rss-export-backup()
+  "Backup all necessary files prior to an export."
   
+  (records-rss-export-backup-file records-rss-index-file))
+
+(defun records-rss-export-backup-file(filename)
+  "Remove the current .bak if it exists, then copy then original file over to
+the .bak. "
+
+  (let(backup-filename)
+
+    (setq backup-filename (concat filename ".bak"))
+
+    (if (file-exists-p backup-filename)
+        (delete-file backup-filename))
+
+    (copy-file filename backup-filename)))
+    
 (defun records-rss-link-exists(record-link)
   "Return true if the given link already exists."
 
@@ -279,8 +299,6 @@ export your activity."
                                  buffer)
   "Export the current record and output the XML to the buffer.  "
 
-  ;;FIXME: insert the 'created' date
-  
   (set-buffer buffer)
 
   (insert "\n\n")
@@ -297,6 +315,9 @@ export your activity."
   (records-rss-insert-element "link" url 1)
 
   ;;add a dublin core 'date' item so that we know when this record was created.
+
+  ;;insert the 'created' date
+  
 
   (records-rss-insert-element "dc:date" created 1)
 
@@ -326,7 +347,7 @@ export your activity."
 
   (insert "\n\n")
   (insert "</description>")
-  (insert "\n")
+  (insert "\n\n")
   
   (insert "</item>\n"))
 
@@ -390,6 +411,8 @@ nested, default is 0"
           (insert "\n         ")
           (insert "xmlns:record=\"http://records.sourceforge.net/schemas/rss-meta-module/\" ")
           (insert "\n         ")
+          (insert "xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" ")
+          (insert "\n         ")
           (insert "xmlns=\"http://purl.org/rss/1.0/\"")
           (insert ">")
           (insert "\n\n")
@@ -427,3 +450,4 @@ nested, default is 0"
   (forward-line 1))
 
 (provide 'records-rss)
+

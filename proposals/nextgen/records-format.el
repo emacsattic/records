@@ -1,6 +1,6 @@
 ;;; records-format.el --- functions used for parsing and formating records file.
 
-;; $Id: records-format.el,v 1.5 2001/05/17 02:15:27 burtonator Exp $
+;; $Id: records-format.el,v 1.6 2001/05/26 18:37:18 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -42,7 +42,10 @@
 ;; 1.0.1 - added records-format-header-end-string as the end of header metainfo
 ;;         marker "-- "
 ;;
-(defvar records-format-version-number "1.0.1" "Version number of this records files format.")
+;; 1.0.2 - migration to new 'reference' system for record links.  This shouldn't
+;;         break anything.
+
+(defvar records-format-version-number "1.0.2" "Version number of this records files format.")
 
 (defun records-format-get-header-end-point()
   "Get the end of the subject header info.  See `records-format-header-end-regexp'"
@@ -104,9 +107,10 @@ version in the current records file.  "
     ;;variable so that it isn't computed everytime.
     
     (if (string-lessp current-version necessary-version)
-        (throw 'error (format "The current version is %s but %s is required"
+        (throw 'error (format "The current version is %s but %s is required ( %s )"
                               current-version
-                              necessary-version)))))
+                              necessary-version
+                              (buffer-name))))))
 
 (defun records-format-read-only-remove-from-record()
   "Remove the read-only properties from the current record"

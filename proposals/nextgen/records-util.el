@@ -1,6 +1,6 @@
 ;;; records-util.el --- util
 
-;; $Id: records-util.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
+;; $Id: records-util.el,v 1.3 2001/05/26 18:37:18 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -68,10 +68,10 @@
 
   (let (cur-point)
     (insert name ": " "// created on "
-            (records-timestamp) "\n")
+            (records-timestamp) "\n\n")
 
     (setq cur-point (point))
-    (insert "\n" "END_" name "\n")
+    (insert "\n\n" "END_" name "\n")
     (goto-char cur-point)))
 
 
