@@ -1,13 +1,17 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.15 1997/05/01 21:21:24 ashvin Exp $
+;;; $Id: records.el,v 1.16 1997/05/06 01:27:55 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
+; Revision 1.16  1997/05/06 01:27:55  ashvin
+; 1. Fixes to records-goto-link to support arbitrary file-names.
+; 2. Fixes to records-mark-record and records-mark-subject.
+;
 ; Revision 1.15  1997/05/01 21:21:24  ashvin
 ; Changed names from notes to record.
 ;
@@ -447,7 +451,7 @@ TODO: non interactive calls should pop-mark also."
     (if arg
 	(progn (records-mark-subject) (setq pt (mark)) (pop-mark)))
     (records-goto-down-record)
-    (push-mark (point))
+    (push-mark (point) t t)
     (if pt (goto-char pt) 
       (records-goto-up-record)
       (point))))
@@ -465,7 +469,7 @@ TODO: non interactive calls should pop-mark also."
 	(progn
 	  (next-line 1)
 	  (beginning-of-line)))
-    (push-mark (point))
+    (push-mark (point) t t)
     ;; also return value
     (goto-char pt)))
 
@@ -539,30 +543,34 @@ A link can be any of the following enclosed in <>.
 3. a pathname followed by \"#tag* Subject\"
 4. a file:// or file://localhost prepended to a pathname."
   (interactive)
-  (if (not (or (looking-at "<")
-	       (re-search-backward "<" (point-boln) t)))
-      ;; not a link I know about
-      (error "records-goto-link: invalid link under point.")
-    ;; try to figure out a link
-    (if (looking-at (concat "<\\(.*\\)/\\([0-9]+\\)\\(" 
-			    records-tag-regexp "\\* \\(.*\\)\\|\\)>"))
-	;; found a link
-	(let ((dir (buffer-substring-no-properties (match-beginning 1)
-						   (match-end 1)))
-	      (date (buffer-substring-no-properties (match-beginning 2)
-						       (match-end 2)))
-	      (tag (if (match-beginning 4)
-		       (buffer-substring-no-properties (match-beginning 4)
-						       (match-end 4))))
-	      (subject (if (match-beginning 5)
-			   (buffer-substring-no-properties (match-beginning 5)
-						       (match-end 5)))))
-	  ;; if "file://" or "file://localhost" is present 
-	  ;; at the beginning of dir, strip it ... guess why?
-	  (if (string-match "^file://\\(localhost\\|\\)" dir)
-	      (setq dir (substring dir (match-end 0))))
-	  (records-goto-record subject date tag nil nil nil nil dir))
-      (error "records-goto-link: invalid link under point."))))
+  (save-excursion
+    (if (not (or (looking-at "<")
+		 (re-search-backward "<" (point-boln) t)))
+	;; not a link I know about
+	(error "records-goto-link: invalid link under point.")
+      ;; try to figure out a link
+      (if (not (looking-at 
+		;; (concat "<\\(.*\\)/\\([0-9]+\\)\\(" records-tag-regexp 
+		;; "\\* \\(.*\\)\\|\\)>")
+		(concat "<\\(.*\\)/\\([^/#]+\\)\\(" records-tag-regexp 
+			"\\* \\(.*\\)\\|\\)>")))
+	  (error "records-goto-link: invalid link under point."))))
+  ;; found a link
+  (let ((dir (buffer-substring-no-properties (match-beginning 1)
+					     (match-end 1)))
+	(date (buffer-substring-no-properties (match-beginning 2)
+					      (match-end 2)))
+	(tag (if (match-beginning 4)
+		 (buffer-substring-no-properties (match-beginning 4)
+						 (match-end 4))))
+	(subject (if (match-beginning 5)
+		     (buffer-substring-no-properties (match-beginning 5)
+						     (match-end 5)))))
+    ;; if "file://" or "file://localhost" is present 
+    ;; at the beginning of dir, strip it ... guess why?
+    (if (string-match "^file://\\(localhost\\|\\)" dir)
+	(setq dir (substring dir (match-end 0))))
+    (records-goto-record subject date tag nil nil nil nil dir)))
 
 (defun records-goto-mouse-link (e)
   "Goto the link where mouse is clicked."
