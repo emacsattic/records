@@ -616,7 +616,7 @@ The todo text
 
 The default value of records-todo-begin-move-regexp is "TODO: ". The
 default value of records-todo-end-regexp is "END_TODO". The comment
-added by @code{records-create-todo} is just a part of the TODO text and
+added by @code{records-create-todo} is just part of the TODO text and
 can be removed.You can change these regexps if you like. Use @kbd{C-h v}
 to examine the values of these variables. You can have also have
 multiple TODOs within a record. If you want a todo to be copied instead
