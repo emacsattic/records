@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.3 2001/05/17 02:15:27 burtonator Exp $
+;; $Id: records-mode.el,v 1.4 2001/05/19 18:41:24 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -183,17 +183,6 @@ The key-bindings of this mode are:
 (setq records-mode-menu-map
       '(["Today's Record" records-goto-today t]
         "--"
-        ("Tools"
-         ["Create TODO" records-create-todo t]
-         ["Create Supplemental" records-create-supplemental t]
-         ["Create Attachment" records-create-attachment t]
-         ["Get TODO's" records-get-todo t]
-         ["Decrypt Record" records-decrypt-record t]
-         ["Encrypt Record" records-encrypt-record t]
-         ["Concat Records" records-concatenate-records t]
-         ["Concat Record Files" records-concatenate-record-files t]
-         ["Browse URL" records-util-browse-url t]
-         ["iSpell check" records-ispell-current-record t])
         ("Hide/Show"
          ["Show all records" records-hs-show-all t]
          "--"
@@ -208,6 +197,20 @@ The key-bindings of this mode are:
          ["On body" records-query-on-body t]
          "--"
          ["Show results buffer" (pop-to-buffer records-query-results-buffer-name) t])
+        ("RSS"
+         ["Create RSS Record" records-rss-create-record t]
+         ["Export" records-rss-export-current-buffer t])
+        ("Tools"
+         ["Create TODO" records-create-todo t]
+         ["Create Supplemental" records-create-supplemental t]
+         ["Create Attachment" records-create-attachment t]
+         ["Get TODO's" records-get-todo t]
+         ["Decrypt Record" records-decrypt-record t]
+         ["Encrypt Record" records-encrypt-record t]
+         ["Concat Records" records-concatenate-records t]
+         ["Concat Record Files" records-concatenate-record-files t]
+         ["Browse URL" records-util-browse-url t]
+         ["iSpell check" records-ispell-current-record t])
         "--"
         ["Insert Record" records-insert-record t]
         ["Delete Record" records-delete-record t]

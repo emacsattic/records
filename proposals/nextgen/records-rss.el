@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.10 2001/05/18 15:37:40 burtonator Exp $
+;; $Id: records-rss.el,v 1.11 2001/05/19 18:41:24 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -61,12 +61,6 @@
 
 ;;; TODO:
 ;;
-;; - Support for XSLT after exporting.
-;;
-;; - Support for images
-;;
-;; - Use the link so that RSS records are not exported multiple times.
-;;
 ;; - If a record ALREADY exists in the RSS index delete it and insert a new
 ;;   record.  This is necessary because if we update a record we want the index
 ;;   to reflect this.
@@ -76,8 +70,18 @@
 ;;
 ;; - Support images for RSS items.  This might be tough because RSS doesn't
 ;;   support this and there isn't really an additional namespace I can use.
+;;
+;; - include additional 'subject' metainfo under a special records namespace.
 
 ;;;History:
+;;
+;; - Fri May 18 2001 10:47 PM (burton@relativity.yi.org): Use the link so that
+;;   RSS records are not exported multiple times.
+;;
+;; - Fri May 18 2001 10:47 PM (burton@relativity.yi.org): Support for XSLT after
+;;   exporting.
+;;
+;; - Fri May 18 2001 10:47 PM (burton@relativity.yi.org): Support for images
 ;;
 ;; - Mon May 14 2001 01:59 AM (burton@relativity.yi.org): Incorporate
 ;; indentation so that this can be understood easily.
@@ -134,6 +138,9 @@ export your activity."
 (defconst records-rss-tag-end-items "<!-- END ITEMS -->"
   "Tag which marks the end of RSS items.")
 
+(defvar records-rss-export-days 14
+  "Number of days over which we should do a full export.")
+
 (defun records-rss-create-record(subject title url)
   "Create an RSS compatible record."
   (interactive
@@ -181,7 +188,7 @@ export your activity."
             
             (records-rss-init-buffer buffer)
             
-            ;;FIXME: make sure that the link doesn't already exist.
+            ;;make sure that the link doesn't already exist.
             
             (if (not (records-rss-link-exists record-link))
                 (progn 
@@ -194,12 +201,56 @@ export your activity."
                                              url
                                              created
                                              description
-                                             buffer))))
-          ))
+                                             buffer))))))
 
       (records-rss-save)
       (message "Exported %i RSS record(s)." count))))
 
+(defun records-rss-export()
+  "Try to export the RSS database over the last X days."
+  (interactive)
+
+  (message "Exporting RSS records... ")
+  
+  (save-excursion
+    (let(buffer day-index)
+
+      ;;clear the records buffer...
+      
+      (setq buffer (find-file-noselect records-rss-index-file))
+      
+      (set-buffer buffer)
+
+      (erase-buffer)
+
+      ;;this might be redundant
+      (records-rss-init-buffer buffer)
+
+      ;;go over each date and export the records...
+      
+
+      (setq day-index records-rss-export-days)
+      
+      (while (>= day-index 0)
+        (let(filename date ndate)
+
+          (setq date (records-add-date (records-normalize-date (records-todays-date))
+                                       (- day-index)))
+
+          (setq ndate (records-denormalize-date date))
+          
+          (setq filename (records-util-get-filename ndate))
+          
+          (set-buffer (find-file-noselect filename))
+
+          ;;don't do anything if we error out...
+          (catch 'error
+            (records-rss-export-current-buffer))
+          
+          (setq day-index (1- day-index))))))
+
+  (message "Exporting RSS records... done"))
+  
 (defun records-rss-link-exists(record-link)
   "Return true if the given link already exists."
 
@@ -261,10 +312,13 @@ export your activity."
              records-rss-images-default)
         (setq image records-rss-images-default))
     
-    (records-rss-insert-element "im:image" image))
+    (records-rss-insert-element "im:image" image 1))
+
+  (records-rss-insert-element "record:subject" subject 1)
   
   ;;description
 
+  (insert "\n")
   (insert "<description>")
   (insert "\n\n")
 
@@ -272,6 +326,7 @@ export your activity."
 
   (insert "\n\n")
   (insert "</description>")
+  (insert "\n")
   
   (insert "</item>\n"))
 
@@ -328,8 +383,13 @@ nested, default is 0"
 
           (insert "<rdf:RDF ")
           (insert "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ")
+          (insert "\n         ")
           (insert "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" ")
+          (insert "\n         ")
           (insert "xmlns:im=\"http://purl.org/rss/1.0/item-images/\" ")
+          (insert "\n         ")
+          (insert "xmlns:record=\"http://records.sourceforge.net/schemas/rss-meta-module/\" ")
+          (insert "\n         ")
           (insert "xmlns=\"http://purl.org/rss/1.0/\"")
           (insert ">")
           (insert "\n\n")
