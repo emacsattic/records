@@ -16,6 +16,9 @@ be installed, you could say something like
 Make sure ${bindir} (generally ${prefix}/bin) in the Makefile exists and is
 writable by you.
 
+Note: if you are getting source from CVS, you will have to generate
+./configure by running autoconf first.
+
 3. Run make install (or just make)
 After the lisp files have been compiled, this procedure is interactive and asks
 for user defaults. Note: The lisp files are not installed anywhere.

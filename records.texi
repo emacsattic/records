@@ -176,6 +176,9 @@ configure).  If you want to specify the directory in which
 Make sure @code{$@{bindir@}} (generally @code{$@{prefix@}/bin}) in the
 Makefile exists and is writable by you.
 
+Note: if you are getting source from CVS, you will have to generate
+@code{./configure} by running @code{autoconf} first.
+
 @item
 Run @code{make install} (or just @code{make})
 
