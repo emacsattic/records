@@ -1,118 +1,11 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.19 1999/04/14 17:12:47 ashvin Exp $
+;;; $Id: records.el,v 1.20 1999/04/14 17:16:51 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
-
-; $Log: records.el,v $
-; Revision 1.19  1999/04/14 17:12:47  ashvin
-; 1. Fixed code so that it does not use records-mark-record directly.
-; Added records-record-region that does the work for records-mark-record. Code
-; uses this function now. Similarly changed records-mark-subject to
-; records-subject-region.
-;
-; 2. Fixed records-encrypt-record and records-decrypt-record.
-;
-; 3. Added start-open to read-only subjects. So text can be added right at the
-;    beginning of subjects. The only thing that users should add is
-;    newlines. This code is required to fix records-encrypt-record.
-;
-; Revision 1.18  1998/11/05 23:12:34  ashvin
-; Fixes to easymenu for the new emacs.
-;
-; Revision 1.17  1998/11/05 16:12:05  ashvin
-; Many minor changes.
-;
-; Revision 1.16  1997/05/06 01:27:55  ashvin
-; 1. Fixes to records-goto-link to support arbitrary file-names.
-; 2. Fixes to records-mark-record and records-mark-subject.
-;
-; Revision 1.15  1997/05/01 21:21:24  ashvin
-; Changed names from notes to record.
-;
-; Revision 1.14  1997/01/23 00:02:35  ashvin
-; The first release
-;
-; Revision 1.13  1996/12/18  16:38:23  asgoel
-; 1. Added autoload functions.
-; 2. Removed user customizable variables to separate file.
-; 3. Removed records-todo and records-concatenate-records etc. to a separate file.
-;
-; Revision 1.12  1996/12/16  17:31:39  asgoel
-; Cleaned up records-todo.
-;
-; Revision 1.11  1996/12/16  16:55:20  asgoel
-; Added more records-concatenate variables for customization.
-;
-; Revision 1.10  1996/12/15  05:02:06  asgoel
-; 1. Major: Added records encryption and  decryption.
-;    func: records-encrypt-record
-;          records-decrypt-record
-; 2. Major: Implemented concatenation of subjects.
-;    func: records-concatenate-records
-;          records-concatenate-record-files
-;    vars: records-output-buffer
-; 	 records-select-buffer-on-concat
-;          records-erase-output-buffer
-; 3. Fixed most todo's.
-; 4. Fixed records-ndate-lessp.
-; 5. Added records-add-date.
-; 6. Added striping of file:// and file://localhost.
-; 7. Identical record files are not put in the history consecutively.
-; 8. Added documentation about function return values.
-; 9. Changed name from records-goto-prev/next/relative-date to
-;    records-goto-prev/next/relative-record-file
-;
-; Revision 1.9  1996/12/13  19:58:26  asgoel
-; Fixed error messages.
-; Added support for records-goto-last-record.
-;
-; Revision 1.8  1996/12/11  21:17:52  asgoel
-; Added records menu.
-;
-; Revision 1.7  1996/12/11  01:55:27  asgoel
-; Added records-body-empty-p
-; Added removal of empty records after todo moves
-;
-; Revision 1.6  1996/12/10  01:34:31  asgoel
-; Made records-initialize interactive (binding : C-c C-z).
-; records-directory does not have to have a slash following it.
-;
-; Revision 1.5  1996/12/05  21:02:40  asgoel
-; Added initialization from records-init-file.
-; Added date index code for going to the previous records file.
-; Added todo functionality.
-; Fixed a normalize year bug.
-; Added subject completion code before records-read-subject is called.
-; Added record subject fontification and read-only text.
-; Added no-switch, directory and todo parameters to records-goto-record.
-; Added directory creation support in records-goto-record.
-; Added on-next parameter to records-goto-down-record.
-; Added no-switch and todo parameters to records-goto-relative-day.
-; Added no-switch parameter to records-goto-prev/next-day.
-; Added optional subject parameter to records-insert-record.
-; Added key bindings for records-goto-prev/next-date.
-; Fixed loading order of records and records-index.
-;
-; Revision 1.4  1996/11/26  02:01:01  asgoel
-; Move records-subject-table to records.el
-;
-; Revision 1.3  1996/11/22  12:43:49  asgoel
-; A working version that supports the old functionality + auto insertion,
-; deletion and renaming of records.
-; However it can not be tested since I have to write a perl script
-; to change my records files to the new format. In the process, a script
-; that can regenerate the index should also be written.
-;
-; Revision 1.2  1996/11/21  03:05:47  asgoel
-; The first working version.
-;
-; Revision 1.1  1996/11/20  02:34:01  asgoel
-; Initial revision
-;
 
 (require 'records-vars)
 (require 'records-index)

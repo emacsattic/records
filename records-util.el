@@ -1,34 +1,11 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.4 1999/04/14 17:13:53 ashvin Exp $
+;;; $Id: records-util.el,v 1.5 1999/04/14 17:16:51 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
-
-; $Log: records-util.el,v $
-; Revision 1.4  1999/04/14 17:13:53  ashvin
-; 1. Fixed code so that it does not use records-mark-record directly.
-; Added records-record-region that does the work for records-mark-record. Code
-; uses this function now. Similarly changed records-mark-subject to
-; records-subject-region.
-;
-; 2. Fixed records-encrypt-record and records-decrypt-record.
-;
-; 3. Added start-open to read-only subjects. So text can be added right at the
-;    beginning of subjects. The only thing that users should add is
-;    newlines. This code is required to fix records-encrypt-record.
-;
-; Revision 1.3  1997/05/01 21:21:23  ashvin
-; Changed names from notes to record.
-;
-; Revision 1.2  1997/01/23 00:02:35  ashvin
-; The first release
-;
-; Revision 1.1  1996/12/17  22:37:29  asgoel
-; Initial revision
-;
 
 (defun records-todo (&optional date)
   "Insert the previous record files todo's into the date file.

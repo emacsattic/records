@@ -1,19 +1,11 @@
 ;;;
 ;;; records-dindex.el
 ;;;
-;;; $Id: records-dindex.el,v 1.2 1997/05/01 21:21:22 ashvin Exp $
+;;; $Id: records-dindex.el,v 1.3 1999/04/14 17:16:51 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
-
-; $Log: records-dindex.el,v $
-; Revision 1.2  1997/05/01 21:21:22  ashvin
-; Changed names from notes to record.
-;
-; Revision 1.1  1996/12/17 18:59:40  asgoel
-; Initial revision
-;
 
 (defvar records-dindex-buffer nil
   "The name of the date-index buffer.

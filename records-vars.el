@@ -1,30 +1,17 @@
 ;;;
 ;;; records-vars.el
 ;;;
-;;; $Id: records-vars.el,v 1.4 1998/11/05 16:10:49 ashvin Exp $
+;;; $Id: records-vars.el,v 1.5 1999/04/14 17:16:51 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
-; $Log: records-vars.el,v $
-; Revision 1.4  1998/11/05 16:10:49  ashvin
-; Initialization of records bold face done differently.
-;
-; Revision 1.3  1997/05/01 21:21:24  ashvin
-; Changed names from notes to record.
-;
-; Revision 1.2  1997/01/23 00:02:35  ashvin
-; The first release
-;
-; Revision 1.1  1996/12/17  22:37:19  asgoel
-; Initial revision
-;
 ;;;
 ;;; The next set of variables are accessed by recordsadmin.
 ;;; Do not set them explicitly since they are set in your
-;;; records initilization file (see records-init-file) when recordsadmin is run.
-;;; Beware!
+;;; records initilization file (see records-init-file) when recordsadmin 
+;;; is run. Beware!
 ;;;
 
 (defvar records-init-file (concat (getenv "HOME") "/.emacs-records")

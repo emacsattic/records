@@ -1,58 +1,11 @@
 ;;;
 ;;; records-index.el
 ;;;
-;;; $Id: records-index.el,v 1.11 1997/05/01 21:21:22 ashvin Exp $
+;;; $Id: records-index.el,v 1.12 1999/04/14 17:16:51 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
-
-; $Log: records-index.el,v $
-; Revision 1.11  1997/05/01 21:21:22  ashvin
-; Changed names from notes to record.
-;
-; Revision 1.10  1997/01/23 00:02:35  ashvin
-; The first release
-;
-; Revision 1.9  1996/12/18  16:36:25  asgoel
-; Added autoloads.
-; Removed date index functions to separate file.
-;
-; Revision 1.8  1996/12/15  04:53:41  asgoel
-; 1. Removed some todo's.
-; 2. Added documentation about return values of functions.
-; 3. Added records-tag macro.
-;
-; Revision 1.7  1996/12/13  19:58:17  asgoel
-; Fixed error messages.
-; Added support for records-goto-last-record.
-;
-; Revision 1.6  1996/12/10  01:35:30  asgoel
-; Fix in records-index-parse-buffer.
-;
-; Revision 1.5  1996/12/05  21:23:02  asgoel
-; Added date index code.
-; Added optional 'modified' parameter to records-index-buffer,
-;   records-index-goto-subject.
-; Added optional 'buf' parameter to records-index-save-buffer.
-; Fixed loading order of records and records-index.
-;
-; Revision 1.4  1996/11/26  02:00:40  asgoel
-; Move records-subject table to records.el
-;
-; Revision 1.3  1996/11/22  12:44:00  asgoel
-; A working version that supports the old functionality + auto insertion,
-; deletion and renaming of records.
-; However it can not be tested since I have to write a perl script
-; to change my records files to the new format. In the process, a script
-; that can regenerate the index should also be written.
-;
-; Revision 1.2  1996/11/21  03:05:27  asgoel
-; The first working version.
-;
-; Revision 1.1  1996/11/20  02:34:07  asgoel
-; Initial revision
-;
 
 (defvar records-index-use-font-lock t
   "* Enable records index fontification.")
