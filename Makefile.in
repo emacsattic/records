@@ -1,13 +1,16 @@
 ###
 ### Makefile.in
 ###
-### $Id: Makefile.in,v 1.3 1997/05/01 21:21:13 ashvin Exp $
+### $Id: Makefile.in,v 1.4 1999/04/10 18:36:23 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: Makefile.in,v $
+# Revision 1.4  1999/04/10 18:36:23  ashvin
+# Minor bug fix.
+#
 # Revision 1.3  1997/05/01 21:21:13  ashvin
 # Changed names from notes to record.
 #
@@ -65,7 +68,7 @@ EFLAGS =-batch -q -no-site-file $(PRELOADS)
 
 DISTFILES = $(SOURCES) INSTALL Makefile.in \
 	README configure configure.in install-sh \
-	mkinstalldirs recordsadmin.in records-load.el \
+	mkinstalldirs notes.info recordsadmin.in records-load.el \
 	encrypt/mailcrypt.el encrypt/mc-pgp.el \
 	encrypt/mc-remail.el encrypt/mc-toplev.el
 
@@ -78,7 +81,7 @@ DISTFILES = $(SOURCES) INSTALL Makefile.in \
 	$(EMACS) $(EFLAGS) -f batch-byte-compile $<
 
 all: $(OBJECTS)
-	recordsadmin -i
+	./recordsadmin -i
 
 # install: all installdirs $(infodir)/records
 install: all
