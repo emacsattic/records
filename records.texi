@@ -11,8 +11,8 @@
 @syncodeindex fn cp
 
 @set EDITION 1.0
-@set VERSION 1.2
-@set UPDATED April 1999
+@set VERSION 1.4
+@set UPDATED January 2000
 
 @iftex
 @finalout
@@ -29,7 +29,7 @@ END-INFO-DIR-ENTRY
 
 @ifinfo
 Records
-Copyright (C) 1995-1999 Ashvin Goel.
+Copyright (C) 1995-2000 Ashvin Goel.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -66,7 +66,7 @@ by the Free Software Foundation.
 @page
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1995-1999 Ashvin Goel.
+Copyright @copyright{} 1995-2000 Ashvin Goel.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -158,7 +158,8 @@ directory, now is the time to do it.
 Run @code{./configure} or @code{./configure --enable-xemacs}
 
 The @code{--enable-xemacs} flag ensures that the elisp files are
-compiled using @code{xemacs}. Use this option if you use @code{xemacs}.
+compiled using @code{xemacs}. You MUST use this option if you use
+@code{xemacs}.
 
 The configure is provided in the source directory (do not run your own
 configure).  If you want to specify the directory in which
@@ -227,7 +228,7 @@ often. Bind the function to a simple key.
 (define-key global-map [?\C-x ?n ?t] 'records-goto-today)
 (define-key global-map [?\C-x ?n ?r] 'records-insert-record-region)
 (define-key global-map [?\C-x ?n ?b] 'records-insert-record-buffer)
-(define-key global-map [?\C-x ?n ?f] 'records-insert-file-link)
+(define-key global-map [?\C-x ?n ?l] 'records-insert-link)
 
 ; Hook up to the calendar mode
 (add-hook 'calendar-load-hook 
@@ -346,21 +347,24 @@ documentation. Hope to start experiments tomorrow.
 "}
 @end format
 
-@vindex records-fontify
+@vindex records-mode-use-font-lock
+@vindex records-mode-font-lock-keywords
 @vindex records-bold-face
 @vindex records-subject-read-only
 The records subject is @code{Work}. A subject starts with an asterisk
-and a space and is always underlined. If the variable
-@code{records-fontify} is set to true (the default), the subject appears
-in a bold font (user variable @code{records-bold-font}). If the variable
+and a space and is always underlined. Below the underlining, a link
+identifies the record. The link above shows that this record is
+associated with the date April 21st, 1999. Note that there are many ways
+in which dates can be represented in records (@pxref{Records
+Administration}).
+
+If the variable @code{records-mode-use-font-lock} is set to true (the
+default), the subject, records link and the TODO (@pxref{Organizing your
+TODOs}) are fontified. You can modify the fontification by changing the
+variable @code{records-mode-font-lock-keywords}. If the variable
 @code{records-subject-read-only} is set to true (the default), the
 subject is read-only, which disallows any accidental updates to a
 records subject.
-
-Below the underlining, a link identifies the record. The link above
-shows that this record is associated with the date April 21st,
-1999. Note that there are many ways in which dates can be represented in
-records (@pxref{Records Administration}).
 
 @node Record File, Record Traversal, What is a Record, Basic Use
 @section What is a Record File?
@@ -428,18 +432,21 @@ a record file does not exist, one will be created.
 
 @item records-goto-link
 
-Key @kbd{C-c C-g}. Goto the link around point in the records file. A
-link in a records file must be enclosed within @kbd{<} and @kbd{>}. This
-link can be a records link or a web link such as an http, FTP, gopher
-link. For instance, <http://www.yahoo.com>. A records link identifies a
-record (@pxref{What is a Record}). This record identifier can be copied
-to any other record and this function used to jump back to the record
-associated with the link.  For instance, if you copied this link
-<../../99/04/042199#* Work> into some other record and then typed
-@kbd{C-c C-g} within the angle brackets, you would be transported to the
-@code{Work} record of April 21st, 1999. When the link is a web link, the
-link is handed off to @code{browse-url-browser-function}.  
+Key @kbd{C-c C-g}. Key @kbd{Button2}. Goto the link around point in the
+records file. A link in a records file must be enclosed within @kbd{<}
+and @kbd{>}. This link can be a records link or a web link such as an
+http, FTP, gopher, news message link. For instance,
+<http://www.yahoo.com>. A records link identifies a record (@pxref{What
+is a Record}). This record identifier can be copied to any other record
+and this function used to jump back to the record associated with the
+link.  For instance, if you copied this link <../../99/04/042199#* Work>
+into some other record and then typed @kbd{C-c C-g} within the angle
+brackets, you would be transported to the @code{Work} record of April
+21st, 1999. When the link is a web link, the link is handed off to
+@code{browse-url-browser-function}. When the link is a news message
+link, @code{deja.com} is searched for the news message.
 @kindex C-c C-g
+@kindex Button2
 
 Note that C-g can be typed only after sometime has elapsed after typing
 C-c or else the command gets aborted because of the behavior of
@@ -544,19 +551,24 @@ underline any text.
 
 Key @kbd{C-x n r} Insert the region in the current buffer into today's
 record. Prompts for subject.
+@kindex C-x n r
 
 @item records-insert-record-buffer
 
 Key @kbd{C-x n b} Insert the current buffer into today's record. Prompts
 for subject.
+@kindex C-x n b
 
-@item records-insert-file-link
+@item records-insert-link
 
-Key @kbd{C-x n f} Write the current buffer file name as a records link
-at the end of today's record and inserts a user-specified comment. This
-function can be used to bookmark files in your records file. Currently,
-this function is not bound to any key. You should bind it to a global
-key.
+Key @kbd{C-x n l} Writes the file name of the current buffer, or the url
+of the current page, or the message-id of the current gnus buffer as a
+records link at the end of today's record and inserts a user-specified
+comment. This function can be used to bookmark files, urls or news
+messages in your records file. Currently, this function is not bound to
+any key. You should bind it to a global key. This function used to be
+called records-insert-file-link.
+@kindex C-x n l
 
 @end ftable
 
@@ -625,7 +637,6 @@ END_TODO
 For your convenience, the function @code{records-create-todo} can be
 used to create a new TODO. Key @kbd{C-c / t}. This function adds a
 comment with the date when the TODO was created.
-
 @kindex C-c / t
 
 @findex records-get-todo
@@ -716,7 +727,7 @@ your PGP passphrase (and caches the passphrase for a short time
 @kindex C-c / d
 @end ftable
 
-@node Concatenating Records,  , Security, Advanced Use
+@node Concatenating Records, , Security, Advanced Use
 @section Putting Records Together
 
 The records-mode allows concatenating several records together. These

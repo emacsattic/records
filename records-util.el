@@ -1,7 +1,7 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.8 1999/11/23 06:22:24 ashvin Exp $
+;;; $Id: records-util.el,v 1.9 2000/01/18 11:27:39 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -101,18 +101,17 @@ Records encryption requires the mailcrypt and mc-pgp packages."
       (load "mc-pgp"))
   (save-excursion
     (let ((point-pair (records-record-region t))
-          start)
+          start end)
       (if arg (setq start (point))
         (setq start (first point-pair)))
+      (setq end (second point-pair))
       (goto-char start)
       ;; sanity check
       (if (or (looking-at mc-pgp-msg-begin-line)
 	      (looking-at mc-pgp-signed-begin-line))
 	  (error "records-encrypt-record: record is already encrypted."))
       (mc-pgp-encrypt-region (list (records-user-name)) 
-                             start 
-                             (second point-pair)
-                             (records-user-name) nil))))
+                             start end (records-user-name) nil))))
 
 (defun records-decrypt-record ()
   "Decrypt the current record.
@@ -300,23 +299,34 @@ Prompts for subject."
   (records-insert-record-region (point-min) (point-max)))
 
 ;; bind the following to some simple key
-;; From Jody Klymak (jklymak@apl.washington.edu)
-(defun records-insert-file-link (&optional comment-string)
-"Writes the current buffer file name at the end of today's record
-and inserts a comment."
+;;      From Jody Klymak (jklymak@apl.washington.edu)
+;; 01/10/2000 Support for url and gnus message id 
+;;      From Rob Mihram 
+(defun records-insert-link (&optional comment-string)
+  "Writes the current buffer file name, url or message id
+at the end of today's record and inserts a comment."
   (interactive "scomment: ")
   (save-excursion
-    (let ((fname buffer-file-name))
-      (if (null fname)
-          (error "Buffer is not associated with any file"))
-      (message "%s" fname)
+    (let 
+        ((flink (cond ((not (null buffer-file-name));; 1. normal file 
+                       buffer-file-name)
+                      ((and (boundp 'url-current-object) 
+                            (not (null url-current-object)));; 2. url page
+                       (concat (aref url-current-object 0) "://" 
+                               (aref url-current-object 3)
+                               (aref url-current-object 5)))
+                      ((eq major-mode 'gnus-summary-mode);; 3. gnus page
+                       (mail-strip-quoted-names 
+                        (mail-header-message-id gnus-current-headers)))
+                      (t (error "Couldn't create link.")))))
+      (message "%s" flink)
        ;;; now we need to visit the buffer records-goto-today
       (if (one-window-p t) 
-          (split-window))
+	  (split-window))
       (other-window 1)
       (records-goto-today)
       (goto-char (point-max))
-      (insert "link: <" fname ">\n")
+      (insert "link: <" flink ">\n")
       (insert "" comment-string "\n")
       (other-window -1))))
 
