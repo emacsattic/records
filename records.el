@@ -1,14 +1,17 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.10 1996/12/15 05:02:06 asgoel Exp $
+;;; $Id: records.el,v 1.11 1996/12/16 16:55:20 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.10  1996/12/15 05:02:06  asgoel
+; Revision 1.11  1996/12/16 16:55:20  asgoel
+; Added more notes-concatenate variables for customization.
+;
+; Revision 1.10  1996/12/15  05:02:06  asgoel
 ; 1. Major: Added notes encryption and  decryption.
 ;    func: notes-encrypt-note
 ;          notes-decrypt-note
@@ -16,7 +19,7 @@
 ;    func: notes-concatenate-notes
 ;          notes-concatenate-note-files
 ;    vars: notes-output-buffer
-; 	 notes-select-buffer-on-concatenate
+; 	 notes-select-buffer-on-concat
 ;          notes-erase-output-buffer
 ; 3. Fixed most todo's.
 ; 4. Fixed notes-ndate-lessp.
@@ -159,7 +162,23 @@ If not nil and not t, ask user about deleting the note.")
 (defvar notes-output-buffer "*NOTES-OUTPUT*"
   "* Contains the output of concatenating notes.")
 
-(defvar notes-select-buffer-on-concatenate nil
+(defvar notes-subject-prefix-on-concat "--- "
+  "* Prefix prepended to each subject on notes concatenation. 
+See \\[notes-concatenate-notes\], and \\[notes-concatenate-note-files\].")
+
+(defvar notes-subject-suffix-on-concat " ---"
+  "* Suffix appended to each subject on notes concatenation. 
+See \\[notes-concatenate-notes\], and \\[notes-concatenate-note-files\].")
+
+(defvar notes-date-prefix-on-concat "* "
+  "* Prefix prepended to each date on notes concatenation. 
+See \\[notes-concatenate-notes\], and \\[notes-concatenate-note-files\].")
+
+(defvar notes-date-suffix-on-concat ""
+  "* Suffix appended to each date on notes concatenation. 
+See \\[notes-concatenate-notes\], and \\[notes-concatenate-note-files\].")
+
+(defvar notes-select-buffer-on-concat nil
   "* If non nil, the notes-output-buffer is selected after notes are
 concatenated by \\[notes-concatenate-notes\].
 If nil, the notes-output-buffer is just displayed.")
@@ -999,14 +1018,28 @@ Notes decryption requires the mailcrypt and mc-pgp packages."
 	(error "notes-decrypt-note: note is not encrypted."))
     (mc-pgp-decrypt-region (match-beginning 0) (mark))))
 
+(defmacro notes-subject-on-concat (subject)
+  "Make subject for notes concatenation."
+  (` (let ((sub (concat notes-subject-prefix-on-concat (, subject)
+			notes-subject-suffix-on-concat)))
+       (concat sub "\n" (make-string (length sub) ?-) "\n"))))
+
+(defmacro notes-date-on-concat (date)
+  "Make date for notes concatenation."
+  (` (let ((d (concat notes-date-prefix-on-concat (, date)
+			notes-date-suffix-on-concat)))
+       (concat d "\n" (make-string (length d) ?-) "\n"))))
+
 (defun notes-concatenate-notes (num)
   "Concatenate the current note with the notes on the same subject written
-in the last NUM days. Output these notes in the notes-output-buffer buffer.
-Prompts for number of days. An empty string will output the current note only.
-A negative number will output all the past notes on the subject!!"
+in the last NUM days. Output these notes in the notes output buffer (see 
+notes-output-buffer). Without prefix arg, prompts for number of days.
+An empty string will output the current note only. A negative number
+will output all the past notes on the subject!!"
   (interactive
    (list
-    (read-from-minibuffer "Concat notes in last N days (default 1): ")))
+    (if current-prefix-arg (int-to-string current-prefix-arg)
+      (read-from-minibuffer "Concat notes in last N days (default 1): "))))
   (let* ((date (notes-file-to-date))
 	 (subject-tag (notes-subject-tag t))
 	 (subject (nth 0 subject-tag))
@@ -1025,7 +1058,7 @@ A negative number will output all the past notes on the subject!!"
       (if notes-erase-output-buffer
 	  (erase-buffer)
 	(goto-char (point-max)))
-      (insert (concat "*** " subject " ***\n\n")))
+      (insert (notes-subject-on-concat subject)))
     ;; start with current note
     (save-excursion
       (while ;; do-while loop 
@@ -1039,32 +1072,30 @@ A negative number will output all the past notes on the subject!!"
 	    (save-excursion
 	      (set-buffer (get-buffer notes-output-buffer))
 	      (goto-char (point-max))
-	      (insert (concat date (notes-tag tag) "\n"))
-	      (insert-char ?- (length (concat date (notes-tag tag))))
-	      (insert "\n")
+	      (insert (notes-date-on-concat (concat date (notes-tag tag))))
 	      (insert-buffer-substring cur-buf bon-point eon-point))
 	    ;; goto the previous note
 	    (setq prev-date-tag (notes-goto-prev-note 1 subject date tag t t))
 	    (setq date (nth 0 prev-date-tag))
 	    (setq tag (nth 1 prev-date-tag))
 	    ;; check if this note should be copied
-	    (and prev-date-tag
+	    (and prev-date-tag 
 		 (notes-ndate-lessp first-ndate 
 				    (notes-normalize-date date))))))
-    ;; display but don't select output
-    (if notes-select-buffer-on-concatenate
+    ;; display/select
+    (if notes-select-buffer-on-concat
 	(pop-to-buffer (get-buffer notes-output-buffer))
       (display-buffer (get-buffer notes-output-buffer)))))
     
 (defun notes-concatenate-note-files (num)
   "Concatenate all the notes in the notes files of the last NUM days.
-All the notes of a subject are collected together.
-Output these notes in the notes-output-buffer buffer. 
-Prompts for number of days.
-An empty string will output the notes of the current file only."
+All the notes of a subject are collected together. Output these notes in the
+notes output buffer (see notes-output-buffer). Without prefix arg, prompts
+for number of days. An empty string will output the notes of the current file."
   (interactive
    (list
-    (read-from-minibuffer "Concat notes in last N days (default 1): ")))
+    (if current-prefix-arg (int-to-string current-prefix-arg)
+      (read-from-minibuffer "Concat notes in last N days (default 1): "))))
   (let* ((date (notes-file-to-date))
 	 (arg (string-to-int num))
 	 (first-ndate (notes-add-date (notes-normalize-date date)
@@ -1081,59 +1112,48 @@ An empty string will output the notes of the current file only."
 	  (progn ;; do-while loop 
 	    ;; goto the beginning of the file
 	    (goto-char (point-min))
-	    (if (notes-goto-down-note nil t)
-		;; first note exists else next file
-		(while ;; loop thru. all notes in a file, do-while loop
-		    (let* ((subject (nth 0 (notes-subject-tag t)))
-			   (tag  (nth 1 (notes-subject-tag t)))
-			   (bon-point (notes-mark-note t))
-			   (eon-point (mark))
-			   subject-mark note)
-		      ;; get subject-mark
-		      (setq subject-mark (assoc subject notes-subject-list))
-		      (if subject-mark
-			  ()
-			;; add subject and new marker to list
-			(setq subject-mark 
-			      (list subject
-				    (save-excursion
-				      (let (emark)
-					(set-buffer
-					 (get-buffer notes-output-buffer))
-					(setq emark (point-max-marker))
-					(goto-char emark)
-					;; insert subject header 
-					(insert-before-markers 
-					 "*** " subject " ***\n\n")
-					(goto-char emark)
-					(insert "\n")
-					emark))))
-			(setq notes-subject-list
-			      (append notes-subject-list
-				      (list subject-mark))))
-		      (setq note (buffer-substring bon-point eon-point))
-		      (save-excursion
-			(set-buffer (get-buffer notes-output-buffer))
-			(goto-char (nth 1 subject-mark))
-			(insert-before-markers 
-			 date (notes-tag tag) "\n"
-			 (make-string (length (concat date (notes-tag tag)))
-				      ?-) "\n")
-			(insert-before-markers note))
-		      (goto-char eon-point)
-		      ;; check if next subject exists, shouldn't move point
-		      (notes-goto-down-note nil t))))
-	(setq date (notes-goto-prev-note-file 1 t))
+	    ;; loop thru. all notes in a file
+	    (while (notes-goto-down-note nil t) 
+	      (let* ((subject (nth 0 (notes-subject-tag t)))
+		     (tag  (nth 1 (notes-subject-tag t)))
+		     (bon-point (notes-mark-note t))
+		     (eon-point (mark))
+		     subject-mark omark note)
+		;; get subject-mark
+		(setq subject-mark (assoc subject notes-subject-list))
+		(if subject-mark
+		    ()
+		  (save-excursion
+		    (set-buffer (get-buffer notes-output-buffer))
+		    ;; make a new marker
+		    (setq omark (point-max-marker))
+		    (goto-char omark)
+		    ;; insert subject header 
+		    (insert-before-markers (notes-subject-on-concat subject))
+		    (goto-char omark)
+		    (insert "\n")) ;; this does a lot of the trick for markers
+		  ;; add subject and new marker to list
+		  (setq subject-mark (list subject omark))
+		  (setq notes-subject-list
+			(append notes-subject-list (list subject-mark))))
+		(setq note (buffer-substring bon-point eon-point))
+		(save-excursion
+		  (set-buffer (get-buffer notes-output-buffer))
+		  (goto-char (nth 1 subject-mark))
+		  (insert-before-markers 
+		   (notes-date-on-concat (concat date (notes-tag tag))))
+		  (insert-before-markers note))
+		(goto-char eon-point)))
+	    (setq date (notes-goto-prev-note-file 1 t))
 	    ;; check if this note should be copied
-	    (and date
-		 (notes-ndate-lessp first-ndate 
-				    (notes-normalize-date date))))))
+	    (and date (notes-ndate-lessp first-ndate 
+					 (notes-normalize-date date))))))
     ;; clean up notes-subject-list
     (while notes-subject-list
       (set-marker (nth 1 (car notes-subject-list)) nil)
       (setq notes-subject-list (cdr notes-subject-list)))
-    ;; display but don't select output
-    (if notes-select-buffer-on-concatenate
+    ;; display/select
+    (if notes-select-buffer-on-concat
 	(pop-to-buffer (get-buffer notes-output-buffer))
       (display-buffer (get-buffer notes-output-buffer)))))
 
