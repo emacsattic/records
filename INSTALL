@@ -9,14 +9,33 @@ you could say something like
 
 ./configure --prefix $HOME
 
-or 
-
-./configure --bindir $HOME/bin
+Make sure ${bindir} (generally ${prefix}/bin) in the Makefile exists and is
+writable by you.
 
 2. make install (or just make)
 After the lisp files have been compiled, this procedure is interactive and asks
 for user defaults.
 
-The installation just puts notesadmin in your bin path (see README).
+3. The changes to your system that "make install" does are the following:
+
+a) Adds ~/.emacs-notes (if this file already exists, it converts only specific
+parts of the file).
+
+b) Adds a couple of lines to ~/.emacs
+
+c) Adds notesadmin to ${bindir}
+
+d) Creates your notes directory (~/notes or whatever you have specified during
+make) and adds some indexes there. If this directory already exists, then it
+reindexes your notes and converts them to the new format. If you don't trust
+the conversion, I would really suggest that you KEEP A COPY OF YOUR NOTES
+BEFORE DOING THE CONVERSION. Check the conversion by hand to make sure that the
+conversion is fine. Specially look for the following: HAVE EMBEDDED LINKS IN
+YOUR NOTES BEEN CONVERTED CORRECTLY. Please tell me if this conversion is not
+okay.
+
+Ashvin Goel (ashvin@cse.ogi.edu)
+
+
 
 

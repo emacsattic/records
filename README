@@ -1,15 +1,16 @@
 This is the first version of the notes mode that I am releasing. There is
-hardly any documentation provided. However, most of the functionality is
+not much documentation provided. However, most of the functionality is
 available from the Notes menu when you are visiting a notes file.
 
 A brief documentation on notes usage is described below.
 
 Steps:
 
-1. Since you are reading this file, you have untarred the gzip'ed
-file. Installation will automatically add the current directory (in which you
-are right now) to the load path in emacs. So if you wish to move the notes
-software to some other directory, this is the time to do it.
+1. Since you are reading this file, you have untarred the gzip'ed file. The
+elisp files in the current directory (in which you are right now) will not be
+installed in any other directory, and installation will automatically add the
+current directory to the load path in emacs. So if you wish to move the notes
+software to some other emacs-related directory, now is the time to do it.
 
 2. Read ./INSTALL and follow its instructions. The install procedure makes the
 byte compiled elisp files, reads in the user settings for notes (by running
@@ -18,6 +19,8 @@ notesadmin), and installs these settings into the notes initialization file
 administration program (notesadmin). Install also adds the loading of
 .emacs-notes into your .emacs. When you start emacs, all the notes defaults
 will be automatically loaded.
+
+GO AHEAD AND DO THE INSTALLATION.
 
 3. Copy the next set of lines from ";;;; notes-mode" to ";;;; notes-mode end"
 into your ~/.emacs. I did not automate this process since users may wish to
@@ -55,16 +58,24 @@ the menu. Once you have added a subject, you can start typing ...
 7. Multiple subjects can be added in each day's notes file. Infact the same
 subject can be added multiple times in each day's notes file.
 
-8. For all the other functionality, look at the notes menu.
+8. For all the other functionality, look at the notes menu. The menu has been
+divided so that most of the functionality at the top of the menu is related to
+notes traversal (up, down, prev, next, goto etc). The middle section adds,
+deletes and renames notes. The last section does administration tasks such as
+encryption, concatanation of notes by subject or days etc. Make sure you look
+at the notes TODO facility.
 
 9. Remember that if you just have one notes file (today's) then notes
-traversal's are not very useful.
+traversal's are not very useful!
 
 10. The program notesadmin has been provided in order to do meta-level things -
 initialize (or reinitialize) your notes software, change date format, change
 directory structure and recreate notes indexes if they are broken (for example
-if your system crashes while emacs is updating your indexes). You should not
-need to use it in normal notes use.
+if your system crashes while emacs is updating your indexes on the fly). You
+should not need to use it in normal notes use.
+
+11. Tell me if you like the package, have improvements to suggest, or have
+found bugs.
 
 Good Luck.
 
