@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
+;; $Id: records-query.el,v 1.3 2001/05/14 06:09:21 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -268,7 +268,6 @@ query across.  "
 
     (insert (make-string (+ records-query-width-created
                             records-query-width-subject
-                            records-query-width-link
                             (length "Excerpt"))
                          ?-))
     
@@ -294,7 +293,6 @@ right of `value' to equal `width'."
         (progn
           (put-text-property start end 'invisible t)
           (put-text-property start end 'intangible t)))))
-  
 
 (defun records-query-results-goto-record()
   "Goto the record on the current line of the results buffer."

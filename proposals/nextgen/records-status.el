@@ -1,6 +1,6 @@
 ;;; records-status.el --- record status information
 
-;; $Id: records-status.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-status.el,v 1.2 2001/05/14 06:09:21 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -42,7 +42,7 @@
   "Set the status for the current record: "
   (interactive
    (list
-    (completing-read "Stats: " (records-get-collection records-status-values))))
+    (completing-read "Status: " (records-get-collection records-status-values))))
 
   (records-format-require-version "1.0.1")
 

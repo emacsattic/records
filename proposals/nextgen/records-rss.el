@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.2 2001/05/13 05:12:11 burtonator Exp $
+;; $Id: records-rss.el,v 1.3 2001/05/14 06:09:21 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -27,12 +27,60 @@
 ;; Place - Suite 330, Boston, MA 02111-1307, USA.
 
 ;;; Commentary:
+;;
+;; This package exports RSS records so that you can publish them onto websites.
+;;
+;; RSS record are just like normal records except they contain required metainfo
+;; for publication and export into RSS format.
+;;
+;; Basically it exports X records into an 'index' file which contains the users
+;; latest RSS records.  All other RSS records are saved into a DATE.rss file in
+;; the same export directory.  A contents.rss file contains all the dated
+;; records files so that navigation based on dates is supported.   
+;;
+
+;;; Format:
+;;
+;; RSS export is done with the modern RSS 1.0 format:
+;;
+;; http://groups.yahoo.com/group/rss-dev/files/namespace.html
+;;
+;; In order for Emacs to parse this out correctly it uses comment tags so that
+;; we don't have to embed XML directly lisp.  Since these tags are just XML
+;; comments this does not break the XML format at all.
+;;
+;; Current tags:
+;;
+;; - <!-- BEGIN ITEMS -->
+;;
+;;   Marks the beginning of the RSS items 
+;;
+;; - <!-- END ITEMS -->
+;;
+;;   Marks the end of the RSS items 
+
+;;; TODO:
+;;
+;; - Support for images
+;;
+;; - Support for optional channel info (title, description, etc)
+;;
+;; - Use the link so that RSS records are not exported multiple times.
+;;
+;; - Incorporate indentation.
 
 (defvar records-rss-export-directory (concat records-directory "/rss")
   "Main directory for RSS export.")
 
 (defvar records-rss-index-file (concat records-rss-export-directory "/index.rss")  
   "File used for RSS index output.")
+
+(defconst records-rss-tag-begin-items "<!-- BEGIN ITEMS -->"
+  "Tag which marks the beginning of RSS items.")
+
+(defconst records-rss-tag-end-items "<!-- END ITEMS -->"
+  "Tag which marks the end of RSS items.")
+
 
 (defun records-rss-create-record(subject title url)
   "Create an RSS compatible record."
@@ -41,13 +89,13 @@
     (completing-read "Subject: " 
                      records-subject-table)
     (read-string "Title: ")
-    (read-string "url: ")))
+    (read-string "URL: ")))
 
   (records-insert-record subject)
 
   (records-metainfo-set "title" title)
   (records-metainfo-set "url" url)
-  (records-metainfo-set "rss" "true"))
+  (records-type-set "rss"))
 
 (defun records-rss-export-current-buffer()
   "Export the current buffer to RSS format."
@@ -58,43 +106,67 @@
   (records-rss-init)
   
   (save-excursion
-    (beginning-of-buffer)
+    (let((count 0))
+      (beginning-of-buffer)
 
-    ;;search for RSS metainfo tags
-    (while (re-search-forward "^rss: true$" nil t)
+      ;;search for RSS metainfo tags
+      (while (re-search-forward "^type: rss$" nil t)
+        (let(record-link title url description buffer)
 
-      (let(title url description buffer)
+          (setq count (1+ count))
 
-        (setq title (records-metainfo-get "title"))
-        (setq url (records-metainfo-get "url"))
+          (setq title (records-metainfo-get "title"))
+          (setq url (records-metainfo-get "url"))
+          (setq record-link (records-metainfo-get "link"))
 
-        (setq buffer (find-file-noselect records-rss-index-file))
+          
+          (setq buffer (find-file-noselect records-rss-index-file))
 
-        (records-rss-init-buffer buffer)
-        
-        (records-rss-export-record title url "description... asdf"
-                                   buffer)
-        
-        )))
+          (records-rss-init-buffer buffer)
 
-  ;;make a symbolic link between the current date and index.rss
-  )
+          (records-rss-export-record record-link
+                                     title
+                                     url
+                                     "FIXME: description... asdf"
+                                     buffer)
 
-(defun records-rss-export-record(title url description buffer)
+          ))
+
+      (message "Exported %i RSS record(s)." count)
+    
+    ))
+
+
+  (records-rss-save))
+
+(defun records-rss-save()
+  "Save any buffers that RSS export might have modified."
+
+  ;;save the index buffer
+  (save-excursion
+    (set-buffer (find-file-noselect records-rss-index-file))
+
+    (save-buffer)))
+
+(defun records-rss-export-record(record-link title url description buffer)
   "Export the current record and output the XML to the buffer.  "
 
   (set-buffer buffer)
 
   (insert "<item>\n")
 
+  (insert "<!-- record-link: " record-link " -->")
+  (insert "\n")
+
+  
   ;;title
-  (record-rss-insert-element "title" title)
+  (records-rss-insert-element "title" title)
   
   ;;link/url
-  (record-rss-insert-element "link" url)
+  (records-rss-insert-element "link" url)
   
   ;;description
-  (record-rss-insert-element "description" description)
+  (records-rss-insert-element "description" description)
   
   (insert "</item>\n"))
 
@@ -125,6 +197,8 @@
   ;;make sure we have beginning XML information
 
   (set-buffer buffer)
+
+  (beginning-of-buffer)
   
   (save-excursion
     (beginning-of-buffer)
@@ -140,13 +214,27 @@
           ;;FIXME: need output channel information
 
           (insert "<rdf:RDF ")
-          (insert "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\ ")
+          (insert "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ")
           (insert "xmlns=\"http://purl.org/rss/1.0/\"")
           (insert ">")
+          (insert "\n\n")
 
+          ;;FIXME: insert <channel> information
+          
+          (insert records-rss-tag-begin-items "\n")
+
+          (insert "\n\n\n")
+          
+          (insert records-rss-tag-end-items "\n")
+          
           (end-of-buffer)
 
-          (insert "</rdf:RDF>")))))
+          (insert "</rdf:RDF>"))))
+
+  (re-search-forward records-rss-tag-begin-items)
+  (forward-line 1)
+  
+  )
   
 
 (provide 'records-rss)
