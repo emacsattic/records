@@ -1,13 +1,16 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.16 1997/05/06 01:27:55 ashvin Exp $
+;;; $Id: records.el,v 1.17 1998/11/05 16:12:05 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
+; Revision 1.17  1998/11/05 16:12:05  ashvin
+; Many minor changes.
+;
 ; Revision 1.16  1997/05/06 01:27:55  ashvin
 ; 1. Fixes to records-goto-link to support arbitrary file-names.
 ; 2. Fixes to records-mark-record and records-mark-subject.
@@ -105,7 +108,7 @@
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
 ;;;
-(defconst records-version "1.1")
+(defconst records-version "1.2")
 
 (defvar records-mode-menu-map nil
   "Records Menu Map. Internal variable.")
@@ -368,7 +371,7 @@ Completion is possible."
 	  (list (completing-read "Records subject: " records-subject-table))))
   subject)
 
-(defun records-compose-region (beg end)
+(defun records-add-text-properties (beg end)
   "Fontify a records region, make read-only etc.
 Look at variables records-fontify and records-subject-read-only.
 This function is currently only invoked for a records subject.
@@ -389,6 +392,12 @@ Any better solution?"
 	(if records-subject-read-only
 	    (add-text-properties beg end '(read-only records-subject))))))
 
+(defun records-remove-text-properties (s) 
+  "Remove the text properties of string in a record.
+Called when killing a region in records mode."
+  ;; length is probably going to be slow
+  (remove-text-properties 0 (length s) '(face nil read-only nil) s))
+
 (defun records-parse-buffer ()
   "Parses the records buffer and fontifies record subjects etc."
   (save-excursion
@@ -399,7 +408,7 @@ Any better solution?"
 	  (while (progn;;  a do-while loop
 		   (records-mark-subject)
 		   ;; fontify region, make read-only etc.
-		   (records-compose-region (point) (mark))
+		   (records-add-text-properties (point) (mark))
 		   ;; goto next record - returns nil when no more exist
 		   (records-goto-down-record)))
 	  (and (not modified) (buffer-modified-p)
@@ -503,7 +512,7 @@ TODO: non interactive calls should pop-mark also."
     (insert "* " subject "\n")
     (insert-char ?- (+ (length subject) 2))
     (insert (concat "\n" (records-make-link subject date tag) "\n"))
-    (records-compose-region opoint (point))
+    (records-add-text-properties opoint (point))
     (if record-body
 	(insert record-body))))
 
@@ -877,7 +886,7 @@ The key-bindings of this mode are:
   (define-key records-mode-map "\C-c\C-l" 'records-goto-last-record)
 
   (define-key records-mode-map "\C-c\C-g" 'records-goto-link)
-  (define-key records-mode-map [M-S-mouse-1] 'records-goto-mouse-link)
+  ;; (define-key records-mode-map [M-S-mouse-1] 'records-goto-mouse-link)
 
   ;; utility functions have C-c/ prefix keys
   (define-key records-mode-map "\C-c/e" 'records-encrypt-record)
@@ -894,106 +903,73 @@ The key-bindings of this mode are:
   (define-key records-mode-map "\M-\C-h" 'records-mark-record)
   (define-key records-mode-map "\C-c\C-z" 'records-initialize);; zap it in
 
+  (eval-when-compile (require 'easymenu))
   (if records-mode-menu-map
       ()
-    (setq records-mode-menu-map (make-sparse-keymap))
-    (define-key records-mode-map [menu-bar] (make-sparse-keymap))
-    (define-key records-mode-map [menu-bar records] (cons "Records" 
-						      records-mode-menu-map))
-
-    (define-key records-mode-menu-map [records-initialize] 
-      '("Re-Init Records" . records-initialize))
-
-    (define-key records-mode-menu-map [separator-0] '("--"))
-
-    (define-key records-mode-menu-map [records-underline-line] 
-      '("Underline Line" . records-underline-line))
-    (define-key records-mode-menu-map [records-link-as-kill] 
-      '("Copy Records Link" . records-link-as-kill))
-    (define-key records-mode-menu-map [records-mark-record] 
-      '("Mark Record" . records-mark-record))
-
-    (define-key records-mode-menu-map [separator-3] '("--"))
-
-    (define-key records-mode-menu-map [records-goto-calendar] 
-      '("Goto Calendar" . records-goto-calendar))
-    (define-key records-mode-menu-map [records-todo] 
-      '("Get TODO's" . records-todo))
-    (define-key records-mode-menu-map [records-concatenate-record-files] 
-      '("Concat Record Files" . records-concatenate-record-files))
-    (define-key records-mode-menu-map [records-concatenate-records] 
-      '("Concat Records" . records-concatenate-records))
-
-    (define-key records-mode-menu-map [separator-6] '("--"))
-
-    (define-key records-mode-menu-map [records-encrypt-record]
-      '("Encrypt Record" . records-encrypt-record))
-    (define-key records-mode-menu-map [records-decrypt-record]
-      '("Decrypt Record" . records-decrypt-record))
-
-    (define-key records-mode-menu-map [separator-9] '("--"))
-
-    (define-key records-mode-menu-map  [records-rename-record] 
-      '("Rename Record" . records-rename-record))
-    (define-key records-mode-menu-map  [records-delete-record] 
-      '("Delete Record" . records-delete-record))
-    (define-key records-mode-menu-map  [records-insert-record] 
-      '("Insert Record" . records-insert-record))
-
-    (define-key records-mode-menu-map [separator-12] '("--"))
-
-    (define-key records-mode-menu-map [records-goto-last-record] 
-      '("Goto Last Record" . records-goto-last-record))
-    (define-key records-mode-menu-map [records-goto-link] 
-      '("Goto Records Link" . records-goto-link))
-    (define-key records-mode-menu-map  [records-goto-index] 
-      '("Goto Index" . records-goto-index))
-
-    (define-key records-mode-menu-map [separator-15] '("--"))
-
-    (define-key records-mode-menu-map  [records-goto-next-day] 
-      '("Next Day" . records-goto-next-day))
-    (define-key records-mode-menu-map  [records-goto-prev-day] 
-      '("Prev Day" . records-goto-prev-day))
-
-    (define-key records-mode-menu-map [separator-18] '("--"))
-
-    (define-key records-mode-menu-map  [records-goto-next-record-file] 
-      '("Next Record File" . records-goto-next-record-file))
-    (define-key records-mode-menu-map  [records-goto-prev-record-file] 
-      '("Prev Record File" . records-goto-prev-record-file))
-
-    (define-key records-mode-menu-map [separator-21] '("--"))
-
-    (define-key records-mode-menu-map  [records-goto-next-record] 
-      '("Next Record" . records-goto-next-record))
-    (define-key records-mode-menu-map  [records-goto-prev-record] 
-      '("Prev Record" . records-goto-prev-record))
-
-    (define-key records-mode-menu-map [separator-24] '("--"))
-
-    (define-key records-mode-menu-map [records-goto-down-record] 
-      '("Down Record" . records-goto-down-record))
-    (define-key records-mode-menu-map [records-goto-up-record] 
-      '("Up Record" . records-goto-up-record))
-
-    (define-key records-mode-menu-map [separator-27] '("--"))
-
-    (define-key records-mode-menu-map [records-goto-today] 
-      '("Today's Record" . records-goto-today))
+    (setq records-mode-menu-map
+	  '(["Today's Record" records-goto-today t]
+	    "--"
+	    ["Up Record" records-goto-up-record t]
+	    ["Down Record" records-goto-down-record t]
+	    "--"
+	    ["Prev Record" records-goto-prev-record t]
+	    ["Next Record" records-goto-next-record t]
+	    "--"
+	    ["Prev Record File" records-goto-prev-record-file t]
+	    ["Next Record File" records-goto-next-record-file t]
+	    "--"
+	    ["Prev Day" records-goto-prev-day t]
+	    ["Next Day" records-goto-next-day t]
+	    "--"
+	    ["Goto Index" records-goto-index t]
+	    ["Goto Records Link" records-goto-link t]
+	    ["Goto Last Record" records-goto-last-record t]
+	    "--"
+	    ["Insert Record" records-insert-record t]
+	    ["Delete Record" records-delete-record t]
+	    ["Rename Record" records-rename-record t]
+	    "--"
+	    ["Decrypt Record" records-decrypt-record t]
+	    ["Encrypt Record" records-encrypt-record t]
+	    "--"
+	    ["Concat Records" records-concatenate-records t]
+	    ["Concat Record Files" records-concatenate-record-files t]
+	    ["Get TODO's" records-todo t]
+	    ["Goto Calendar" records-goto-calendar t]
+	    "--"
+	    ["Mark Record"  records-mark-record t]
+	    ["Copy Records Link" records-link-as-kill t]
+	    ["Underline Line" records-underline-line t]
+	    "--"
+	    ["Re-Init Records" records-initialize t]
+	    ))
+    (if running-xemacs
+	()
+      (define-key records-mode-map [menu-bar] (make-sparse-keymap))
+      (setq records-mode-menu-map
+	    (cons "Records" (easy-menu-create-keymaps nil 
+						      records-mode-menu-map)))
+      (define-key records-mode-map [menu-bar records] records-mode-menu-map))
     )
+  (if running-xemacs
+      (progn 
+	(set-buffer-menubar current-menubar)
+	(add-submenu nil (cons "Records" records-mode-menu-map))))
 
   ;; imenu stuff 
-  (eval-when-compile (require 'imenu))
-  (make-variable-buffer-local 'imenu-prev-index-position-function)
-  (make-variable-buffer-local 'imenu-extract-index-name-function)
-  (setq imenu-prev-index-position-function 'records-goto-up-record)
-  (setq imenu-extract-index-name-function 'records-subject-tag)
+  (if (locate-library "imenu")
+      (progn
+	(require 'imenu)
+	(make-variable-buffer-local 'imenu-prev-index-position-function)
+	(make-variable-buffer-local 'imenu-extract-index-name-function)
+	(setq imenu-prev-index-position-function 'records-goto-up-record)
+	(setq imenu-extract-index-name-function 'records-subject-tag)))
 
   (records-parse-buffer)
+  (make-local-hook 'kill-hooks)
+  (add-hook 'kill-hooks 'records-remove-text-properties nil t)
   (if records-initialize
       ()
-    ;; (message "HI")
     (records-initialize)
     (setq records-initialize t))
   (run-hooks 'records-mode-hooks)
