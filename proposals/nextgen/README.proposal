@@ -1,0 +1,124 @@
+********************************************************************************
+*** Last-Modified: $Date: 2001/05/13 02:16:06 $ 
+*** Version: $Id: README.proposal,v 1.1 2001/05/13 02:16:06 burtonator Exp $
+*** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
+********************************************************************************
+
+** Introduction:
+
+This is a proposal for the next generation (2.0?) of records-mode.  It is based
+on records 1.4.8 so there may be some features missing which were added to the
+1.4.9 release.
+
+It was written on a mix of GNU Emacs 20.x and GNU Emacs 21.  It might have
+problems with XEmacs.  This should be fixed prior to release as the current
+records-mode works on XEmacs and we don't want to remove this.  It relies on a
+few modern Emacsen feature such as (point-at-eol) which are not in 20.x.  If
+this is a problem we can make some changes prior to release.
+
+It also relies on GNU Emacs font-lock-add-keywords and should use
+font-lock-defaults like XEmacs uses.  I don't have a clean solution to this
+right now as getting font-lock to work across XEmacs and GNU Emacs is very
+ugly.
+
+** Features:
+
+- Preserve old format while allowing new features to be added under a new
+  format.  I am version stamping all new records files so that we know with what
+  file format is was created with.  Then our functions can do a
+  (records-format-require-version "1.0.4") and if the file format version number
+  is not >= to this value an error will be thrown.  This is important because I
+  want to enable some advanced features that won't work on the old file format.
+  A good example is that metainfo is terminated by a "-- ".  So for example:
+
+
+  * News
+  ------
+  link: ../../2001/05/02052001#2* News
+  created: Wed May 02 2001 04:39 PM
+  url: http://linuxtoday.com/news_story.php3?ltsn=2001-05-02-019-20-NW-CY-MS
+  title:  Eric S. Raymond: Beware the Microsoft shell game
+  --
+
+  This allows us to have a known termination of the metainfo.  We wouldn't want
+  to use the same function which indexes this record format run across the old
+  records so we require a specific version number.  
+
+- All records can have a status (todo|completed|working).  This should replace
+  the current TODO and END_TODO stuff.  This allows us to query on the metainfo
+  just like before.  I am not sure how involved this will be because I don't use
+  the TODO feature much.
+
+- Add support for SUPPLEMENTAL record information.  This will allow us to add
+  information as a aside after the record was created.
+
+- Ability to query and generate reports from your records.  This is important
+  because the larger our records files grow the more we will want to do date
+  mining across the files.  
+
+- Need to flatten out the menus a little bit.  Right now the menus are getting
+  too long with way too many options.  We should have a menu system similar to
+  the way w3 lays out it's menu.  
+
+- Incorporation of "owner" information.  This information can be used so that
+  each record file could have information about the person who created it.  This
+  way we can have copyright information on each file and privacy notices.  This
+  is also needed for RSS export (see below).
+
+- Each new records receives a "creation-time" so that we can keep track of when
+  a given record was originally created.
+
+- Need to support hierarchical subjects:
+
+    Need a better way to structure Subjects.  It should be possible to have a
+    subject hierarchy (similar to an object hierarchy).  
+
+    Book -> Class Guide to Better Writing
+
+    This way we don't have to have one subject with Book:Classic Guide to Better
+    Writing as one long subject.  
+
+    We will need a major mode for managing the subject hierarchy.  This should also
+    include the number of sub records each subject has.  
+    
+    /Books [200]
+       Classic Guide to Better Writing [140]
+       Age of Spiritual Machines [60]
+
+    The Subject line in each record should render the hierarchy:
+
+    Classic Guide to Better Writing
+    |
+    \_ Books
+
+    This feature also needs to support completion with hierarchy.
+
+- Need to support metainfo for all records.  Users should be able to add user
+  defined fields for each record.  For example a user could add a "title" or a
+  "url" for a record.  This metainfo should be font-locked just like the link:
+  item.  The link item should be changed to normal metainfo. 
+
+- Need the ability to export certain subjects (News) to RSS format for
+  publication and syndication to websites.  The metainfo is needed here so that
+  we can include some fields that are needed/optional for RSS.
+
+- Need to have a comment character for records-mode.  Right now I have an
+  implementation that uses "//".  
+
+- Ability to bring up the calendar when you change between days.  I am
+  highlighting the current day that is being viewed.
+
+- Ability to add ATTACHMENTS to records.  These would be text blobs related to
+  the current record but you could hide the blob if you wanted to.  A good
+  example of this would be large sections of text taken from websites or e-mail.
+  I have noticed that some records contain large sections of text that are not
+  really part of the original record.  If would be nice if I could use this to
+  mark large sections of non-relevant text.
+
+** Future:
+
+All approved features should be migrated into the mainstream records and
+possibly released as a 2.0 version.
+
+
+- Kevin A. Burton
