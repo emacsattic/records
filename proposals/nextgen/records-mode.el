@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.5 2001/05/26 18:37:18 burtonator Exp $
+;; $Id: records-mode.el,v 1.6 2001/05/29 00:45:01 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -111,7 +111,11 @@ The key-bindings of this mode are:
              (make-local-variable 'font-lock-defaults)
              (setq font-lock-defaults '(records-mode-font-lock-keywords))
              (font-lock-mode 1)))
-  (run-hooks 'records-mode-hooks))
+  (run-hooks 'records-mode-hooks)
+
+  ;;save the buffer because read-only settings and fontification, etc may flag
+  ;;the buffer as changed.
+  (save-buffer))
 
 
 (define-key records-mode-map "\C-c\C-i" 'records-insert-record)
