@@ -1,14 +1,19 @@
 ;;;
 ;;; notes-index.el
 ;;;
-;;; $Id: records-index.el,v 1.7 1996/12/13 19:58:17 asgoel Exp $
+;;; $Id: records-index.el,v 1.8 1996/12/15 04:53:41 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-index.el,v $
-; Revision 1.7  1996/12/13 19:58:17  asgoel
+; Revision 1.8  1996/12/15 04:53:41  asgoel
+; 1. Removed some todo's.
+; 2. Added documentation about return values of functions.
+; 3. Added notes-tag macro.
+;
+; Revision 1.7  1996/12/13  19:58:17  asgoel
 ; Fixed error messages.
 ; Added support for notes-goto-last-note.
 ;
@@ -63,11 +68,7 @@ Initialized when the notes date index file is loaded.")
   (define-key notes-index-mode-map "\r" 'notes-index-goto-link)
   (define-key notes-index-mode-map "\C-c\C-j" 'notes-index-goto-link)
   (define-key notes-index-mode-map [mouse-2] 
-    'notes-index-goto-mouse-link)
-  ;; (define-key notes-index-mode-map [S-mouse-2]
-  ;; 'notes-index-mouse-follow-link-other-window)
-  ;; (define-key notes-index-mode-map "o" 'notes-index-link)
-  )
+    'notes-index-goto-mouse-link))
 
 (defun notes-index-mode ()
   "Notes-index-mode with mouse support.
@@ -148,7 +149,7 @@ If modified is t, check the file modification time since being visited."
 	     (get-buffer buf))
 	(save-excursion
 	  (set-buffer buf)
-	  ;; TODO: no message required
+	  ;; no message would be better
 	  (save-buffer)))))
 
 (defun notes-index-goto-subject (subject &optional switch no-error modified)
@@ -184,11 +185,8 @@ If no-error is nil, raise error if (date, tag) doesn't exist.
 if no-error is t, return nil if (date, tag) doesn't exist and 
 place point on the smallest (date, tag) pair greater than (date, tag)."
   ;; first check if (date, tag) exists
-  ;; TODO: check if this can be a regexp macro with optional date, tag 
-  (if (re-search-forward (concat date (if (> (length tag) 0) (concat "#" tag)))
-			 (point-eoln) t)
-      ;; found
-      (progn
+  (if (re-search-forward (concat date (notes-tag tag)) (point-eoln) t)
+      (progn ;; found
 	(goto-char (match-beginning 0))
 	(list date tag))
     ;; (date, tag) not found
@@ -249,7 +247,8 @@ or nil if the next (date, tag) doesn't exist."
 
 (defun notes-index-goto-relative-date-tag(&optional arg date tag)
   "Invoke notes-index-goto-prev-date-tag or notes-index-goto-next-date-tag
-depending on whether arg is negative or positive."
+depending on whether arg is negative or positive.
+Returns the new (date, tag)."
   (let ((date-tag (if date (notes-index-goto-date-tag date tag t))))
     (cond ((null arg) date-tag)
 	  ((= arg 0) date-tag)
@@ -322,7 +321,7 @@ depending on whether arg is negative or positive."
 	(error (concat "notes-index-insert-note: Note " date " " tag 
 		       " exists already."))
       ;; now insert
-      (insert (concat date (if (> (length tag) 0) (concat "#" tag)) " "))
+      (insert (concat date (notes-tag tag) " "))
       (notes-index-save-buffer)
       (setq buffer-read-only t)
       )))
