@@ -1,14 +1,17 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.11 1996/12/16 16:55:20 asgoel Exp $
+;;; $Id: records.el,v 1.12 1996/12/16 17:31:39 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.11  1996/12/16 16:55:20  asgoel
+; Revision 1.12  1996/12/16 17:31:39  asgoel
+; Cleaned up notes-todo.
+;
+; Revision 1.11  1996/12/16  16:55:20  asgoel
 ; Added more notes-concatenate variables for customization.
 ;
 ; Revision 1.10  1996/12/15  05:02:06  asgoel
@@ -146,7 +149,7 @@ If not nil and not t, user is asked whether notes-todo should be invoked.")
 
 (defvar	notes-todo-begin-copy-regexp "^CTODO: "
   "* The beginning of the copy todo is recognized by this regexp.")
-(defvar	notes-todo-begin-move-regexp "^MTODO: "
+(defvar	notes-todo-begin-move-regexp "^TODO: "
   "* The beginning of the move todo is recognized by this regexp.")
 (defvar	notes-todo-end-regexp "^\n\n"
   "* The end of both the copy and move todo is recognized by this regexp.")
@@ -308,6 +311,18 @@ like notes-date, notes-date-length, etc."
        ;; "^\\* \\(.*\\)\n\\-+$"
        "^\\* \\(.*\\)\n\\-\\-\\-+$"
        )))
+
+(defmacro notes-subject-on-concat (subject)
+  "Make subject for notes concatenation."
+  (` (let ((sub (concat notes-subject-prefix-on-concat (, subject)
+			notes-subject-suffix-on-concat)))
+       (concat sub "\n" (make-string (length sub) ?-) "\n"))))
+
+(defmacro notes-date-on-concat (date)
+  "Make date for notes concatenation."
+  (` (let ((d (concat notes-date-prefix-on-concat (, date)
+			notes-date-suffix-on-concat)))
+       (concat d "\n" (make-string (length d) ?-) "\n"))))
 
 (defun point-boln ()
   "Return the boln as a position."
@@ -844,7 +859,6 @@ Identical note files are not put in the history consecutively."
     (setq notes-history (cdr notes-history))
     (apply 'notes-goto-note link)))
 
-;; TODO: should break function up
 (defun notes-todo (&optional date)
   "Insert the previous note files todo's into the date file.
 See the notes-todo-.*day variables on when it is automatically invoked."
@@ -852,73 +866,53 @@ See the notes-todo-.*day variables on when it is automatically invoked."
   (if (null date)
       (setq date (notes-file-to-date)))
   (save-excursion
-    (let ((date-buf (current-buffer))
-	  (prev-date (notes-goto-prev-note-file 1 t)))
-      (if (and prev-date
-	       (goto-char (point-min)) ;; always true
-	       (notes-goto-down-note nil t)) ;; first note exists
+    (let* ((date-buf (current-buffer))
+	   (prev-date (notes-goto-prev-note-file 1 t))
+	   (cur-buf (current-buffer)))
+      (if (null prev-date)
+	  () ;; nothing to do
+	(goto-char (point-min))
+	(while (notes-goto-down-note nil t) ;; note exists
 	  ;; start the magic
-	  (let ((subject (nth 0 (notes-subject-tag t))) ;; first note
-		(bon-point (point))
-		(eon-point (point-max))
-		(cur-buf (current-buffer))
-		next-subject bt-point et-point move subject-inserted)
-	    (while 
-		(progn;; do-while loop
-		  (save-excursion
-		    ;; get the end of note and the next subject
-		    (if (notes-goto-down-note)
-			(progn 
-			  (setq next-subject (nth 0 (notes-subject-tag t)))
-			  (setq eon-point (point)))
-		      (setq eon-point (point-max))
-		      (setq next-subject nil)))
-		  ;; process all the todo's in the current note
-		  (while (re-search-forward notes-todo-begin-regexp eon-point
-					    'eon-point)
-		    ;; do the copy/move thing for the current todo
-		    (setq bt-point (match-beginning 0))
-		    (setq move (match-beginning 2))
-		    (if (re-search-forward notes-todo-end-regexp eon-point 
-					   'eon-point);; goto end of todo
-			(setq et-point (match-end 0))
-		      (setq et-point (point)))
-		    ;; for move, save the regions in the old file
-		    (if move
-			(setq notes-todo-move-regions
-			      (cons (list bt-point et-point) 
-				    notes-todo-move-regions)))
-		    ;; now copy the region to the new file
-		    (save-excursion
-		      (set-buffer date-buf)
-		      (goto-char (point-max))
-		      (if (not subject-inserted)
-			  (progn (notes-insert-note subject)
-				 (setq subject-inserted t)))
-		      (insert-buffer-substring cur-buf bt-point et-point)
-		      ;; insert an extra newline
-		      (insert "\n")))
-		  ;; going to next note: reset variables
-		  (setq subject next-subject)
-		  (setq bon-point eon-point)
-		  (setq subject-inserted nil) 
-		  subject))
-	    ;; end of processing of all notes
-	    ;; for todo-moves - remove regions from old file
-	    (let ((modified (buffer-modified-p)))
-	      (while notes-todo-move-regions
-		(goto-char (car (car notes-todo-move-regions)))
-		(apply 'delete-region (car notes-todo-move-regions))
-
-		;; do the notes-todo-delete-empty-note
-		(if (and notes-todo-delete-empty-note (notes-body-empty-p))
-		    (notes-delete-note nil t))
-
-		(setq notes-todo-move-regions
-		      (cdr notes-todo-move-regions)))
-	      (and (not modified) (buffer-modified-p)
-		   (save-buffer)))
-	    )))))
+	  (let* ((subject (nth 0 (notes-subject-tag t))) ;; first note
+		 (bon-point (notes-mark-note))
+		 (eon-point (mark))
+		 bt-point et-point move subject-inserted)
+	    ;; process all the todo's in the current note
+	    (while (re-search-forward notes-todo-begin-regexp eon-point 'end)
+	      ;; do the copy/move thing for the current todo
+	      (setq bt-point (match-beginning 0))
+	      (setq move (match-beginning 2))
+	      ;; goto end of todo
+	      (if (re-search-forward notes-todo-end-regexp eon-point 'end)
+		  (setq et-point (match-end 0))
+		(setq et-point (point)))
+	      ;; for move, save the regions in the old file
+	      (if move (setq notes-todo-move-regions 
+			     (cons (list bt-point et-point)
+				   notes-todo-move-regions)))
+	      ;; now copy the region to the new file
+	      (save-excursion
+		(set-buffer date-buf)
+		(goto-char (point-max))
+		(if (not subject-inserted)
+		    (progn (notes-insert-note subject) 
+			   (setq subject-inserted t)))
+		(insert-buffer-substring cur-buf bt-point et-point)
+		;; insert an extra newline - this is useful for empty notes
+		(insert "\n")))))
+	;; end of note processing. for todo-move, remove regions from old file
+	(let ((modified (buffer-modified-p)))
+	  (while notes-todo-move-regions
+	    (goto-char (car (car notes-todo-move-regions)))
+	    (apply 'delete-region (car notes-todo-move-regions))
+	    ;; do the notes-todo-delete-empty-note
+	    (if (and notes-todo-delete-empty-note (notes-body-empty-p))
+		(notes-delete-note nil t))
+	    (setq notes-todo-move-regions
+		  (cdr notes-todo-move-regions)))
+	  (and (not modified) (buffer-modified-p) (save-buffer)))
+	))))
 
 (defun notes-insert-note(&optional subject note-body)
   "Insert a new note for the current date. Asks for the subject."
@@ -1017,18 +1011,6 @@ Notes decryption requires the mailcrypt and mc-pgp packages."
 		      mc-pgp-signed-begin-line "\\)") (mark) t))
 	(error "notes-decrypt-note: note is not encrypted."))
     (mc-pgp-decrypt-region (match-beginning 0) (mark))))
-
-(defmacro notes-subject-on-concat (subject)
-  "Make subject for notes concatenation."
-  (` (let ((sub (concat notes-subject-prefix-on-concat (, subject)
-			notes-subject-suffix-on-concat)))
-       (concat sub "\n" (make-string (length sub) ?-) "\n"))))
-
-(defmacro notes-date-on-concat (date)
-  "Make date for notes concatenation."
-  (` (let ((d (concat notes-date-prefix-on-concat (, date)
-			notes-date-suffix-on-concat)))
-       (concat d "\n" (make-string (length d) ?-) "\n"))))
 
 (defun notes-concatenate-notes (num)
   "Concatenate the current note with the notes on the same subject written
