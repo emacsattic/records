@@ -2,13 +2,17 @@
 
 ### notesadmin.in
 ###
-### $Id: recordsadmin.in,v 1.7 1997/01/23 00:02:35 ashvin Exp $
+### $Id: recordsadmin.in,v 1.8 1997/01/23 17:04:32 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
+# Revision 1.8  1997/01/23 17:04:32  ashvin
+# Added -n option.
+# Added some more useful output for the user.
+#
 # Revision 1.7  1997/01/23 00:02:35  ashvin
 # The first release
 #
@@ -137,7 +141,7 @@ MORE_MESG
 # Start the bang bang
 #
  
-if (!getopts('hdvic')) {
+if (!getopts('hdvicn')) {
     &usage();
 }
 
@@ -161,7 +165,10 @@ if ($opt_c) {
     &notes_convert_format();
 }
 
-&notes_recreate_indexes();
+if (!$opt_n) {
+   print "Indexing all your notes...\n";
+   &notes_recreate_indexes();
+}
 exit(0);
 
 sub usage {
@@ -173,8 +180,9 @@ install notes defaults, convert date and directory formats, etc.
 
 where options are:
 	[-h]	this usage message
-	[-i]	install notes defaults
-	[-c]	converts one date and directory format to another
+	[-i]	install notes defaults and then reindexes notes
+	[-c]	converts one date and directory format to another and reindex
+	[-n]	do not reindex notes (useful with -i or -c)
 	[-d]	run in debug mode
 	[-v]	run in verbose mode
 ";
@@ -747,12 +755,18 @@ sub notes_make_dindex {
 
 sub notes_install_init_file {
     local($init) = &notes_read_init_file();
+    local($val);
     if ($init) {
 	print "You have a valid $notes_init_file.
 I will use its values to initialize your notes.
 Unless you know what you are doing, do not change these values.
 If you wish to change the date or directory format, use 
 $0 -c\n\n";
+	print "Do you still want to re-initialize your init file (y or n) ";
+	chop($val= <>);
+	if ($val eq "n") {
+	    return;
+	}
     }
 
     print "The default values of the variables are shown in parenthesis.
