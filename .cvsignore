@@ -1,4 +1,5 @@
 Makefile
+auto
 config.cache
 config.log
 config.status

@@ -1,7 +1,7 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.14 2000/04/17 21:09:30 ashvin Exp $
+;;; $Id: records-util.el,v 1.15 2001/04/11 18:14:12 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -386,5 +386,57 @@ at the end of today's record and inserts a comment."
       (insert "link: <" flink ">\n")
       (insert "" comment-string "\n")
       (other-window -1))))
+
+(defun records-insert-template (&optional arg)
+  "Insert a template into the current record based on the subject and the
+association list records-template-alist (see the variable). Suitable for
+calling from records-make-record-hook. Inserts template at end of record.
+With non-null argument, inserts at beginning of record body.
+
+Example hook:
+ (add-hook 'records-make-record-hook 
+          (function (lambda ()
+                      (records-insert-template current-prefix-arg))))
+"
+  (interactive "P")
+  (eval-when-compile (require 'tempo))
+  (let ((subject nil)
+        (tmpl nil)
+        point-pair)
+    (save-excursion
+      (setq subject (records-goto-subject)))
+    (setq tmpl (cdr (assoc subject records-template-alist)))
+    (if tmpl
+        (progn
+          (setq point-pair (records-record-region t))
+          (if arg
+              (goto-char (first point-pair))
+            (goto-char (second point-pair)))
+          (tempo-insert-template 'tmpl nil)
+          ))))
+
+(defvar records-saved-subject-read-only nil)
+
+(defun records-outline-mode (&optional arg)
+  "Toggle outline minor mode for a records file.
+With arg, turn outline minor mode on if arg is positive, off otherwise.
+See the command `outline-mode' for more information on this mode."
+  (interactive "P")
+  (outline-minor-mode arg)
+  (make-local-variable 'records-saved-subject-read-only)
+  (if (eq outline-minor-mode t)
+      ;; outline-minor-mode was turned on
+      (if records-subject-read-only
+          (progn 
+            ;; make records-subject-read-only nil and remove the read-only
+            ;; property so that subjects can be hidden
+            (setq records-saved-subject-read-only t)
+            (setq records-subject-read-only nil)
+            (records-remove-read-only-property)
+            ))
+    ;; outline-minor-mode was turned off
+    (setq records-subject-read-only records-saved-subject-read-only)
+    (records-parse-buffer)
+    ))
 
 (provide 'records-util)

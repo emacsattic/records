@@ -1,9 +1,10 @@
 ;;;;
 ;;; records-tex.el: functions for working with latex mode on records-mode 
 ;;;                 records
-;;; $Id: records-tex.el,v 1.1 2000/04/17 21:09:30 ashvin Exp $
+;;; $Id: records-tex.el,v 1.2 2001/04/11 18:14:12 ashvin Exp $
 ;;;
 ;;; Copyright (C) 2000 by Johan W. Klüwer
+;;; Copyright (C) 2000 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
@@ -84,6 +85,8 @@ in the entire buffer. Used by hyperref.sty latex style file."
       ))
   (message "Use M-x records-widen-latex to switch back to records mode."))
 
+;;; TODO: should check that going to records-mode makes sense
+;;; (possibly by checking the name of the file).
 ;;;###autoload
 (defun records-widen-latex ()
   "Widen records-file buffer and switch from latex to records-mode."

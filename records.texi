@@ -124,7 +124,10 @@ emacs calendar is also available.
 You can get the latest version of records from
 
 @noindent
-@uref{http://www.cse.ogi.edu/~ashvin/software.html}
+@uref{http://www.cse.ogi.edu/~ashvin/software.html}. Soon this project
+will be migrating to @uref{http://sourceforge.net}. Then the latest
+version will be available from
+@uref{http://sourceforge.net/projects/records}.
 
 @node Installation, Tutorial, Location, Top
 @chapter Installation
@@ -153,6 +156,9 @@ elisp files in the current directory (in which you are right now) will
 automatically add the current directory to the load path in emacs. So if
 you wish to move the records software to some other emacs-related
 directory, now is the time to do it.
+
+@item
+If you are installing records on Windows, read INSTALL-NT first.
 
 @item
 Run @code{./configure} or @code{./configure --enable-xemacs}
@@ -243,6 +249,11 @@ often. Bind the function to a simple key.
            (lambda () 
              (define-key LaTeX-mode-map "\C-clw" 'records-widen-latex))))
 
+; Hook to insert a template when a record is inserted. 
+; See function records-insert-template 
+(add-hook 'records-make-record-hook
+          (function (lambda ()
+                      (records-insert-template current-prefix-arg))))
 ;;;*** OPTIONAL ***;;;
 
 ; If you like abbrev mode 
@@ -259,6 +270,9 @@ often. Bind the function to a simple key.
                   (turn-on-auto-fill)
                   (turn-on-filladapt-mode)
                   )))
+
+; If you want to always start up in outline mode
+(add-hook 'records-mode-hooks 'records-outline-mode)
 
 ; Using imenu: imenu will invoke a popup menu of records subjects
 ; 1. In Xemacs:
@@ -322,7 +336,6 @@ Remember that if you just have one record file (today's) then records
 traversal's are not very useful!
 
 @item 
-
 The program @file{recordsadmin} has been provided in the distribution in
 order to administer your records. You should not need to use
 @file{recordsadmin} in normal records use. @file{recordsadmin} 1)
@@ -452,13 +465,12 @@ a record file does not exist, one will be created.
 @kindex C-c C-t
 
 @item records-goto-link
-
-Key @kbd{C-c C-g}. Key @kbd{Button2}. Goto the link around point in the
-records file. A link in a records file must be enclosed within @kbd{<}
-and @kbd{>}. This link can be a records link or a web link such as an
-http, FTP, gopher, news message link. It can also be an html link like
-@uref{<a href=http://www.yahoo.com>} or @uref{<http://www.yahoo.com>}. A
-records link identifies a record (@pxref{What is a Record}). This record
+Key @kbd{C-c C-g}. Goto the link around point in the records file. A
+link in a records file must be enclosed within @kbd{<} and @kbd{>}. This
+link can be a records link or a web link such as an http, FTP, gopher,
+news message link. It can also be an html link like @uref{<a
+href=http://www.yahoo.com>} or @uref{<http://www.yahoo.com>}. A records
+link identifies a record (@pxref{What is a Record}). This record
 identifier can be copied to any other record and this function used to
 jump back to the record associated with the link.  For instance, if you
 copied this link @uref{<../../99/04/042199#* Work>} into some other
@@ -468,11 +480,16 @@ link is a web link, the link is handed off to
 @code{browse-url-browser-function}. When the link is a news message
 link, @code{deja.com} is searched for the news message.
 @kindex C-c C-g
-@kindex Button2
 
 Note that C-g can be typed only after sometime has elapsed after typing
 C-c or else the command gets aborted because of the behavior of
 C-g. This is either an emacs bug or this binding ought to be changed.
+
+@item records-goto-mouse-link
+Key @kbd{Button2}. When mouse is clicked on a link, goto the link. See
+@code{records-goto-link} for more details. When mouse is clicked
+anywhere else, invoke the default mouse binding.
+@kindex Button2
 
 @item records-goto-last-record
 Key @kbd{C-c C-l}. Go back to the last record file visited. Identical
@@ -520,6 +537,19 @@ date. Interactively asks for the subject. Subject completion is
 available with the @key{TAB} key.
 @kindex C-c C-i
 
+You can insert templates when a new record is inserted. Look at the
+online documentation of the @code{records-insert-template} function and
+the @code{records-template-alist} variable. From Rob Tillotson, the
+author of the template code:
+@quotation 
+In essence, with templates, records becomes a sort of ad-hoc database of
+journals, bibliographic information, contact logs, and all kinds of
+other random stuff. There might be advantages to keeping this kind of
+stuff in an SQL server or something, but records is convenient and
+easily greppable and doesn't require me to screw around with building
+databases (if I need to add a field, I can just type it in)... 
+@end quotation
+
 @item records-delete-record
 Key @kbd{C-c C-d}. Delete the current record for the current date.
 With argument, removes the subject only, so the body is preserved. If
@@ -545,6 +575,14 @@ for the new date.
 @section Miscellaneous Commands
 
 @ftable @code
+@item records-popup-mode-menu
+Key @kbd{Button3}. When mouse is clicked on a link, popup a link-specific menu.
+When mouse is clicked anywhere else, invoke the default popup menu.
+@kindex Button3
+
+@item records-outline-mode
+
+
 @item records-goto-calendar
 Key @kbd{C-c C-c}. Goto the emacs calendar with the cursor on the date
 in the current record file.
@@ -632,6 +670,7 @@ This section describes the advanced records commands.
 * Security::                    Securing records with encryption.
 * Concatenating Records::       Collecting your past records together.
 * Editing In LaTeX mode::       Editing Records In LaTeX mode.
+* Editing In Outline mode::     Editing Records In Outline minor mode.
 @end menu
 
 @node Organizing your TODOs, Security, Advanced Use, Advanced Use
@@ -691,9 +730,9 @@ The default value of records-todo-begin-move-regexp is "TODO: ". The
 default value of records-todo-end-regexp is "END_TODO". The comment
 added by @code{records-create-todo} is just part of the TODO text and
 can be removed.You can change these regexps if you like. Use @kbd{C-h v}
-to examine the values of these variables. You can have also have
-multiple TODOs within a record. If you want a todo to be copied instead
-of moved, then use CTODO, instead of TODO. Look at
+to examine the values of these variables. You can also have multiple
+TODOs within a record. If you want a todo to be copied instead of moved,
+then use CTODO, instead of TODO. Look at
 @code{records-todo-begin-copy-regexp}.  NOTE: the value of
 @code{records-todo-begin-move-regexp, records-todo-begin-copy-regexp,
 records-todo-end-regexp} has changed after records version 1.3. In fact,
@@ -773,7 +812,7 @@ are concatenated in date order.
 @ftable @code
 @item records-concatenate-records
 @vindex records-output-buffer 
-Key @kbd{C-c / c}. Concatenate the current record with the records on
+Key @kbd{C-c + c}. Concatenate the current record with the records on
 the same subject written in the last @var{num} days. Output these
 records in the records output buffer. The name of this buffer is
 contained in the variable @code{records-output-buffer}. Without prefix
@@ -781,11 +820,11 @@ argument, prompts for number of days.  An empty string will output the
 current record only. A negative number will output all the past records
 on the subject! Normally, the records are output in most-recent first
 order. This function asks the user if the order should be reversed.
-@kindex C-c / c
+@kindex C-c + c
 
 @item records-concatenate-records-latex
 @vindex records-latex-output-buffer 
-Key @kbd{C-c l c}. Concatenate the current record with the records on
+Key @kbd{C-c + l}. Concatenate the current record with the records on
 the same subject written in the last @var{num} days. Output these
 records in latex format in the records latex output buffer. The name of
 this buffer is contained in the variable
@@ -795,25 +834,25 @@ string will output the current record only. A negative number will
 output all the past records on the subject!  Normally, the records are
 output in most-recent first order. This function asks the user if the
 order should be reversed.
-@kindex C-c l c
+@kindex C-c + l
 
 @item records-concatenate-record-files
-Key @kbd{C-c / f}. Concatenate all the records in the records files of
+Key @kbd{C-c + f}. Concatenate all the records in the records files of
 the last @var{num} days.  All the records of a subject are collected
 together. Output these records in the records output buffer (see
 above). Without prefix argument, the function prompts for the number of
 days. An empty string will output the records of the current file.
-@kindex C-c / f
+@kindex C-c + f
 
 @item records-concatenate-record-files-latex
 @vindex records-latex-output-buffer 
-Key @kbd{C-c l f}. Concatenate all the records in the records files of
+Key @kbd{C-c + r}. Concatenate all the records in the records files of
 the last @var{num} days.  All the records of a subject are collected
 together. Output these records in latex format in the records latex
 output buffer (see above). Without prefix argument, the function prompts
 for the number of days. An empty string will output the records of the
 current file. This function is not implemented currently.
-@kindex C-c l f
+@kindex C-c + r
 @end ftable
 
 The records-mode concatenation related variables are shown below.
@@ -864,7 +903,7 @@ Output location for Latex runs. By default,
 
 @end vtable
 
-@node Editing In LaTeX mode,, Concatenating Records, Advanced Use
+@node Editing In LaTeX mode, Editing In Outline mode, Concatenating Records, Advanced Use
 @section Editing Records In LaTeX mode
 
 Records can be edited in LaTeX mode for those who insist on writing
@@ -875,9 +914,9 @@ latex mode, use @code{records-widen-latex}.
 
 @ftable @code
 @item records-narrow-latex
-Key @kbd{C-c l n}. Narrow records-file buffer to the current record and
+Key @kbd{C-c / l}. Narrow records-file buffer to the current record and
 switch to latex-mode.
-@kindex C-c l n
+@kindex C-c / l
 
 @item records-widen-latex
 Widen records-file buffer and switch from latex to records-mode. This
@@ -889,6 +928,17 @@ installation section (@pxref{Installation}).
 
 @end ftable
 
+@node Editing In Outline mode,, Editing In LaTeX mode, Advanced Use
+@section Editing Records In Outline mode
+
+Records can be edited in Outline mode. The outline minor mode is toggled
+by calling @code{records-ouline-mode}.
+
+@ftable @code
+@item records-ouline-mode
+Key @kbd{C-c / o}.
+@kindex C-c / o
+@end ftable
 
 @node Conclusion, Variable Index, Advanced Use, Top
 @chapter Conclusions and Acknowledgments
@@ -915,8 +965,8 @@ daily) and I found that inconvenient.
 Kaarthik Sivakumar @email{sivakuma@@mail.eecis.udel.edu} insisted on
 documentation and that forced me to write the info pages.
 
-Please send me mail at @email{ashvin@@cse.ogi.edu} if you find this
-software useful.
+Please send me mail at @email{ashvin@@users.sourceforge.net} if you find
+this software useful.
 
 @node Variable Index, Concept Index, Conclusion, Top
 @unnumbered Variable Index

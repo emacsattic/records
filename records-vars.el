@@ -1,7 +1,7 @@
 ;;;
 ;;; records-vars.el
 ;;;
-;;; $Id: records-vars.el,v 1.10 2000/04/17 21:09:30 ashvin Exp $
+;;; $Id: records-vars.el,v 1.11 2001/04/11 18:14:12 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -82,21 +82,22 @@ font-lock-mode-disable-list."
     :group 'font-lock-faces)
 )
 
-;; TODO: make it customizable: look at tag-table-alist in etags.el 
+;; TODO: hard to make it customizable: look at tag-table-alist in etags.el 
 (defvar records-mode-font-lock-keywords
   '(
     ;; subject face: this regexp obtained from records-subject-regexp
     ("^\\* \\(.*\\)\n\\-\\-\\-+$" . bold)
     ("^\\(END_\\)?TODO:?" . font-lock-warning-face) ; todo
-    ("^link:\\ <\\(.*\\)>$" 1 font-lock-reference-face) ; link
+    ;; ("^link:\\ <\\(.*\\)>$" 1 font-lock-reference-face) ; link
+    ("<\\([^\n]*\\)>" 1 font-lock-reference-face) ; link
     ("^TODO:\\ \\(//\\ .*$\\)" 1 font-lock-comment-face)) ; todo comment
-  "* Font-lock keywords for records mode.")
+  "* Font-lock keywords for records mode."
+  )
 
 (defcustom records-subject-read-only t
   "* If t, records subjects are made read-only.
-This disables any accidental updates to a records subject.
-The down side is that if any part of the subject is copied to a record body,
-it is read-only and does not allow editing of that part."
+This disables any accidental updates to a records subject. 
+This variable has a local value for each records buffer."
   :type 'boolean
   :group 'records
   )
@@ -255,11 +256,45 @@ this file exists in the correct directory. It is not installed by default."
   :group 'records
   )
 
+(defcustom records-template-alist nil 
+  "* List of templates associated with record subjects. 
+Each value is a tempo template expression (not an already defined template, 
+but the expression that would be passed to tempo-define-template).
+This alist can be used to insert templates associated with each record
+subject. See the function records-insert-template.
+
+An example of this alist is
+  ((\"Tennis\" . (\"Partner: \\nField no: \\nWho won: \\n\"))
+   (\"Health\" . (\"Medication: \\nWeight: \\n\"))
+   (\"Today\" . (\"Time: \" (current-time-string) \"\\n\"))
+
+The third element inserts the current time when the Today record is inserted.
+"
+  :type '(repeat (cons :format "%v"
+                       (choice :value "" (string :tag "Records Subject"))
+                       (choice :value "" (sexp :tag "Records template"))))
+  :group 'records
+)
+
+;;; records hooks
+(defvar records-index-mode-hooks nil
+  "* Hook functions that are run when the records index buffer is created.")
+
+(defvar records-mode-hooks nil
+  "* Hook functions that are run when any records file buffer is created.")
+
+(defvar records-load-hooks nil
+  "* Hook functions that are run when records mode is loaded.")
+
+(defvar records-make-record-hook nil
+  "* Hook functions that are run when a record is created. 
+This hook can be used to create record templates.")
+
 (if (boundp 'running-xemacs)
     ()
   (if (string-match "Lucid" (emacs-version))
       (setq running-xemacs t)
-    (setq running-xemacs nil)  
+    (setq running-xemacs nil)
     ))
 
 ;;; Adding emacs compatibility code here, just so it is loaded first.

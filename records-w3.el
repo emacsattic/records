@@ -1,7 +1,7 @@
 ;;;
 ;;; records-w3.html --- code to generate web pages from records
 ;;;
-;;; $Id: records-w3.el,v 1.1 2000/04/17 21:09:30 ashvin Exp $
+;;; $Id: records-w3.el,v 1.2 2001/04/11 18:14:12 ashvin Exp $
 ;;;
 ;;; Copyright (C) 2000 John Wiegley
 ;;;
@@ -99,7 +99,7 @@
 	    (goto-char (point-max))
 	    (while (not (bobp))
 	      (records-goto-up-record)
-	      (let ((link (records-link))
+	      (let ((link (records-subject-link))
 		    topic html-file toc-file reg title body date)
 		(when (and (string-match
 			    "/\\([0-9]+\\)#\\([0-9]*\\)\\*\\s-+\\(.+\\)>\\'" 

@@ -1,17 +1,37 @@
 ;; -*-text-*-
 Version 1.4.9
-        * Added support for editing a record in latex mode.
+        * Installation now works for native Windows NT port of xemacs. Look at
+          the INSTALL-NT file for more details.
+        * Added a mode specific menu that pops up when the right button is
+          pressed. This button pops up a link specific menu when the button is
+          clicked on a records link.
+        * When records are inserted, template code can be added to
+          records (by subject). For instance, this allows adding the current
+          time when a record is inserted. Uses the tempo lisp package.
+        * Added support for editing a record in outline minor mode.
+        * Added support for editing a record in latex mode (interaction with
+          outline minor mode not tested).
         * Added support for outputing the concatenation of records in latex
           mode (see records-concatenate-records-latex and
           records-concatenate-record-files-latex).
         * Records can now be concatenated and presented in most-recent first or
           the reverse order.
-        * Added a newline to the end of the index and dindex files when they
-          are created the first time.
         * Made almost all records variables customizable.
         * records-goto-link now supports html links of the form <a href=...>
+        * Pressing the middle button when on a records link chases the link,
+          while pressing it at any other place on a record invokes the default
+          binding of the middle button.
+        * Added a newline to the end of the index and dindex files when they
+          are created the first time.
+        * Changed the records-mode-font-lock-keywords variable so that all
+          references (links enclosed in <..>) are highlighted and not just
+          the link in the header of the records subject. As always, use the
+          middle button to go to the link.
         * Fixed a bug where the first entry in the dindex file was
           out-of-order.
+        * Fixed a date normalization bug in recordsadmin (this bug was kicking
+          in when the year is stored in 2 digits and the year is greater than
+          or equal to 2001!) 
         * Fixed a bug in records encryption and decryption where the correct
           encryption scheme (such as pgp, gpg, etc.) was not being loaded.
         * Removed the use of ripem user id for encryption and decryption of
@@ -51,7 +71,7 @@ Version 1.4.5
         * recordsadmin now updates the load path in ~/.emacs-records even 
           when the user specifies that the init file variables should not be
           updated. This is needed otherwise the load path becomes inconsistent 
-          with the new installation. The init file variables are ofcourse not
+          with the new installation. The init file variables are of course not
           updated.
 
 Version 1.4.4
