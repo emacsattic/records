@@ -1,13 +1,16 @@
 ###
 ### Makefile.in
 ###
-### $Id: Makefile.in,v 1.4 1999/04/10 18:36:23 ashvin Exp $
+### $Id: Makefile.in,v 1.5 1999/04/10 19:42:13 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: Makefile.in,v $
+# Revision 1.5  1999/04/10 19:42:13  ashvin
+# Added FAQ in DISTFILES
+#
 # Revision 1.4  1999/04/10 18:36:23  ashvin
 # Minor bug fix.
 #
@@ -66,7 +69,7 @@ OBJECTS = records-vars.elc records-dindex.elc records-index.elc records-util.elc
 PRELOADS = -l records-load.el -l records-vars.el -l records.el
 EFLAGS =-batch -q -no-site-file $(PRELOADS)
 
-DISTFILES = $(SOURCES) INSTALL Makefile.in \
+DISTFILES = $(SOURCES) FAQ INSTALL Makefile.in \
 	README configure configure.in install-sh \
 	mkinstalldirs notes.info recordsadmin.in records-load.el \
 	encrypt/mailcrypt.el encrypt/mc-pgp.el \
