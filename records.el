@@ -1,14 +1,17 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.7 1996/12/11 01:55:27 asgoel Exp $
+;;; $Id: records.el,v 1.8 1996/12/11 21:17:52 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.7  1996/12/11 01:55:27  asgoel
+; Revision 1.8  1996/12/11 21:17:52  asgoel
+; Added notes menu.
+;
+; Revision 1.7  1996/12/11  01:55:27  asgoel
 ; Added notes-body-empty-p
 ; Added removal of empty notes after todo moves
 ;
@@ -124,6 +127,9 @@ If not nil and not t, ask user about deleting the note.")
 
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
+
+(defvar notes-mode-menu-map nil
+  "Notes Menu Map. Internal variable.")
 
 (defvar notes-subject-table (make-vector 127 0)
   "List of subjects for notes subject completion.
@@ -844,12 +850,12 @@ The key-bindings of this mode are:
   (define-key notes-mode-map "\C-c\C-p" 'notes-goto-prev-note)
   (define-key notes-mode-map "\C-c\C-n" 'notes-goto-next-note)
 
-  (define-key notes-mode-map "\C-c\C-y" 'notes-goto-prev-day) ;; yesterday
-  (define-key notes-mode-map "\C-c\C-t" 'notes-goto-next-day) ;; tomorrow
-  (define-key notes-mode-map "\C-c\C-b" 'notes-goto-prev-date) ;; back file
-  (define-key notes-mode-map "\C-c\C-f" 'notes-goto-next-date) ;; front file
+  (define-key notes-mode-map "\C-c\C-y" 'notes-goto-prev-day);; yesterday
+  (define-key notes-mode-map "\C-c\C-t" 'notes-goto-next-day);; tomorrow
+  (define-key notes-mode-map "\C-c\C-b" 'notes-goto-prev-date);; back file
+  (define-key notes-mode-map "\C-c\C-f" 'notes-goto-next-date);; front file
 
-  (define-key notes-mode-map "\C-c\C-j" 'notes-goto-index) ;; jump!!
+  (define-key notes-mode-map "\C-c\C-j" 'notes-goto-index);; jump!!
 
   (define-key notes-mode-map "\C-c\C-l" 'notes-goto-last-note)
 
@@ -859,7 +865,80 @@ The key-bindings of this mode are:
   (define-key notes-mode-map "\C-c\C-k" 'notes-link-as-kill)
   (define-key notes-mode-map [?\C-c ?\C--] 'notes-underline-line)
   (define-key notes-mode-map "\M-\C-h" 'notes-mark-note)
-  (define-key notes-mode-map "\C-c\C-z" 'notes-initialize) ;; zap it in
+  (define-key notes-mode-map "\C-c\C-z" 'notes-initialize);; zap it in
+
+  (if notes-mode-menu-map
+      ()
+    (setq notes-mode-menu-map (make-sparse-keymap))
+    (define-key notes-mode-map [menu-bar] (make-sparse-keymap))
+    (define-key notes-mode-map [menu-bar notes] (cons "Notes" 
+						      notes-mode-menu-map))
+
+    (define-key notes-mode-menu-map [notes-initialize] 
+      '("Re-Init Notes" . notes-initialize))
+
+    (define-key notes-mode-menu-map [separator-0] '("--"))
+
+    (define-key notes-mode-menu-map [notes-underline-line] 
+      '("Underline line" . notes-underline-line))
+    (define-key notes-mode-menu-map [notes-link-as-kill] 
+      '("Copy Notes Link" . notes-link-as-kill))
+    (define-key notes-mode-menu-map [notes-mark-note] 
+      '("Mark Note" . notes-mark-note))
+    (define-key notes-mode-menu-map [notes-todo] 
+      '("Get TODO's" . notes-todo))
+
+    (define-key notes-mode-menu-map [separator-1] '("--"))
+
+    (define-key notes-mode-menu-map  [notes-rename-note] 
+      '("Rename Note" . notes-rename-note))
+    (define-key notes-mode-menu-map  [notes-delete-note] 
+      '("Delete Note" . notes-delete-note))
+    (define-key notes-mode-menu-map  [notes-insert-note] 
+      '("Insert Note" . notes-insert-note))
+
+    (define-key notes-mode-menu-map [separator-2] '("--"))
+
+    (define-key notes-mode-menu-map [notes-goto-last-note] 
+      '("Goto Last Note" . notes-goto-last-note))
+    (define-key notes-mode-menu-map [notes-goto-link] 
+      '("Goto Notes Link" . notes-goto-link))
+    (define-key notes-mode-menu-map  [notes-goto-index] 
+      '("Goto Index" . notes-goto-index))
+
+    (define-key notes-mode-menu-map [separator-3] '("--"))
+
+    (define-key notes-mode-menu-map  [notes-goto-next-day] 
+      '("Next Day" . notes-goto-next-day))
+    (define-key notes-mode-menu-map  [notes-goto-prev-day] 
+      '("Prev Day" . notes-goto-prev-day))
+
+    (define-key notes-mode-menu-map [separator-4] '("--"))
+
+    (define-key notes-mode-menu-map  [notes-goto-next-date] 
+      '("Next Note File" . notes-goto-next-date))
+    (define-key notes-mode-menu-map  [notes-goto-prev-date] 
+      '("Prev Note File" . notes-goto-prev-date))
+
+    (define-key notes-mode-menu-map [separator-5] '("--"))
+
+    (define-key notes-mode-menu-map  [notes-goto-next-note] 
+      '("Next Note" . notes-goto-next-note))
+    (define-key notes-mode-menu-map  [notes-goto-prev-note] 
+      '("Prev Note" . notes-goto-prev-note))
+
+    (define-key notes-mode-menu-map [separator-6] '("--"))
+
+    (define-key notes-mode-menu-map [notes-goto-down-note] 
+      '("Down Note" . notes-goto-down-note))
+    (define-key notes-mode-menu-map [notes-goto-up-note] 
+      '("Up Note" . notes-goto-up-note))
+
+    (define-key notes-mode-menu-map [separator-7] '("--"))
+
+    (define-key notes-mode-menu-map [notes-goto-today] 
+      '("Today's Note" . notes-goto-today))
+    )
 
   ;; imenu stuff 
   (make-variable-buffer-local 'imenu-prev-index-position-function)
