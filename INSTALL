@@ -12,7 +12,7 @@ writable by you.
 
 2. Run make install (or just make)
 After the lisp files have been compiled, this procedure is interactive and asks
-for user defaults.
+for user defaults. Note: The lisp files are not installed anywhere.
 
 3. The changes to your system that "make install" does are the following:
 
@@ -67,7 +67,7 @@ often. Bind it to a simple key.
 (add-hook 'records-mode-hooks
     (function
      (lambda ()
-       (abbrev-mode 1)))))
+       (abbrev-mode 1))))
 
 ; If you want to be brought to today's record on startup
 (records-goto-today)
