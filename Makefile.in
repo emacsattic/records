@@ -1,13 +1,17 @@
 ###
 ### Makefile.in
 ###
-### $Id: Makefile.in,v 1.5 1999/04/10 19:42:13 ashvin Exp $
+### $Id: Makefile.in,v 1.6 1999/05/25 02:07:22 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: Makefile.in,v $
+# Revision 1.6  1999/05/25 02:07:22  ashvin
+# Renamed encrypt to mailcrypt.
+# Added records.info file.
+#
 # Revision 1.5  1999/04/10 19:42:13  ashvin
 # Added FAQ in DISTFILES
 #
@@ -71,9 +75,10 @@ EFLAGS =-batch -q -no-site-file $(PRELOADS)
 
 DISTFILES = $(SOURCES) FAQ INSTALL Makefile.in \
 	README configure configure.in install-sh \
-	mkinstalldirs notes.info recordsadmin.in records-load.el \
-	encrypt/mailcrypt.el encrypt/mc-pgp.el \
-	encrypt/mc-remail.el encrypt/mc-toplev.el
+	mkinstalldirs recordsadmin.in records-load.el \
+	records.info records.ps \
+	mailcrypt/mailcrypt.el mailcrypt/mc-pgp.el \
+	mailcrypt/mc-remail.el mailcrypt/mc-toplev.el
 
 # records.info records.dvi records.texi 
 
@@ -130,10 +135,13 @@ TAGS: $(SOURCES)
 	cd $(srcdir) && etags $(SOURCES)
 
 clean:
-	rm -f $(OBJECTS) records.info
+	rm -f $(OBJECTS) records.aux records.cp records.cps records.dvi 
+	rm -f records.fn records.pg records.ky records.kys records.toc 
+	rm -f records.tp records.vr records.vrs records.log
 
 distclean: clean
 	-rm -f *~ *.tar.gz
+	rm -f records.ps records.info 
 	rm -f Makefile config.status config.cache config.log
 
 ${srcdir}/configure: configure.in
@@ -151,7 +159,7 @@ dist: $(DISTFILES)
 	distname=records-$$version; \
 	rm -rf $$distname; \
 	mkdir $$distname; \
-	mkdir $$distname/encrypt; \
+	mkdir $$distname/mailcrypt; \
 	for file in $(DISTFILES); do \
 	  ln $$file $$distname/$$file; \
 	done; \
