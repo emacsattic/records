@@ -1,14 +1,18 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.5 1996/12/05 21:02:40 asgoel Exp $
+;;; $Id: records.el,v 1.6 1996/12/10 01:34:31 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.5  1996/12/05 21:02:40  asgoel
+; Revision 1.6  1996/12/10 01:34:31  asgoel
+; Made notes-initialize interactive (binding : C-c C-z).
+; notes-directory does not have to have a slash following it.
+;
+; Revision 1.5  1996/12/05  21:02:40  asgoel
 ; Added initialization from notes-init-file.
 ; Added date index code for going to the previous notes file.
 ; Added todo functionality.
@@ -46,14 +50,14 @@
 This file is also read by the perl index generator.
 If you change this variable, you must change the perl scripts also.")
 
-(defvar notes-directory (concat (getenv "HOME") "/notes/")
+(defvar notes-directory (concat (getenv "HOME") "/notes")
   "* Directory under which all notes are stored.")
 
-(defvar notes-index-file (concat notes-directory "index")
-  "* File name in which all notes indexes are stored.")
+(defvar notes-index-file (concat notes-directory "/index")
+  "* File name in which notes subject index is stored.")
 
-(defvar notes-dindex-file (concat notes-directory "dindex")
-  "* File name in which all notes date indexes are stored.")
+(defvar notes-dindex-file (concat notes-directory "/dindex")
+  "* File name in which notes date index is stored.")
 
 (defvar notes-directory-structure 1
   "* The directory structure for notes files. Its values can be 
@@ -77,7 +81,7 @@ This variable determines the order of the month in date.
 Valid values are 0, 1 or 2 only.")
 
 (defvar notes-year-length 4
-  "* The length of a notes file year. Can be 2 or 4 only.")
+  "* The length of a notes file year. Valid values are 2 or 4 only.")
 
 (defvar notes-fontify t
   "* Enable notes fontification.")
@@ -157,6 +161,7 @@ Internal variable.")
 (defun notes-initialize ()
   "Reads the notes init file and sets the notes internal variables
 like notes-date, notes-date-length, etc."
+  (interactive)
   (if (file-exists-p notes-init-file)
       (load notes-init-file))
   (setq notes-day-length 2)
@@ -194,6 +199,13 @@ like notes-date, notes-date-length, etc."
   (setq notes-todo-begin-regexp
 	(concat "\\(" notes-todo-begin-copy-regexp "\\)\\|\\("
 		notes-todo-begin-move-regexp "\\)"))
+  ;; do some cleaning up
+  (if (and notes-dindex-buffer
+	   (get-buffer notes-dindex-buffer))
+      (kill-buffer notes-dindex-buffer))
+  (if (and notes-index-buffer
+	   (get-buffer notes-index-buffer))
+      (kill-buffer notes-index-buffer))
   )
 
 ;; initialize on load
@@ -302,19 +314,19 @@ The ndate is normalized and in (day month year) format."
 With absolute set, get the absolute path."
   (cond ((= notes-directory-structure 0) (if absolute notes-directory ""))
 	((= notes-directory-structure 1) 
-	 (concat (if absolute notes-directory "../")
+	 (concat (if absolute notes-directory "..") "/"
 		 (substring date (nth 1 (nth 2 notes-date))
 			    (+ (nth 2 (nth 2 notes-date)) 
-			       (nth 1 (nth 2 notes-date)))) "/"))
+			       (nth 1 (nth 2 notes-date))))))
 	((= notes-directory-structure 2)
-	 (concat (if absolute notes-directory "../../")
+	 (concat (if absolute notes-directory "../..") "/"
 		 (substring date (nth 1 (nth 2 notes-date))
 			    (+ (nth 2 (nth 2 notes-date))
 			       (nth 1 (nth 2 notes-date)))) 
 		 "/"
 		 (substring date (nth 1 (nth 1 notes-date))
 			    (+ (nth 2 (nth 1 notes-date))
-			       (nth 1 (nth 1 notes-date)))) "/"))
+			       (nth 1 (nth 1 notes-date))))))
 	(t (error "notes-directory-path: bad value"))))
 
 (defun notes-read-subject (&optional subject)
@@ -359,7 +371,7 @@ before a subject that appears on the first line of the file."
 (defun notes-make-link (subject date tag)
   "Make a notes link."
   (concat "link: <"
-	  (notes-directory-path date)
+	  (notes-directory-path date) "/"
 	  date "#" tag "* " subject ">"))
 
 (defun notes-goto-subject ()
@@ -479,7 +491,7 @@ With arg., keep the body and remove the subject only."
       ;; not a link I know about
       (error "notes-goto-link: not on a link")
     ;; try to figure out a link
-    (if (looking-at (concat "<\\(.*/\\)\\([0-9]+\\)" 
+    (if (looking-at (concat "<\\(.*\\)/\\([0-9]+\\)" 
 			    notes-tag-regexp "\\* \\(.*\\)>"))
 	;; found a link
 	(let ((subject (buffer-substring-no-properties (match-beginning 4)
@@ -507,7 +519,7 @@ If todo is t, then invoke notes-todo when a note-less file is being visited.
 If todo is not nil and not t, ask user whether notes-todo should be called. "
   (if (null dir)
       (setq dir (notes-directory-path date t)))
-  (let ((file (concat dir date)))
+  (let ((file (concat dir "/" date)))
     (if (not (file-directory-p dir))
 	;; ask the user if they want to create the directory
       (if (y-or-n-p (concat "Make directory: " dir " "))
@@ -828,6 +840,7 @@ The key-bindings of this mode are:
   (define-key notes-mode-map "\C-c\C-k" 'notes-link-as-kill)
   (define-key notes-mode-map [?\C-c ?\C--] 'notes-underline-line)
   (define-key notes-mode-map "\M-\C-h" 'notes-mark-note)
+  (define-key notes-mode-map "\C-c\C-z" 'notes-initialize) ;; zap it in
 
   ;; imenu stuff 
   (make-variable-buffer-local 'imenu-prev-index-position-function)
