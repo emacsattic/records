@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.13 2001/05/26 18:59:17 burtonator Exp $
+;; $Id: records-rss.el,v 1.14 2001/05/26 23:13:15 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -151,9 +151,9 @@ export your activity."
 
   (records-insert-record subject)
 
-  (records-metainfo-set "title" title)
+  (records-type-set "rss")
   (records-metainfo-set "url" url)
-  (records-type-set "rss"))
+  (records-metainfo-set "title" title))
 
 (defun records-rss-export-current-buffer()
   "Export the current buffer to RSS format and return the number of records
