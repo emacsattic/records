@@ -237,6 +237,12 @@ often. Bind the function to a simple key.
 	     (define-key calendar-mode-map "n" 
               'records-calendar-to-record))))
 
+; Hook up to the latex mode
+(add-hook 'LaTeX-mode-hook
+          (function
+           (lambda () 
+             (define-key LaTeX-mode-map "\C-clw" 'records-widen-latex))))
+
 ;;;*** OPTIONAL ***;;;
 
 ; If you like abbrev mode 
@@ -244,6 +250,21 @@ often. Bind the function to a simple key.
     (function
      (lambda ()
        (abbrev-mode 1))))
+
+; If you like to use auto filling and/or filladapt modes while editing text.
+; If you have these functions in the text-mode-hook, then you don't need 
+; them here. 
+(add-hook 'records-mode-hooks 
+      (function (lambda ()
+                  (turn-on-auto-fill)
+                  (turn-on-filladapt-mode)
+                  )))
+
+; Using imenu: imenu will invoke a popup menu of records subjects
+; 1. In Xemacs:
+; (define-key global-map [(shift button3)] 'imenu)
+; 2. In gnu emacs:
+; (define-key global-map [(shift mouse-3)] 'imenu)
 
 ; If you want to be brought to today's record on startup
 (records-goto-today)
@@ -347,7 +368,7 @@ documentation. Hope to start experiments tomorrow.
 "}
 @end format
 
-@vindex records-mode-use-font-lock
+@vindex records-use-font-lock
 @vindex records-mode-font-lock-keywords
 @vindex records-bold-face
 @vindex records-subject-read-only
@@ -358,7 +379,7 @@ associated with the date April 21st, 1999. Note that there are many ways
 in which dates can be represented in records (@pxref{Records
 Administration}).
 
-If the variable @code{records-mode-use-font-lock} is set to true (the
+If the variable @code{records-use-font-lock} is set to true (the
 default), the subject, records link and the TODO (@pxref{Organizing your
 TODOs}) are fontified. You can modify the fontification by changing the
 variable @code{records-mode-font-lock-keywords}. If the variable
@@ -435,14 +456,15 @@ a record file does not exist, one will be created.
 Key @kbd{C-c C-g}. Key @kbd{Button2}. Goto the link around point in the
 records file. A link in a records file must be enclosed within @kbd{<}
 and @kbd{>}. This link can be a records link or a web link such as an
-http, FTP, gopher, news message link. For instance,
-<http://www.yahoo.com>. A records link identifies a record (@pxref{What
-is a Record}). This record identifier can be copied to any other record
-and this function used to jump back to the record associated with the
-link.  For instance, if you copied this link <../../99/04/042199#* Work>
-into some other record and then typed @kbd{C-c C-g} within the angle
-brackets, you would be transported to the @code{Work} record of April
-21st, 1999. When the link is a web link, the link is handed off to
+http, FTP, gopher, news message link. It can also be an html link like
+@uref{<a href=http://www.yahoo.com>} or @uref{<http://www.yahoo.com>}. A
+records link identifies a record (@pxref{What is a Record}). This record
+identifier can be copied to any other record and this function used to
+jump back to the record associated with the link.  For instance, if you
+copied this link @uref{<../../99/04/042199#* Work>} into some other
+record and then typed @kbd{C-c C-g} within the angle brackets, you would
+be transported to the @code{Work} record of April 21st, 1999. When the
+link is a web link, the link is handed off to
 @code{browse-url-browser-function}. When the link is a news message
 link, @code{deja.com} is searched for the news message.
 @kindex C-c C-g
@@ -542,10 +564,10 @@ other record.
 @kindex C-c C-k
 
 @item records-underline-line
-Key @kbd{C-c return}. Underline the current line to the length of the
+Key @kbd{C-c -}. Underline the current line to the length of the
 line. This function is not really specific to records. You can use it to 
 underline any text.
-@kindex C-c return
+@kindex C-c -
 
 @item records-insert-record-region
 
@@ -609,6 +631,7 @@ This section describes the advanced records commands.
 * Organizing your TODOs::       Add TODO's to your records.
 * Security::                    Securing records with encryption.
 * Concatenating Records::       Collecting your past records together.
+* Editing In LaTeX mode::       Editing Records In LaTeX mode.
 @end menu
 
 @node Organizing your TODOs, Security, Advanced Use, Advanced Use
@@ -733,7 +756,7 @@ your PGP passphrase (and caches the passphrase for a short time
 @kindex C-c / d
 @end ftable
 
-@node Concatenating Records, , Security, Advanced Use
+@node Concatenating Records, Editing In LaTeX mode, Security, Advanced Use
 @section Putting Records Together
 
 The records-mode allows concatenating several records together. These
@@ -756,8 +779,23 @@ records in the records output buffer. The name of this buffer is
 contained in the variable @code{records-output-buffer}. Without prefix
 argument, prompts for number of days.  An empty string will output the
 current record only. A negative number will output all the past records
-on the subject!
+on the subject! Normally, the records are output in most-recent first
+order. This function asks the user if the order should be reversed.
 @kindex C-c / c
+
+@item records-concatenate-records-latex
+@vindex records-latex-output-buffer 
+Key @kbd{C-c l c}. Concatenate the current record with the records on
+the same subject written in the last @var{num} days. Output these
+records in latex format in the records latex output buffer. The name of
+this buffer is contained in the variable
+@code{records-latex-output-buffer}. Then run latex on the
+output. Without prefix argument, prompts for number of days.  An empty
+string will output the current record only. A negative number will
+output all the past records on the subject!  Normally, the records are
+output in most-recent first order. This function asks the user if the
+order should be reversed.
+@kindex C-c l c
 
 @item records-concatenate-record-files
 Key @kbd{C-c / f}. Concatenate all the records in the records files of
@@ -766,11 +804,25 @@ together. Output these records in the records output buffer (see
 above). Without prefix argument, the function prompts for the number of
 days. An empty string will output the records of the current file.
 @kindex C-c / f
+
+@item records-concatenate-record-files-latex
+@vindex records-latex-output-buffer 
+Key @kbd{C-c l f}. Concatenate all the records in the records files of
+the last @var{num} days.  All the records of a subject are collected
+together. Output these records in latex format in the records latex
+output buffer (see above). Without prefix argument, the function prompts
+for the number of days. An empty string will output the records of the
+current file. This function is not implemented currently.
+@kindex C-c l f
 @end ftable
 
 The records-mode concatenation related variables are shown below.
 
 @vtable @code
+@item records-output-buffer
+Contains the output of concatenating records. By default,
+"*RECORDS-OUTPUT*".
+
 @item records-subject-prefix-on-concat
 Prefix prepended to each subject on records concatenation. By default,
 "--- ".
@@ -794,7 +846,49 @@ If non nil, the records-output-buffer is erased, every time the
 concatenation functions are invoked.  If nil, the output is appended. By
 default, nil.
 
+@item records-latex-output-buffer
+Contains the output of concatenating records in latex format. By default,
+"*RECORDS-LATEX-OUTPUT*".
+
+@item records-tex-directory
+Location of latex template for records. By default,
+"RECORDS-DIRECTORY/tex/".
+
+@item records-tex-template-plain
+Location of plain template for LaTeX'ing records. By default, 
+"RECORDS-DIRECTORY/tex/records-templ.tex".
+
+@item records-tex-temp-output-file
+Output location for Latex runs. By default,
+"RECORDS-DIRECTORY/tex/records-temp.tex".
+
 @end vtable
+
+@node Editing In LaTeX mode,, Concatenating Records, Advanced Use
+@section Editing Records In LaTeX mode
+
+Records can be edited in LaTeX mode for those who insist on writing
+everything in this arcane language! The latex mode can be invoked in
+each record by calling @code{records-narrow-latex}. The record changes
+all links and TODOs to latex compatible environments. To get out of
+latex mode, use @code{records-widen-latex}.
+
+@ftable @code
+@item records-narrow-latex
+Key @kbd{C-c l n}. Narrow records-file buffer to the current record and
+switch to latex-mode.
+@kindex C-c l n
+
+@item records-widen-latex
+Widen records-file buffer and switch from latex to records-mode. This
+key is not bound by default since the buffer is now in LaTeX mode. You
+will have to invoke this function in the minibuffer (@code{M-x
+records-widen-latex}) to come back to records mode. Or else you can bind
+the key @kbd{C-c l w} to this function in LaTeX mode as shown in the
+installation section (@pxref{Installation}).
+
+@end ftable
+
 
 @node Conclusion, Variable Index, Advanced Use, Top
 @chapter Conclusions and Acknowledgments

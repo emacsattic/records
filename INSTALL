@@ -65,13 +65,35 @@ often. Bind it to a simple key.
 	   (lambda ()
 	     (define-key calendar-mode-map "n" 'records-calendar-to-record))))
 
+; Hook up to the latex mode
+(add-hook 'LaTeX-mode-hook
+          (function
+           (lambda () 
+             (define-key LaTeX-mode-map "\C-clw" 'records-widen-latex))))
+
 ;;;*** OPTIONAL ***;;;
 
 ; If you like abbrev mode 
 (add-hook 'records-mode-hooks
-    (function
-     (lambda ()
-       (abbrev-mode 1))))
+          (function 
+           (lambda ()
+             (abbrev-mode 1))))
+
+; If you like to use auto filling and/or filladapt modes while editing text.
+; If you have these functions in the text-mode-hook, then you don't need 
+; them here. 
+(add-hook 'records-mode-hooks 
+      (function 
+       (lambda ()
+         (turn-on-auto-fill)
+         (turn-on-filladapt-mode)
+         )))
+
+; Using imenu: imenu will invoke a popup menu of records subjects
+; 1. In Xemacs:
+; (define-key global-map [(shift button3)] 'imenu)
+; 2. In gnu emacs:
+; (define-key global-map [(shift mouse-3)] 'imenu)
 
 ; If you want to be brought to today's record on startup
 (records-goto-today)
