@@ -1,0 +1,148 @@
+# Generated automatically from Makefile.in by configure.
+###
+### Makefile.in
+###
+### $Id: Makefile,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+###
+### Copyright (C) 1996 by Ashvin Goel
+###
+### This file is under the Gnu Public License.
+
+# the Emacs binary on your system
+EMACS=
+# the perl binary on your system
+PERL=/usr/bin/perl
+
+# The installation prefix for architecture-independent files.
+prefix=/usr/local
+
+# The installation prefix for architecture-dependent files.
+exec_prefix=${prefix}
+
+# The directory for installing read-only architecture-independent data.
+datadir=${prefix}/share
+
+# Currently not used.
+# This will be wrong if you use private lispdir areas.
+# In that case, set it explicitly during make.
+lispdir=${datadir}/emacs/site-lisp
+
+# The directory for installing executables that users run.
+bindir = ${exec_prefix}/bin
+
+# Where to put the Info file
+infodir=${prefix}/info
+
+# Installation command
+INSTALL = /usr/bin/install -c
+INSTALL_DATA = ${INSTALL} -m 644
+
+# Various auxiliary programs
+MAKEINFO=makeinfo
+DVIPS=dvips
+TEXI2DVI=texi2dvi
+TEXI2HTML=texi2html
+TAR=tar
+
+srcdir = .
+
+SOURCES = records-vars.el records-dindex.el records-index.el records-util.el records-search.el records.el
+OBJECTS = records-vars.elc records-dindex.elc records-index.elc records-util.elc records-search.elc records.elc
+
+PRELOADS = -l records-load.el -l records-vars.el -l records.el
+EFLAGS =-batch -q -no-site-file $(PRELOADS)
+
+DISTFILES = $(SOURCES) FAQ INSTALL Makefile.in NEWS \
+	README configure configure.in install-sh \
+	mkinstalldirs recordsadmin.in records-load.el \
+	records.info records.ps \
+	mailcrypt/FSF-timer.el mailcrypt/expect.el mailcrypt/mailcrypt.el \
+	mailcrypt/mc-gpg.el mailcrypt/mc-pgp.el mailcrypt/mc-pgp5.el \
+	mailcrypt/mc-remail.el mailcrypt/mc-setversion.el \
+	mailcrypt/mc-toplev.el
+
+# records.info records.dvi records.texi 
+
+.SUFFIXES:
+.SUFFIXES: .elc .el
+
+.el.elc:
+	$(EMACS) $(EFLAGS) -f batch-byte-compile $<
+
+all: $(OBJECTS)
+	./recordsadmin -i
+
+# install: all installdirs $(infodir)/records
+install: all
+	$(INSTALL) recordsadmin $(bindir)
+
+#	for f in $(SOURCES); do \
+#	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
+#	done;
+#	for f in $(OBJECTS); do \
+#	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
+#	done;
+
+# Make sure all installation directories actually exist
+# by making them if necessary.
+installdirs: mkinstalldirs
+	$(srcdir)/mkinstalldirs $(infodir)
+
+# There may be a newer info file in . than in srcdir.
+$(infodir)/records: records.info
+	-if test -f records.info; then d=.; \
+	 else d=$(srcdir); fi; \
+	$(INSTALL_DATA) $$d/records.info $@; \
+	if $(SHELL) -c 'install-info --version'	>/dev/null 2>&1; then \
+	  install-info --infodir=$(infodir) $$d/records.info; \
+	else true; fi
+
+info: records.info
+
+records.info: records.texi
+	$(MAKEINFO) $(srcdir)/records.texi
+
+dvi: records.dvi
+
+records.dvi: records.texi
+	$(TEXI2DVI) $(srcdir)/records.texi
+
+ps: records.ps
+
+records.ps: records.dvi
+	$(DVIPS) $(srcdir)/records.dvi -o
+
+TAGS: $(SOURCES)
+	cd $(srcdir) && etags $(SOURCES)
+
+clean:
+	rm -f $(OBJECTS) records.aux records.cp records.cps records.dvi 
+	rm -f records.fn records.pg records.ky records.kys records.toc 
+	rm -f records.tp records.vr records.vrs records.log
+
+distclean: clean
+	-rm -f *~ *.tar.gz
+	rm -f records.ps records.info 
+	rm -f Makefile config.status config.cache config.log
+
+${srcdir}/configure: configure.in
+	cd ${srcdir} && autoconf
+
+Makefile: Makefile.in recordsadmin.in config.status
+	./config.status
+
+config.status: ${srcdir}/configure
+	./config.status --recheck
+
+dist: $(DISTFILES)
+	version=`perl -ne 'print $$1 if /defconst records-version \"(.*)\"/' \
+		 records.el`; \
+	distname=records-$$version; \
+	rm -rf $$distname; \
+	mkdir $$distname; \
+	mkdir $$distname/mailcrypt; \
+	for file in $(DISTFILES); do \
+	  ln $$file $$distname/$$file; \
+	done; \
+	$(TAR) -chz -f $$distname.tar.gz $$distname; \
+	rm -rf $$distname
