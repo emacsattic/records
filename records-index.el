@@ -1,14 +1,17 @@
 ;;;
 ;;; notes-index.el
 ;;;
-;;; $Id: records-index.el,v 1.5 1996/12/05 21:23:02 asgoel Exp $
+;;; $Id: records-index.el,v 1.6 1996/12/10 01:35:30 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-index.el,v $
-; Revision 1.5  1996/12/05 21:23:02  asgoel
+; Revision 1.6  1996/12/10 01:35:30  asgoel
+; Fix in notes-index-parse-buffer.
+;
+; Revision 1.5  1996/12/05  21:23:02  asgoel
 ; Added date index code.
 ; Added optional 'modified' parameter to notes-index-buffer,
 ;   notes-index-goto-subject.
@@ -92,7 +95,7 @@ Key bindings are:
 (defun notes-index-parse-buffer ()
   "Parses the index buffer for notes subject completion."
   (if (null notes-index-buffer)
-      (setq notes-index-buffer (current-buffer)))
+      (setq notes-index-buffer (buffer-name (current-buffer))))
   (goto-char (point-min))
   ;; really a 'do' loop
   (while (progn
