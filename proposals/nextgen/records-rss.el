@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.20 2002/04/05 19:37:53 burtonator Exp $
+;; $Id: records-rss.el,v 1.21 2002/04/10 23:56:29 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -161,59 +161,59 @@ export your activity."
   (records-metainfo-set "url" url)
   (records-metainfo-set "title" title))
 
-(defun records-rss-export-current-buffer()
+(defun records-rss-export-current-buffer(&optional nomessage)
   "Export the current buffer to RSS format and return the number of records
 exported.  This should also write a file into ~/.records/records-mode-DATE.rss
 containing all records for this date."
   (interactive)
 
-  (records-format-require-version "1.0.1")
+  (when (equal major-mode 'records-mode)
   
-  (records-rss-init)
+    (records-format-require-version "1.0.1")
   
-  (save-excursion
-    (let((count 0))
-      (beginning-of-buffer)
+    (records-rss-init)
+  
+    (save-excursion
+      (let((count 0))
+        (beginning-of-buffer)
 
-      ;;search for RSS metainfo tags
-      (while (re-search-forward "^type: rss$" nil t)
+        ;;search for RSS metainfo tags
+        (while (re-search-forward "^type: rss$" nil t)
 
-        (let(record-link subject title url description created buffer)
+          (let(record-link subject title url description created buffer)
 
-          (save-excursion
-            (setq subject (records-goto-subject)))
+            (save-excursion
+              (setq subject (records-goto-subject)))
 
-          (setq title (records-metainfo-get "title"))
-          (setq url (records-metainfo-get "url"))
-          (setq record-link (records-metainfo-get "link"))
-          (setq created (records-metainfo-get "created"))
+            (setq title (records-metainfo-get "title"))
+            (setq url (records-metainfo-get "url"))
+            (setq record-link (records-metainfo-get "link"))
+            (setq created (records-metainfo-get "created"))
           
-          (setq description (records-format-get-body))
+            (setq description (records-format-get-body))
           
-          (save-excursion
+            (save-excursion
 
-            (setq buffer (find-file-noselect records-rss-index-file))
+              (setq buffer (find-file-noselect records-rss-index-file))
             
-            (records-rss-init-buffer buffer)
+              (records-rss-init-buffer buffer)
             
-            ;;make sure that the link doesn't already exist.
-            
-            (if (not (records-rss-link-exists record-link))
-                (progn 
-                  
-                  (setq count (1+ count))
-                  
-                  (records-rss-export-record record-link
-                                             subject
-                                             title
-                                             url
-                                             created
-                                             description
-                                             buffer))))))
+              (setq count (1+ count))
+              
+              (records-rss-export-record record-link
+                                         subject
+                                         title
+                                         url
+                                         created
+                                         description
+                                         buffer))))
 
-      (records-rss-save)
-      (message "Exported %i RSS record(s)." count)
-      count)))
+        (records-rss-save)
+
+        (when (not nomessage)
+          (message "Exported %i RSS record(s)." count))
+
+        count))))
 
 (defun records-rss-export()
   "Try to export the RSS database over the last X days."
@@ -295,7 +295,23 @@ the .bak. "
     (beginning-of-buffer)
 
     (search-forward record-link nil t)))
-  
+
+(defun records-rss-delete-record-for-update(record-link)
+  "Delete the given record so that it can be updated."
+
+  (let(record-begin)
+
+    (save-excursion
+
+      (when (search-forward record-link nil t)
+
+        (setq record-begin (point-at-bol))
+
+        (when (re-search-forward "</rss:item>" nil t)
+
+          (delete-region record-begin (match-end 0))
+          (goto-char record-begin))))))
+
 (defun records-rss-save()
   "Save any buffers that RSS export might have modified."
 
@@ -320,18 +336,21 @@ the .bak. "
 
   (set-buffer buffer)
 
+  (when (records-rss-link-exists record-link)
+    (records-rss-delete-record-for-update record-link))
+
   (insert "\n\n")
   
   (insert "<!-- record-link: " record-link " -->")
   (insert "\n")
 
-  (insert "<item>\n")
+  (insert "<rss:item>\n")
 
   ;;title
-  (records-rss-insert-element "title" title 1)
+  (records-rss-insert-element "rss:title" title 1)
   
   ;;link/url
-  (records-rss-insert-element "link" url 1 t)
+  (records-rss-insert-element "rss:link" url 1 t)
 
   ;;add a dublin core 'date' item so that we know when this record was created.
 
@@ -357,9 +376,33 @@ the .bak. "
   
   ;;description
 
-  (records-rss-insert-element "description" description 0 t t)
+  (records-rss-insert-element "rss:description" description 0 t t)
+
+  ;;now include XHTML mod-content
+
+  (insert "    <content:items>\n")
+
+  (insert "        <rdf:Bag>\n")
+  (insert "            <rdf:li>\n")
+  (insert "                <content:item>\n")
+  (insert "                    <content:format rdf:resource=\"http://www.w3.org/1999/xhtml\"/>\n")
+  (insert "                    <content:encoding rdf:resource=\"http://www.w3.org/TR/REC-xml#dt-wellformed\"/>\n")
+
+  (insert "                    <rdf:value rdf:parseType=\"Literal\" xmlns=\"http://www.w3.org/1999/xhtml\">\n")
+
+  ;;now export the XHTML content here..
+
+  (insert (records-rss-xhtmlify description))
   
-  (insert "</item>\n"))
+  (insert "                    </rdf:value>\n")
+  
+  (insert "                </content:item>\n")
+  (insert "            </rdf:li>\n")
+  (insert "        </rdf:Bag>\n")
+
+  (insert "    </content:items>\n")
+
+  (insert "</rss:item>\n"))
 
 (defun records-rss-insert-element(name value &optional level cdata text-format)
   "Build an XML element and insert it into the current buffer.  If specified
@@ -441,31 +484,31 @@ the value.  "
           (insert "\n         ")
           (insert "xmlns:record=\"http://records.sourceforge.net/schemas/rss-meta-module/\" ")
           (insert "\n         ")
-          (insert "xmlns:xhtml=\"http://www.w3.org/1999/xhtml\" ")
+          (insert "xmlns=\"http://www.w3.org/1999/xhtml\" ")
           (insert "\n         ")
           (insert "xmlns:content=\"http://purl.org/rss/1.0/modules/content/\" ")
           (insert "\n         ")
-          (insert "xmlns=\"http://purl.org/rss/1.0/\"")
+          (insert "xmlns:rss=\"http://purl.org/rss/1.0/\"")
           (insert ">")
           (insert "\n\n")
 
           ;;insert <channel> information
 
-          (insert "<channel>")
+          (insert "<rss:channel>")
           (insert "\n")
 
-          (records-rss-insert-element "title" records-rss-channel-title 1)
+          (records-rss-insert-element "rss:title" records-rss-channel-title 1)
 
-          (insert "<description>")
+          (insert "<rss:description>")
           (insert "\n")
 
           (insert records-rss-channel-description)
 
           (insert "\n")
-          (insert "</description>")
+          (insert "</rss:description>")
           (insert "\n")
 
-          (insert "</channel>")
+          (insert "</rss:channel>")
           (insert "\n")
           
           (insert records-rss-tag-begin-items "\n")
@@ -495,49 +538,148 @@ the value.  "
       
       (insert content)
       
-      (beginning-of-buffer)
+      (records-rss-xhtmlify--quote)
+      (records-rss-xhtmlify--bold)
+      (records-rss-xhtmlify--cite)
+      (records-rss-xhtmlify--para)
 
-      )))
+      (buffer-substring (point-min) (point-max)))))
 
-(defun records-rss-xhtmlify--para()
-  "Turn all text paragraphs into XHTML paragraphs"
+(defun records-rss-xhtmlify--cite()
+  "Create anchors to all text based citations."
   (interactive)
   
   (save-excursion
+    (beginning-of-buffer)
 
-    (let((begin nil)
-         (end nil)
-         (regexp "^[ ]*$"))
-      (while (re-search-forward regexp nil t)
+    (while (re-search-forward "\\[\\([0-9]+\\)\\]" nil t)
+      (let(n-cite n-cite-begin n-cite-end cite-url cite-text)
+      
+        (setq n-cite (match-string 1))
+
+        ;;now get the citation link
+
+        (setq n-cite-begin (match-beginning 0))
+        (setq n-cite-end (match-end 0))
         
-        (setq begin (match-beginning 0))
+        (save-excursion
 
-        (forward-line 1)
+          (when (re-search-forward (concat "^" n-cite "\\. \\(.*\\)$") nil t)
+
+            (setq cite-url (match-string 1))
+
+            ;;delete this citation URL
+
+            (delete-region (match-beginning 0) (match-end 0))))
+
+        ;;now delete the cite number and change the 
+        (when cite-url
         
-        (when (and (re-search-forward "[^ ]" nil t)
-                   (re-search-forward regexp nil t))
+          (save-excursion
 
-          (setq end (match-end 0))
+            (delete-region n-cite-begin n-cite-end)
 
-          (when (> (- end begin) 0)
-          
-            (save-restriction
+            ;;search backward from n-cite-begin to the text that is probably the
+            ;;link we need to create
 
-              (narrow-to-region begin end)
+            (goto-char n-cite-begin)
 
-              (beginning-of-buffer)
-            
-              (insert "<p>")
+            (when (and (forward-word -1)
+                       (re-search-forward "[a-zA-Z0-9_-]+" nil t))
 
-              (end-of-buffer)
-            
-              (insert "</p>"))))
+              (setq cite-text (match-string 0))
 
-        (if end 
-            (goto-char end)
-          (goto-char (match-end 0)))
+              (replace-match (concat "<a href=\"" cite-url  "\">" cite-text "</a>")))))))))
 
-        (forward-line 1)))))
+(defun records-rss-xhtmlify--quote()
+  "Turn all quotes into italicized text."
+  (interactive)
+  
+  (records-rss--match-replace-block "\"" "\"" "<i>" "</i>"))
+
+(defun records-rss-xhtmlify--bold()
+  "Turn all bold text into bold XHTML regions."
+  (interactive)
+  
+  (records-rss--match-replace-block "\*" "\*" "<b>" "</b>"))
+
+(defun records-rss--match-replace-block(first-match second-match first-replacement second-replacement)
+  "Within a paragraph, search for the `first-match', then the `second-match'.
+  Then replace the whole region around `first-replacement' and
+  `second-replacement'."
+
+  (save-excursion
+    (beginning-of-buffer)
+
+    (let(begin end quote quote-begin quote-end)
+    
+      (while (records-rss--has-next-para)
+
+        (setq begin (point))
+
+        (records-rss--next-para)
+        
+        (setq end (point))
+
+        (save-excursion
+          (save-restriction
+            (narrow-to-region begin end)
+            (beginning-of-buffer)
+
+            (when (search-forward first-match nil t)
+              
+              (setq quote-begin (match-beginning 0))
+              
+              (when (search-forward second-match nil t)
+                
+                (setq quote-end (match-end 0))
+              
+                ;;now replace the quote.
+              
+                (setq quote (buffer-substring quote-begin quote-end))
+              
+                (delete-region quote-begin quote-end)
+
+                (goto-char quote-begin)
+
+                (insert (concat first-replacement quote second-replacement))))))))))
+
+(defun records-rss-xhtmlify--para()
+  "Turn all text paragraphs into XHTML paragraphs"
+
+  (save-excursion
+    (beginning-of-buffer)
+    (insert "<p>\n")
+
+    (while (records-rss--next-para)
+
+      (if (records-rss--has-next-para)
+          (progn
+            (insert "</p>\n")
+            (records-util-delete-whitespace-forward)
+            (insert "\n<p>\n"))
+        (insert "</p>\n")))))
+
+(defun records-rss--next-para()
+  "Go to the next paragraph.  Return nil if there are no more paragraphs."
+
+  (let((current-point (point)))
+
+    (forward-paragraph)
+
+    (not (equal current-point (point)))))
+
+(defun records-rss--has-next-para()
+  "Return true if we have more paragraphs."
+
+  (let(result)
+    (save-excursion
+
+      (setq result (records-rss--next-para)))
+    result))
+
+(add-hook 'after-save-hook (lambda()
+                            (records-rss-export-current-buffer t)))
 
 (provide 'records-rss)
 

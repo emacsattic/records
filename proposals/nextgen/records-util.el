@@ -1,6 +1,6 @@
 ;;; records-util.el --- util
 
-;; $Id: records-util.el,v 1.3 2001/05/26 18:37:18 burtonator Exp $
+;; $Id: records-util.el,v 1.4 2002/04/10 23:56:29 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -73,7 +73,6 @@
     (setq cur-point (point))
     (insert "\n\n" "END_" name "\n")
     (goto-char cur-point)))
-
 
 (defun records-get-todo (&optional date)
   "Insert the previous record files todo's into the date file.
@@ -470,5 +469,20 @@ at the end of today's record and inserts a comment."
       (setq date (concat (elt date 2) (elt date 1) (elt date 3))))
   
   (concat (records-directory-path date t) "/" date))
+
+(defun records-util-delete-whitespace-forward(&optional no-newline)
+  "Delete all whitespace forward of the current point. "
+  (interactive)
+  (save-excursion
+    
+    (let(current-point regexp)
+      (if no-newline
+          (setq regexp "[^ \t]")
+        (setq regexp "[^ \n\t]"))
+      (setq current-point (point))
+      ;;delete any extra spaces, eols or tabs
+      (if (re-search-forward regexp nil t)
+          (if (> (match-end 0) current-point)
+              (delete-region current-point (1- (match-end 0))))))))
 
 (provide 'records-util)
