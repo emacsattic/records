@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.7 2001/05/15 14:01:39 burtonator Exp $
+;; $Id: records-query.el,v 1.8 2001/07/09 04:41:32 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -390,6 +390,18 @@ right of `value' to equal `width'."
   (interactive)
 
   (records-query-exec nil "^type: rss$" nil))
+
+(defun records-query-set-length(length)
+  "Use completion to set the amount of days to run a query across."
+  (interactive
+   (list 
+    (string-to-number (completing-read "Over how many days do you want to run queries? " (list (list "14" 1)
+                                                                                               (list "28" 2) 
+                                                                                               (list "56" 3)
+                                                                                               (list "112" 4))
+                                       nil nil (number-to-string records-query-default-days)))))
+
+  (setq records-query-default-days length))
 
 
 (define-key records-query-result-mode-map  [return] 'records-query-results-goto-record)

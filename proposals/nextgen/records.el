@@ -1,6 +1,6 @@
 ;;; records.el --- records
 
-;; $Id: records.el,v 1.4 2001/05/26 18:37:18 burtonator Exp $
+;; $Id: records.el,v 1.5 2001/07/09 04:41:32 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -993,6 +993,45 @@ With arg, removes the subject only."
       (goto-char (point-max))
       (records-insert-record subject record-body)))
   (records-delete-record nil t))
+
+(defun records-close-all-unnecessary-buffers()
+  "Utility function which can close all records buffers thatyou probably aren't
+using.  Note that this will not kill the current buffer."
+  (interactive)
+
+
+  (save-some-buffers)
+
+  (let (current-buffer
+        records-buffer
+        buffer-list
+        (killed-buffer-count 0)
+        (i 0))
+
+    (setq current-buffer (current-buffer))
+          
+    (setq buffer-list (buffer-list))
+    
+    ;;go through every buffer
+    (while (< i (length buffer-list))
+
+      ;;get the next buffer.
+      (setq records-buffer (nth i buffer-list))
+
+      (save-excursion
+
+        (set-buffer records-buffer)
+
+        (if (and (not (equal records-buffer current-buffer))
+                 (equal major-mode 'records-mode))
+            (progn
+              (setq killed-buffer-count (1+ killed-buffer-count))
+              (kill-buffer records-buffer))))
+      
+      ;;goto the  next buffer
+      (setq i (+ 1 i)))
+
+    (message (format "Closed %i records-mode buffers." killed-buffer-count))))
 
 (run-hooks 'records-load-hooks)
 

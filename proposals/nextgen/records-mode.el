@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.7 2001/05/30 07:36:57 burtonator Exp $
+;; $Id: records-mode.el,v 1.8 2001/07/09 04:41:32 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -204,6 +204,8 @@ The key-bindings of this mode are:
          ["On header" records-query-on-header t]
          ["On body" records-query-on-body t]
          "--"
+         ["Set number of days to run queries" records-query-set-length t]
+         "--"
          ["Show results buffer" (pop-to-buffer records-query-results-buffer-name) t])
         ("RSS"
          ["Create RSS Record" records-rss-create-record t]
@@ -256,6 +258,7 @@ The key-bindings of this mode are:
         ["Copy Records Link" records-link-as-kill t]
         ["Underline Line" records-underline-line t]
         "--"
+        ["Close all unnecessary records buffers" records-close-all-unnecessary-buffers t]
         ["Re-Init Records" records-initialize t]))
 
 
