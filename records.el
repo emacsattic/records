@@ -1,13 +1,16 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.17 1998/11/05 16:12:05 ashvin Exp $
+;;; $Id: records.el,v 1.18 1998/11/05 23:12:34 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
+; Revision 1.18  1998/11/05 23:12:34  ashvin
+; Fixes to easymenu for the new emacs.
+;
 ; Revision 1.17  1998/11/05 16:12:05  ashvin
 ; Many minor changes.
 ;
@@ -902,7 +905,6 @@ The key-bindings of this mode are:
   (define-key records-mode-map [?\C-c ?\C--] 'records-underline-line)
   (define-key records-mode-map "\M-\C-h" 'records-mark-record)
   (define-key records-mode-map "\C-c\C-z" 'records-initialize);; zap it in
-
   (eval-when-compile (require 'easymenu))
   (if records-mode-menu-map
       ()
@@ -945,16 +947,14 @@ The key-bindings of this mode are:
 	    ))
     (if running-xemacs
 	()
-      (define-key records-mode-map [menu-bar] (make-sparse-keymap))
-      (setq records-mode-menu-map
-	    (cons "Records" (easy-menu-create-keymaps nil 
-						      records-mode-menu-map)))
-      (define-key records-mode-map [menu-bar records] records-mode-menu-map))
+      (easy-menu-define records-mode-menu-map records-mode-map "Records" 
+                        (cons "Records" records-mode-menu-map)))
     )
+  ;; This code should be run everytime a new records buffer is initialized
   (if running-xemacs
       (progn 
-	(set-buffer-menubar current-menubar)
-	(add-submenu nil (cons "Records" records-mode-menu-map))))
+ 	(set-buffer-menubar current-menubar)
+ 	(add-submenu nil (cons "Records" records-mode-menu-map))))
 
   ;; imenu stuff 
   (if (locate-library "imenu")
