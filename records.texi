@@ -86,10 +86,9 @@ by the Free Software Foundation.
 
 @end titlepage
 
-@ifinfo
+@ifnottex
 @node Top, Location, (dir), (dir)
-
-@end ifinfo
+@end ifnottex
 
 @chapter Introduction
 
