@@ -1,0 +1,151 @@
+###
+### Makefile.in
+###
+### $Id: Makefile.in,v 1.1 1996/12/24 23:56:07 asgoel Exp $
+###
+### Copyright (C) 1996 by Ashvin Goel
+###
+### This file is under the Gnu Public License.
+
+# $Log: Makefile.in,v $
+# Revision 1.1  1996/12/24 23:56:07  asgoel
+# Initial revision
+#
+
+# the Emacs binary on your system
+EMACS=@EMACS_BIN@
+# the perl binary on your system
+PERL=@PERL@
+
+# The installation prefix for architecture-independent files.
+prefix=@prefix@
+
+# The installation prefix for architecture-dependent files.
+exec_prefix=@exec_prefix@
+
+# The directory for installing read-only architecture-independent data.
+datadir=@datadir@
+
+# Where to put the .el and .elc files
+# This will be wrong if you use private lispdir areas.
+# In that case, set it explicitly during make.
+lispdir=@lispdir@
+
+# The directory for installing executables that users run.
+bindir = @bindir@
+
+# Where to put the Info file
+infodir=@infodir@
+
+# Installation command
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+
+# Various auxiliary programs
+MAKEINFO=makeinfo
+DVIPS=dvips
+TEXI2DVI=texi2dvi
+TEXI2HTML=texi2html
+TAR=tar
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+SOURCES = notes-vars.el notes-dindex.el notes-index.el notes-util.el notes.el
+OBJECTS = notes-vars.elc notes-dindex.elc notes-index.elc notes-util.elc notes.elc
+
+PRELOADS = -l notes-load.el -l notes-vars.el -l notes.el
+EFLAGS =-batch -q -no-site-file $(PRELOADS)
+
+DISTFILES = $(SOURCES) ANNOUNCE ChangeLog INSTALL LCD-entry Makefile.in \
+	NEWS ONEWS README configure configure.in install-sh \
+	notes.info notes.dvi notes.texi mkinstalldirs \
+	texi2html.ext
+
+.SUFFIXES:
+.SUFFIXES: .elc .el
+
+.el.elc:
+	$(EMACS) $(EFLAGS) -f batch-byte-compile $<
+
+all: $(OBJECTS)
+
+install: all installdirs $(infodir)/notes
+	for f in $(SOURCES); do \
+	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
+	done;
+	for f in $(OBJECTS); do \
+	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
+	done;
+
+# Make sure all installation directories actually exist
+# by making them if necessary.
+installdirs: mkinstalldirs
+	$(srcdir)/mkinstalldirs $(lispdir) $(infodir)
+
+# There may be a newer info file in . than in srcdir.
+$(infodir)/notes: notes.info
+	-if test -f notes.info; then d=.; \
+	 else d=$(srcdir); fi; \
+	$(INSTALL_DATA) $$d/notes.info $@; \
+	if $(SHELL) -c 'install-info --version'	>/dev/null 2>&1; then \
+	  install-info --infodir=$(infodir) $$d/notes.info; \
+	else true; fi
+
+uninstall:
+	cd $(lispdir) && rm -f $(SOURCES) $(OBJECTS)
+	rm -f $(infodir)/notes
+
+info: notes.info
+
+notes.info: notes.texi
+	$(MAKEINFO) $(srcdir)/notes.texi
+
+dvi: notes.dvi
+
+notes.dvi: notes.texi
+	$(TEXI2DVI) $(srcdir)/notes.texi
+
+ps: notes.ps
+
+notes.ps: notes.dvi
+	$(DVIPS) $(srcdir)/notes.dvi
+
+html: notes_toc.html
+
+notes_toc.html: notes.texi
+	$(TEXI2HTML) -split_chapter $(srcdir)/notes.texi
+
+TAGS: $(SOURCES)
+	cd $(srcdir) && etags $(SOURCES)
+
+clean:
+	rm -f $(OBJECTS)
+	-rm -f *.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.vr
+	-rm -f *.html
+	rm -f TAGS
+
+distclean: clean
+	-rm -f *~ *.tar.gz
+	rm -f Makefile config.status config.cache config.log
+
+${srcdir}/configure: configure.in
+	cd ${srcdir} && autoconf
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: ${srcdir}/configure
+	./config.status --recheck
+
+dist: $(DISTFILES)
+	version=`perl -ne 'print $$1 if /defconst mc-version \"(.*)\"/' \
+		 notes.el`; \
+	distname=notes-$$version; \
+	rm -rf $$distname; \
+	mkdir $$distname; \
+	for file in $(DISTFILES); do \
+	  ln $$file $$distname/$$file; \
+	done; \
+	$(TAR) -chz -f $$distname.tar.gz $$distname; \
+	rm -rf $$distname
