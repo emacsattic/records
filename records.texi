@@ -481,13 +481,19 @@ available with the @key{TAB} key.
 Key @kbd{C-c C-d}. Delete the current record for the current date.
 With argument, removes the subject only, so the body is preserved. If
 this is the last record on a subject, the user is asked if the subject
-should be removed from the index file.
+should be removed from the index file. If the deletion of this record
+makes the file empty, the records file is deleted.
 @kindex C-c C-d
 
 @item records-rename-record
 Key @kbd{C-c C-r}. Renames the subject of the current record for the
 current date.
 @kindex C-c C-r
+
+@item records-move-record
+Key @kbd{C-c C-m}. Moves the current record to another date. It prompts
+for the new date.
+@kindex C-c C-m
 
 @end ftable
 
