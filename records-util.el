@@ -1,7 +1,7 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.11 2000/01/27 21:19:07 ashvin Exp $
+;;; $Id: records-util.el,v 1.12 2000/01/27 21:26:47 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -90,7 +90,7 @@ See the records-todo-.*day variables on when it is automatically invoked."
 (defun records-user-name ()
   "The user name of the records user."
   (if (not (boundp 'mc-default-scheme))
-      (require 'mailcrypt))
+      (eval-when-compile (require 'mailcrypt)))
   (let ((user (cdr (assoc 'user-id (funcall mc-default-scheme)))))
     (cond ((boundp 'mc-ripem-user-id)
            mc-ripem-user-id)
@@ -103,7 +103,7 @@ With prefix arg, start the encryption from point to the end of record.
 Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   (interactive "P")
   (if (not (boundp 'mc-default-scheme))
-      (load "mailcrypt"))
+      (eval-when-compile (require 'mailcrypt)))
   (save-excursion
     (let ((point-pair (records-record-region t))
           start end)
@@ -126,7 +126,7 @@ Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
 Records decryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   (interactive)
   (if (not (boundp 'mc-default-scheme))
-      (load "mailcrypt"))
+      (eval-when-compile (require 'mailcrypt)))
   (save-excursion
     (let ((point-pair (records-record-region t)))
       (goto-char (first point-pair))
