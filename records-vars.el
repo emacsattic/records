@@ -1,13 +1,16 @@
 ;;;
 ;;; records-vars.el
 ;;;
-;;; $Id: records-vars.el,v 1.3 1997/05/01 21:21:24 ashvin Exp $
+;;; $Id: records-vars.el,v 1.4 1998/11/05 16:10:49 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-vars.el,v $
+; Revision 1.4  1998/11/05 16:10:49  ashvin
+; Initialization of records bold face done differently.
+;
 ; Revision 1.3  1997/05/01 21:21:24  ashvin
 ; Changed names from notes to record.
 ;
@@ -76,8 +79,9 @@ This disables any accidental updates to a records subject.
 The down side is that if any part of the subject is copied to a record body,
 it is read-only and does not allow editing of that part.")
 
-(defvar records-bold-face 'bold
+(defvar records-bold-face (copy-face 'bold 'records-bold-face)
   "* Face to use for records-index-mode and records-mode subjects.
+The name of the face and the name of the variable are both the same.
 The default face is copied from 'bold.")
 
 ;; todo variables
@@ -138,6 +142,13 @@ If nil, the records-output-buffer is just displayed.")
   "* If non nil, the records-output-buffer is erased, 
 every time \\[records-concatenate-records\] is invoked.
 If nil, the output is appended.")
+
+(if (boundp 'running-xemacs)
+    ()
+  (if (string-match "Lucid" (emacs-version))
+      (setq running-xemacs t)
+    (setq running-xemacs nil)  
+    ))
 
 (provide 'records-vars)
 
