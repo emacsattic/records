@@ -1,14 +1,17 @@
 ;;;
 ;;; notes-index.el
 ;;;
-;;; $Id: records-index.el,v 1.3 1996/11/22 12:44:00 asgoel Exp $
+;;; $Id: records-index.el,v 1.4 1996/11/26 02:00:40 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-index.el,v $
-; Revision 1.3  1996/11/22 12:44:00  asgoel
+; Revision 1.4  1996/11/26 02:00:40  asgoel
+; Move notes-subject table to notes.el
+;
+; Revision 1.3  1996/11/22  12:44:00  asgoel
 ; A working version that supports the old functionality + auto insertion,
 ; deletion and renaming of notes.
 ; However it can not be tested since I have to write a perl script
@@ -37,10 +40,6 @@
 (defvar notes-index-buffer nil
   "The name of the index buffer. Initialized when the notes index is loaded.")
 
-(defvar notes-subject-table (make-vector 127 0)
-  "List of subjects for notes subject completion.
-Reloaded by loading the notes-index file.")
-
 (defvar notes-index-mode-map nil
   "Key map for notes index mode.")
 
@@ -66,7 +65,6 @@ Key bindings are:
   (notes-index-parse-buffer)
   (setq major-mode 'notes-index-mode mode-name "notes-index")
   (use-local-map notes-index-mode-map)
-  (run-hooks 'notes-index-mode-hooks)
   (if notes-index-use-font-lock
       (progn
 	(require 'font-lock)
@@ -75,6 +73,7 @@ Key bindings are:
 	(make-local-variable 'font-lock-keywords)
 	(setq font-lock-keywords notes-index-font-lock-keywords)
 	(font-lock-mode 1)))
+  (run-hooks 'notes-index-mode-hooks)
   )
 
 (defmacro notes-index-subject-regexp (&optional subject)
