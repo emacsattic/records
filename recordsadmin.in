@@ -2,14 +2,22 @@
 
 ### notesadmin
 ###
-### $Id: recordsadmin.in,v 1.2 1996/12/03 02:15:08 asgoel Exp $
+### $Id: recordsadmin.in,v 1.3 1996/12/05 21:27:57 asgoel Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
-# Revision 1.2  1996/12/03 02:15:08  asgoel
+# Revision 1.3  1996/12/05 21:27:57  asgoel
+# Added generation of date index.
+# Adding new options for notes initialization, conversion -
+#   haven't done the work.
+# Fixed a normalize year bug.
+# Fixed a file modified bug.
+# Changed subject regexp to allow spaces etc. in the subject.
+#
+# Revision 1.2  1996/12/03  02:15:08  asgoel
 # Getopts introduced.
 # Changed name of file to notesadmin.
 # Introduced verbose and debug flags.
@@ -30,6 +38,7 @@ $notes_init_file="$ENV{HOME}/.emacs-notes";
 $notes_directory = "$ENV{HOME}/notes/";
 $notes_directory_structure = 1;
 $notes_index_file = "${notes_directory}index";
+$notes_dindex_file = "${notes_directory}dindex";
 $notes_year_length = 4;
 $notes_day_order = 0;
 $notes_month_order = 1;
@@ -45,13 +54,35 @@ $notes_date_length = 0;
 $notes_day_length = 0;
 $notes_month_length = 0;
 %notes_raw_index = ();
+%notes_date_index = ();
+
 #
 # Start the bang bang
 #
+ 
+if (!getopts('dvirc')) {
+    print STDERR "Usage: $0 [-options ...]
 
-if (!getopts('dv')) {
-    print STDERR "Usage: $0 [-d] [-v]\n";
+where options are:
+	[-i]	initialize notes
+	[-r]	recreates notes indexes
+	[-c]	converts one date/directory format to another
+	[-d]	run in debug mode
+	[-v]	run in verbose mode
+";
     exit(1);
+}
+
+if ($opt_i) {
+    $initialize_notes = 1;
+}
+
+if ($opt_r) {
+    $recreate_notes = 1;
+}
+
+if ($opt_c) {
+    $convert_notes = 1;
 }
 
 if ($opt_d) {
@@ -69,6 +100,7 @@ foreach (@notes_files) {
     &notes_update_file($_);
 }
 &notes_make_index();
+&notes_make_dindex();
 exit(0);
 
 sub notes_initialize_external {
@@ -166,7 +198,7 @@ sub notes_normalize_date {
     if (length($date[0]) == 2) {
 	# normalize year
 	substr($date[0], 2, 4) = substr($date[0], 0, 2);
-	if ($date[0] > 95) {
+	if ($date[0] > 90) {
 	    substr($date[0], 0, 2) = "19";
 	} else {
 	    substr($date[0], 0, 2) = "20";
@@ -212,6 +244,7 @@ sub notes_update_file {
     local($file) = @_;
     local($date) = basename($file);
     local($subject);
+    local($file_modified);
     local(@notes_file);
 
     ## variables in the finite state machine
@@ -221,10 +254,7 @@ sub notes_update_file {
     local($tag, $tag_generated);
     local($state) = 1;
 
-    # TODO
-    # 1. more testing
-    # 2. finite state machine diagram.
-    # 3. rewrite file if $file_modified is set.
+    # TODO: finite state machine diagram.
 
     if (!open(IN, "< $file")) {
         warn("$0: cannot open $file.  Skipped.\n");
@@ -248,7 +278,7 @@ sub notes_update_file {
 	} elsif ($state == 2) {
 	    # look for subject
 	    if (!$subject_found) {
-		if (/^\* (\S*)\s*$/) {
+		if (/^\* (.*)\s*$/) {
 		    # partial subject was found
 		    # get potential subject name
 		    $subject = $1;
@@ -272,11 +302,11 @@ sub notes_update_file {
 	    $state = 3;
 	    next;
 	} elsif ($state == 3) {
-	    # check loose link match
 	    if (!$tag_generated) {
 		$tag = notes_add_note_to_rawindex($subject, $date);
 		$tag_generated = 1;
 	    }
+	    # check loose link match
 	    $a_link_regexp = "^(link|prev|next): <.*>";
 	    if (/$a_link_regexp/) {
 		$a_link_found = 1;
@@ -332,8 +362,15 @@ sub notes_update_file {
 sub notes_add_note_to_rawindex {
     local($subject, $date) = @_;
     local($ndate) = &notes_normalize_date($date);
-    local($key) = $subject . " " . $ndate;
-    if (! exists($notes_raw_index{$key})) {
+    local($key) = $subject . $ndate;
+
+    # add the date and count of number of subjects to the date index
+    if (!exists($notes_date_index{$ndate})) {
+	$notes_date_index{$ndate} = 1;
+    } else {
+	$notes_date_index{$ndate}++;
+    }
+    if (!exists($notes_raw_index{$key})) {
 	$notes_raw_index{$key} = 0;
 	return '';
     } else {
@@ -356,7 +393,8 @@ sub notes_make_index {
     # index start up 
     print INDEX "-*- notes-index -*- ";
     foreach $subject_ndate (sort keys(%notes_raw_index)) {
-	($subject, $ndate) = split(/\s+/, $subject_ndate);
+	$subject = substr($subject_ndate, 0, -8);
+	$ndate = substr($subject_ndate, -8);
 	$date = &notes_denormalize_date($ndate);
 	$tags = $notes_raw_index{$subject_ndate};
 	if ($subject ne $old_subject) {
@@ -373,4 +411,21 @@ sub notes_make_index {
     }
     print INDEX "\n";
     close(INDEX);
+}
+
+sub notes_make_dindex {
+    local($date, $ndate);
+
+    if ( -T "$notes_dindex_file" ) {
+	rename("$notes_dindex_file", "$notes_dindex_file~") ||
+	    die("Could not rename $notes_dindex_file: $!\n");
+    }
+    open(DINDEX, ">$notes_dindex_file") || 
+	die("Could not open $notes_dindex_file for writing: $!\n");
+    print DINDEX " "; 
+    foreach $ndate (sort keys (%notes_date_index)) {
+	$date = &notes_denormalize_date($ndate);
+	print DINDEX $date, "#", $notes_date_index{$ndate}, " ";
+    }
+    close (DINDEX);
 }
