@@ -1,15 +1,18 @@
-#!/usr/local/bin/perl -- -*- perl -*-
+#! @PERL@ -- -*- perl -*-
 
-### notesadmin
+### notesadmin.in
 ###
-### $Id: recordsadmin.in,v 1.5 1996/12/11 01:53:55 asgoel Exp $
+### $Id: recordsadmin.in,v 1.6 1996/12/21 00:08:22 asgoel Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
-# Revision 1.5  1996/12/11 01:53:55  asgoel
+# Revision 1.6  1996/12/21 00:08:22  asgoel
+# Added require 5.000
+#
+# Revision 1.5  1996/12/11  01:53:55  asgoel
 # Improved documentation of external variables.
 #
 # Revision 1.4  1996/12/10  20:58:47  asgoel
@@ -35,6 +38,8 @@
 # Initial revision
 #
 #
+require 5.000;
+
 use Getopt::Std;
 use File::Basename;
 
