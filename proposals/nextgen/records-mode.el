@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.6 2001/05/29 00:45:01 burtonator Exp $
+;; $Id: records-mode.el,v 1.7 2001/05/30 07:36:57 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -183,6 +183,10 @@ The key-bindings of this mode are:
 (define-key records-mode-map "\C-c\C-q\C-h" 'records-query-on-header)
 (define-key records-mode-map "\C-c\C-q\C-b" 'records-query-on-body)
 ;;(define-key records-mode-map "\C-c\C-q\C-r" 'records-query-on-body)
+
+;;rss support
+(define-key records-mode-map "\C-c/rc" 'records-rss-create-record)
+(define-key records-mode-map "\C-c/re" 'records-rss-export-current-buffer)
 
 (setq records-mode-menu-map
       '(["Today's Record" records-goto-today t]

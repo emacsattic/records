@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.14 2001/05/26 23:13:15 burtonator Exp $
+;; $Id: records-rss.el,v 1.15 2001/05/30 07:36:57 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -321,7 +321,7 @@ the .bak. "
   (records-rss-insert-element "title" title 1)
   
   ;;link/url
-  (records-rss-insert-element "link" url 1)
+  (records-rss-insert-element "link" url 1 t)
 
   ;;add a dublin core 'date' item so that we know when this record was created.
 
@@ -360,10 +360,11 @@ the .bak. "
   
   (insert "</item>\n"))
 
-(defun records-rss-insert-element(name value &optional level)
+(defun records-rss-insert-element(name value &optional level cdata)
   "Build an XML element and insert it into the current buffer.  If specified
 `level' should contain an integer which species the level at which this node is
-nested, default is 0"
+nested, default is 0.  If `cdata' is true then we will output this element as a
+CDATA element. "
 
   (let(level-string)
 
@@ -378,8 +379,14 @@ nested, default is 0"
     
     (insert "<" name ">")
 
+    (if cdata
+        (insert "<![CDATA["))
+    
     (insert value)
 
+    (if cdata
+        (insert "]]>"))
+    
     (insert "</" name ">")
 
     (insert "\n")))
