@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.6 2001/05/14 09:05:37 burtonator Exp $
+;; $Id: records-rss.el,v 1.7 2001/05/14 09:51:25 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -65,14 +65,37 @@
 ;;
 ;; - Support for images
 ;;
-;; - Support for optional channel info (title, description, etc)
-;;
 ;; - Use the link so that RSS records are not exported multiple times.
 ;;
-;; - Incorporate indentation so that this can be understood easily.
+;; - If a record ALREADY exists in the RSS index delete it and insert a new
+;;   record.  This is necessary because if we update a record we want the index
+;;   to reflect this.
+
+
+;;;History:
+;;
+;; - Mon May 14 2001 01:59 AM (burton@relativity.yi.org): Incorporate
+;; indentation so that this can be understood easily.
+;;
+;; - Mon May 14 2001 02:26 AM (burton@relativity.yi.org): Support for optional
+;; channel info (title, description, etc)
+;;
+
 
 (defcustom records-rss-export-directory (concat records-directory "/rss")
   "Main directory for RSS export."
+  :type 'string
+  :group 'records-rss)
+
+(defcustom records-rss-channel-title records-owner-name
+  "Title to use for RSS channel info."
+  :type 'string
+  :group 'records-rss)
+
+(defcustom records-rss-channel-description (format "RSS channel for %s (%s)"
+                                                   records-owner-name
+                                                   records-owner-email)
+  "Description to use for RSS channel info."
   :type 'string
   :group 'records-rss)
 
@@ -258,6 +281,23 @@ nested, default is 0"
           (insert "\n\n")
 
           ;;FIXME: insert <channel> information
+
+          (insert "<channel>")
+          (insert "\n")
+
+          (records-rss-insert-element "title" records-rss-channel-title 1)
+
+          (insert "<description>")
+          (insert "\n")
+
+          (insert records-rss-channel-description)
+
+          (insert "\n")
+          (insert "</description>")
+          (insert "\n")
+
+          (insert "</channel>")
+          (insert "\n")
           
           (insert records-rss-tag-begin-items "\n")
 
