@@ -1,6 +1,6 @@
 ;;; records.el --- code for handling record indexes.
 
-;; $Id: records-index.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-index.el,v 1.2 2001/09/25 06:37:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -33,8 +33,11 @@
 (defvar records-index-use-font-lock t
   "* Enable records index fontification.")
 
+(defface records-index-subject-face '((t (:foreground "goldenrod" :bold t)))
+  "Face used to highlight symbolic links.")
+
 (defvar records-index-font-lock-keywords
-  '(("^\\(.*\\): " 1 bold))
+  '(("^\\(.*\\): " 1 'records-index-subject-face))
   "* Font-lock keywords for records index mode.")
 
 (defvar records-index-buffer nil
@@ -330,7 +333,18 @@ Returns the new (date, tag)."
     (setq buffer-read-only t)))
 
 (put 'records-index 'mode-class 'special)
+
+(defun records-index-goto-next-record()
+  "Go forward a record."
+  (interactive)
   
+  (if (re-search-forward " [0-9]" nil t)
+      (goto-char (1+ (match-beginning 0)))
+    (error "No more records")))
+
+(define-key records-index-mode-map [(tab)] 'records-index-goto-next-record)
+
 (provide 'records-index)
+
 (if (not (featurep 'records))
     (require 'records))

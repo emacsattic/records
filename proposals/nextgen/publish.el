@@ -1,4 +1,4 @@
-;; $Id: publish.el,v 1.2 2001/05/18 15:37:40 burtonator Exp $
+;; $Id: publish.el,v 1.3 2001/09/25 06:37:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -185,6 +185,13 @@ shtml then you should make the change here."
     (setq description (buffer-substring-no-properties start end))
 
     (publish title description)))
+
+(defun publish-sync-ask()
+  "Ask to sync to the publication server."
+  (interactive)
+
+  (if (yes-or-no-p "Synchronize publications now? ")
+      (publish-sync)))
 
 (defun publish-sync()
   "Synchronize the local publication directory with the server.  "

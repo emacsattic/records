@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.18 2001/06/02 09:19:56 burtonator Exp $
+;; $Id: records-rss.el,v 1.19 2001/09/25 06:37:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -120,7 +120,6 @@
   :type '(alist (cons 'string 'string))
   :group 'records-rss)
 
-
 (defcustom records-rss-item-default-url "http://www.sourceforge.net/projects/records"
   "Default URL for RSS content.  This is used when you want to export a record
 as RSS but don't want to provide a URL.  Use the default if you just want to
@@ -157,7 +156,8 @@ export your activity."
 
 (defun records-rss-export-current-buffer()
   "Export the current buffer to RSS format and return the number of records
-exported."
+exported.  This should also write a file into ~/.records/records-mode-DATE.rss
+containing all records for this date."
   (interactive)
 
   (records-format-require-version "1.0.1")
@@ -184,6 +184,7 @@ exported."
           (setq description (records-format-get-body))
           
           (save-excursion
+
             (setq buffer (find-file-noselect records-rss-index-file))
             
             (records-rss-init-buffer buffer)
