@@ -2,14 +2,17 @@
 
 ### notesadmin
 ###
-### $Id: recordsadmin.in,v 1.4 1996/12/10 20:58:47 asgoel Exp $
+### $Id: recordsadmin.in,v 1.5 1996/12/11 01:53:55 asgoel Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
-# Revision 1.4  1996/12/10 20:58:47  asgoel
+# Revision 1.5  1996/12/11 01:53:55  asgoel
+# Improved documentation of external variables.
+#
+# Revision 1.4  1996/12/10  20:58:47  asgoel
 # Added notes -c : converts from one notes date and directory format to another.
 # Modified various functions to accept an alternate set of variables.
 # Modified notes -i : initializes/installs notes init file.
@@ -48,19 +51,27 @@ $notes_init_file="$ENV{HOME}/.emacs-notes";
     "notes_dindex_file", 1, 'File name in which notes date index is stored.',
     "notes_directory_structure", 0, 'The directory structure for notes files.
 Its values can be 
-0 => all notes are stored in the variable notes-directory. 
-1 => notes are stored by year.
-2 => notes are stored by year and month.',
+0 => all notes are stored in notes_directory. 
+1 => notes are stored by year within notes_directory.
+2 => notes are stored by year and month within notes_directory.',
     "notes_day_order", 0, 'A notes file name is composed of a day, month and year.
 This variable determines the order of the day in date. 
-Valid values are 0, 1 or 2 only.',
+For example, day = 0, if you want a notes date to be in (day, month, year)
+format and day = 2, if you want a notes date to be (year, month, day), etc.
+Valid values for day are 0, 1 or 2 only.',
     "notes_month_order", 0, 'A notes file name is composed of a day, month and year.
 This variable determines the order of the month in date. 
-Valid values are 0, 1 or 2 only.',
+For example, month = 1, if you want a notes date to be in (day, month, year)
+format and month = 0, if you want a notes date to be (month, day, year), etc.
+Valid values for month are 0, 1 or 2 only.',
     "notes_year_order", 0, 'A notes file name is composed of a day, month and year.
-This variable determines the order of the month in date. 
+This variable determines the order of the year in date. 
+For example, year = 2, if you want a notes date to be in (day, month, year)
+format and year = 0, if you want a notes date to be (year, month, day), etc.
 Valid values are 0, 1 or 2 only.',
     "notes_year_length", 0, 'The length of a notes file year. 
+This can be 4 (example 1996) or 2 (96).
+Even if it is 2, notes will work correctly after the turn of the century.
 Valid values are 2 or 4 only.',
 );
 
