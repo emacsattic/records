@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.3 2001/05/14 06:09:21 burtonator Exp $
+;; $Id: records-rss.el,v 1.4 2001/05/14 08:18:24 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -67,10 +67,13 @@
 ;;
 ;; - Use the link so that RSS records are not exported multiple times.
 ;;
-;; - Incorporate indentation.
+;; - Incorporate indentation so that this can be understood easily.
 
-(defvar records-rss-export-directory (concat records-directory "/rss")
-  "Main directory for RSS export.")
+
+(defcustom records-rss-export-directory (concat records-directory "/rss")
+  "Main directory for RSS export."
+  :type 'string
+  :group 'records-rss)
 
 (defvar records-rss-index-file (concat records-rss-export-directory "/index.rss")  
   "File used for RSS index output.")
@@ -80,6 +83,7 @@
 
 (defconst records-rss-tag-end-items "<!-- END ITEMS -->"
   "Tag which marks the end of RSS items.")
+
 
 
 (defun records-rss-create-record(subject title url)
@@ -113,8 +117,6 @@
       (while (re-search-forward "^type: rss$" nil t)
         (let(record-link title url description buffer)
 
-          (setq count (1+ count))
-
           (setq title (records-metainfo-get "title"))
           (setq url (records-metainfo-get "url"))
           (setq record-link (records-metainfo-get "link"))
@@ -124,21 +126,33 @@
 
           (records-rss-init-buffer buffer)
 
-          (records-rss-export-record record-link
-                                     title
-                                     url
-                                     "FIXME: description... asdf"
-                                     buffer)
+          ;;FIXME: make sure that the link doesn't already exist.
 
+          (if (not (records-rss-link-exists record-link))
+              (progn 
+                
+                (setq count (1+ count))
+
+                (records-rss-export-record record-link
+                                           title
+                                           url
+                                           "FIXME: description... asdf"
+                                           buffer)))
           ))
 
-      (message "Exported %i RSS record(s)." count)
+      (records-rss-save)
+      (message "Exported %i RSS record(s)." count))))
+
+(defun records-rss-link-exists(record-link)
+  "Return true if the given link already exists."
+
+  (save-excursion
+    (set-buffer (find-file-noselect records-rss-index-file))
     
-    ))
+    (beginning-of-buffer)
 
-
-  (records-rss-save))
-
+    (search-forward record-link nil t)))
+  
 (defun records-rss-save()
   "Save any buffers that RSS export might have modified."
 
@@ -151,35 +165,51 @@
 (defun records-rss-export-record(record-link title url description buffer)
   "Export the current record and output the XML to the buffer.  "
 
+  ;;FIXME: insert the 'created' date
+  
   (set-buffer buffer)
 
-  (insert "<item>\n")
-
+  (insert "\n\n")
+  
   (insert "<!-- record-link: " record-link " -->")
   (insert "\n")
 
-  
+  (insert "<item>\n")
+
   ;;title
-  (records-rss-insert-element "title" title)
+  (records-rss-insert-element "title" title 1)
   
   ;;link/url
-  (records-rss-insert-element "link" url)
+  (records-rss-insert-element "link" url 1)
   
   ;;description
-  (records-rss-insert-element "description" description)
+  (records-rss-insert-element "description" description 1)
   
   (insert "</item>\n"))
 
-(defun records-rss-insert-element(name value)
-  "Build an XML element and insert it into the current buffer."
+(defun records-rss-insert-element(name value &optional level)
+  "Build an XML element and insert it into the current buffer.  If specified
+`level' should contain an integer which species the level at which this node is
+nested, default is 0"
 
-  (insert "<" name ">")
+  (let(level-string)
 
-  (insert value)
+    (setq level-string "")
 
-  (insert "</" name ">")
+    (if level
+        (progn
+          (setq level-string (make-string (* level 4) ? ))))
+          ;;
 
-  (insert "\n"))
+    (insert level-string)
+    
+    (insert "<" name ">")
+
+    (insert value)
+
+    (insert "</" name ">")
+
+    (insert "\n")))
 
 (defun records-rss-init()
   "Perform any optimization that RSS needs."
