@@ -1,6 +1,6 @@
 ;;; records-format.el --- functions used for parsing and formating records file.
 
-;; $Id: records-format.el,v 1.4 2001/05/15 14:01:39 burtonator Exp $
+;; $Id: records-format.el,v 1.5 2001/05/17 02:15:27 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -199,8 +199,6 @@ version in the current records file.  "
       (setq header (buffer-substring-no-properties start end))
 
       header)))
-  
-  
 
 (provide 'records-format)
 
