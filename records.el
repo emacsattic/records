@@ -1,14 +1,18 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.6 1996/12/10 01:34:31 asgoel Exp $
+;;; $Id: records.el,v 1.7 1996/12/11 01:55:27 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.6  1996/12/10 01:34:31  asgoel
+; Revision 1.7  1996/12/11 01:55:27  asgoel
+; Added notes-body-empty-p
+; Added removal of empty notes after todo moves
+;
+; Revision 1.6  1996/12/10  01:34:31  asgoel
 ; Made notes-initialize interactive (binding : C-c C-z).
 ; notes-directory does not have to have a slash following it.
 ;
@@ -431,6 +435,13 @@ The note marked is the one that contains point or follows point."
     ;; also return value
     (goto-char pt)))
 
+(defun notes-body-empty-p ()
+  "Is the body of the note under point empty?"
+  (save-excursion
+    (notes-mark-note t)
+    (and (looking-at "\\s-*")
+	 (eq (match-end 0) (mark)))))
+
 (defun notes-link ()
   "Returns the notes link of the note around the current point."
   (save-excursion
@@ -502,6 +513,8 @@ With arg., keep the body and remove the subject only."
 						       (match-end 3)))
 	      (dir (buffer-substring-no-properties (match-beginning 1)
 						   (match-end 1))))
+	  ;; TODO: if "file://" or "file://localhost" is present 
+	  ;; at the beginning of dir, strip it
 	  (notes-goto-note subject date tag nil nil dir))
       (error "notes-goto-link: not on a link"))))
 
@@ -538,8 +551,10 @@ If todo is not nil and not t, ask user whether notes-todo should be called. "
 	;; this is for going to a specific day and not a note
 	nil
       (goto-char (point-min))
+      ;; TODO: this search forward will fail to get to the right spot
+      ;; if this link has been added to a previous subject in the file.
       (if (re-search-forward 
-	   (concat "link: <.*" date "#" tag "\\* " subject ">") 
+	   (concat "^link: <.*" date "#" tag "\\* " subject ">") 
 	   (point-max) t)
 	  ;; found
 	  ;; TODO: add support for notes-goto-last-note
@@ -685,11 +700,10 @@ With negative arg, goto the note arg-times previous to date and tag."
   (interactive "P")
   (notes-goto-relative-note (if arg arg 1) subject date tag no-error))
 
-;; TODO: should invoke it automatically  
 ;; TODO: should break function up
 (defun notes-todo (&optional date)
   "Insert the previous note files todo's into the date file.
-See the notes-todo.\* variables on when it is automatically invoked."
+See the notes-todo-.*day variables on when it is automatically invoked."
   (interactive)
   (if (null date)
       (setq date (notes-file-to-date)))
@@ -708,7 +722,7 @@ See the notes-todo.\* variables on when it is automatically invoked."
 	    (while 
 		(progn;; do-while loop
 		  (save-excursion
-		    ;; get the end of note, next subject
+		    ;; get the end of note and the next subject
 		    (if (notes-goto-down-note)
 			(progn 
 			  (setq next-subject (nth 0 (notes-subject-tag t)))
@@ -737,7 +751,9 @@ See the notes-todo.\* variables on when it is automatically invoked."
 		      (if (not subject-inserted)
 			  (progn (notes-insert-note subject)
 				 (setq subject-inserted t)))
-		      (insert-buffer-substring cur-buf bt-point et-point)))
+		      (insert-buffer-substring cur-buf bt-point et-point)
+		      ;; insert an extra newline
+		      (insert "\n")))
 		  ;; going to next note: reset variables
 		  (setq subject next-subject)
 		  (setq bon-point eon-point)
@@ -748,7 +764,10 @@ See the notes-todo.\* variables on when it is automatically invoked."
 	    (let ((modified (buffer-modified-p)))
 	      (while notes-todo-move-regions
 		;; TODO: should do the notes-todo-delete-empty-note
+		(goto-char (car (car notes-todo-move-regions)))
 		(apply 'delete-region (car notes-todo-move-regions))
+		(if (and notes-todo-delete-empty-note (notes-body-empty-p))
+		    (notes-delete-note))
 		(setq notes-todo-move-regions
 		      (cdr notes-todo-move-regions)))
 	      (and (not modified) (buffer-modified-p)
