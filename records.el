@@ -1,7 +1,7 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.20 1999/04/14 17:16:51 ashvin Exp $
+;;; $Id: records.el,v 1.21 1999/05/25 02:06:33 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -16,7 +16,7 @@
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
 ;;;
-(defconst records-version "1.2")
+(defconst records-version "1.3")
 
 (defvar records-mode-menu-map nil
   "Records Menu Map. Internal variable.")
@@ -826,11 +826,10 @@ The key-bindings of this mode are:
   (define-key records-mode-map "\C-c\C-f" 'records-goto-next-record-file) 
                                         ; front file
 
+  (define-key records-mode-map "\C-c\C-g" 'records-goto-link)
+  (define-key records-mode-map "\C-c\C-l" 'records-goto-last-record)
   (define-key records-mode-map "\C-c\C-j" 'records-goto-index); jump!!
 
-  (define-key records-mode-map "\C-c\C-l" 'records-goto-last-record)
-
-  (define-key records-mode-map "\C-c\C-g" 'records-goto-link)
   ;; (define-key records-mode-map [M-S-mouse-1] 'records-goto-mouse-link)
 
   ;; utility functions have C-c/ prefix keys
@@ -840,9 +839,9 @@ The key-bindings of this mode are:
   (define-key records-mode-map "\C-c/t" 'records-todo)
   (define-key records-mode-map "\C-c/c" 'records-concatenate-records)
   (define-key records-mode-map "\C-c/f" 'records-concatenate-record-files)
-  (define-key records-mode-map "\C-c/n" 'records-goto-calendar)
 
 
+  (define-key records-mode-map "\C-c\C-c" 'records-goto-calendar)
   (define-key records-mode-map "\C-c\C-k" 'records-link-as-kill)
   (define-key records-mode-map [?\C-c ?\C--] 'records-underline-line)
   (define-key records-mode-map "\M-\C-h" 'records-mark-record)
@@ -865,22 +864,21 @@ The key-bindings of this mode are:
 	    ["Prev Day" records-goto-prev-day t]
 	    ["Next Day" records-goto-next-day t]
 	    "--"
-	    ["Goto Index" records-goto-index t]
 	    ["Goto Records Link" records-goto-link t]
 	    ["Goto Last Record" records-goto-last-record t]
+	    ["Goto Index" records-goto-index t]
 	    "--"
 	    ["Insert Record" records-insert-record t]
 	    ["Delete Record" records-delete-record t]
 	    ["Rename Record" records-rename-record t]
 	    "--"
+	    ["Get TODO's" records-todo t]
 	    ["Decrypt Record" records-decrypt-record t]
 	    ["Encrypt Record" records-encrypt-record t]
-	    "--"
 	    ["Concat Records" records-concatenate-records t]
 	    ["Concat Record Files" records-concatenate-record-files t]
-	    ["Get TODO's" records-todo t]
-	    ["Goto Calendar" records-goto-calendar t]
 	    "--"
+	    ["Goto Calendar" records-goto-calendar t]
 	    ["Mark Record"  records-mark-record t]
 	    ["Copy Records Link" records-link-as-kill t]
 	    ["Underline Line" records-underline-line t]
