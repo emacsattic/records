@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.8 2001/07/09 04:41:32 burtonator Exp $
+;; $Id: records-mode.el,v 1.9 2002/06/25 23:26:14 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -186,6 +186,8 @@ The key-bindings of this mode are:
 
 ;;rss support
 (define-key records-mode-map "\C-c/rc" 'records-rss-create-record)
+(define-key records-mode-map "\C-c/rf" 'records-rss-create-feature)
+(define-key records-mode-map "\C-c/rp" 'records-rss-preview-record-in-browser)
 (define-key records-mode-map "\C-c/re" 'records-rss-export-current-buffer)
 
 (setq records-mode-menu-map
@@ -209,7 +211,10 @@ The key-bindings of this mode are:
          ["Show results buffer" (pop-to-buffer records-query-results-buffer-name) t])
         ("RSS"
          ["Create RSS Record" records-rss-create-record t]
-         ["Export" records-rss-export-current-buffer t])
+         ["Create RSS Feature" records-rss-create-feature t]
+         ["Mark as Draft" records-rss-mark-draft t]
+         ["Preview in Browser" records-rss-preview-record-in-browser t]
+         ["Export Current Buffer" records-rss-export-current-buffer t])
         ("Tools"
          ["Create TODO" records-create-todo t]
          ["Create Supplemental" records-create-supplemental t]

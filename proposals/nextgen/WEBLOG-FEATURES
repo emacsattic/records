@@ -1,0 +1,35 @@
+
+- Saves all published articles as RSS
+
+- Supports draft RSS items.  When an item is marked as a draft it can be edited
+  locally without being saved to the local RSS file.
+
+- Weblog supports transactional commit to CVS.
+
+- All publications saved to RECORDS_HOME/rss/index.rss
+
+- Supports linking images directly into your weblog.
+
+- Supports linking source code as an html rendering from Emacs directly into
+  your weblog.
+
+- Supports mod_content for including the whole publication within the RSS item.
+
+- Supports XHTML publication of Emacs content
+
+    - paragraph are quoted with <p>
+
+    - italicized text is quoted
+
+    - *bold* text is quoted with <b>
+
+    - Itemized text (lines beginning with '-') are quoted with <li>
+
+    - Citations such as [1] are linked with <a> to the text at the bottom of the
+      record.
+    
+- RSS is kept in reverse-chronological order which makes for the ability to
+  easily write XSLT
+
+- Ability to preview weblog in XHTML locally with a web browser via the
+  `browse-url' plugin mechanism.
