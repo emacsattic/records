@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.15 2001/05/30 07:36:57 burtonator Exp $
+;; $Id: records-rss.el,v 1.18 2001/06/02 09:19:56 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -348,23 +348,16 @@ the .bak. "
   
   ;;description
 
-  (insert "\n")
-  (insert "<description>")
-  (insert "\n\n")
-
-  (insert description)
-
-  (insert "\n\n")
-  (insert "</description>")
-  (insert "\n\n")
+  (records-rss-insert-element "description" description 0 t t)
   
   (insert "</item>\n"))
 
-(defun records-rss-insert-element(name value &optional level cdata)
+(defun records-rss-insert-element(name value &optional level cdata text-format)
   "Build an XML element and insert it into the current buffer.  If specified
 `level' should contain an integer which species the level at which this node is
 nested, default is 0.  If `cdata' is true then we will output this element as a
-CDATA element. "
+CDATA element.  If `text-format' is true, insert \n around beginning and end of
+the value.  "
 
   (let(level-string)
 
@@ -376,18 +369,30 @@ CDATA element. "
           ;;
 
     (insert level-string)
-    
+
+    (if text-format
+        (insert "\n"))
+
     (insert "<" name ">")
 
     (if cdata
         (insert "<![CDATA["))
+
+    (if text-format
+        (insert "\n\n"))
     
     (insert value)
 
+    (if text-format
+        (insert "\n\n"))
+    
     (if cdata
         (insert "]]>"))
     
     (insert "</" name ">")
+
+    (if text-format
+        (insert "\n\n"))
 
     (insert "\n")))
 
