@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.5 2001/05/14 13:06:47 burtonator Exp $
+;; $Id: records-query.el,v 1.6 2001/05/14 16:48:37 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -169,21 +169,8 @@ query across.  "
 
               ;;now get the body
 
-              (save-excursion
-                (let(start end)
-
-                  (assert (re-search-forward records-format-header-end-regexp nil t)
-                          nil "Could not find end of header")
-
-                  (setq start (match-end 0))
-
-                  (if (re-search-forward (records-subject-regexp) nil t)
-                      (setq end (match-beginning 0))
-                    (setq end (point-max)))
-
-                  (setq body (buffer-substring-no-properties start end))))
-
-
+              (setq body (records-format-get-body))
+              
               ;;try to get the title and use that as the excerpt if it is provided
               (setq excerpt (records-metainfo-get "title"))
 
