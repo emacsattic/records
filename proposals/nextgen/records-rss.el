@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.23 2002/06/25 23:26:14 burtonator Exp $
+;; $Id: records-rss.el,v 1.24 2002/06/28 18:58:47 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -611,10 +611,10 @@ the value.  "
       (records-rss-xhtmlify--items)
       (records-rss-xhtmlify--images)
       (records-rss-xhtmlify--cite)
-      ;;(records-rss-xhtmlify--supplemental)
       (records-rss-xhtmlify--para)
       (records-rss-xhtmlify--source)
       (records-rss-xhtmlify--cited-para)
+      (records-rss-xhtmlify--supplemental)
 
       (buffer-substring (point-min) (point-max)))))
 
@@ -1002,81 +1002,20 @@ content, delete them."
     
     (while (re-search-forward "^SUPPLEMENTAL.*$" nil t)
 
-      (let((sup-title (match-string 0))
-           (sup-body nil)
-           (begin nil)
-           (end nil))
+      (save-restriction
+        (narrow-to-region (match-beginning 0) (match-end 0))
 
-        (replace-match "")
+        (goto-char (point-min))
 
-        (setq begin (point))
-        
-        (assert (re-search-forward "^END_SUPPLEMENTAL.*$" nil t)
-                nil "Could not find end of supplemental")
+        (insert "<span style=\"color: blue\">\n")
 
-        (replace-match "")
+        (goto-char (point-max))
 
-        (setq end (point))
-        
-        (setq sup-body (buffer-substring begin end))
-
-        ;;form a table like this...
-        
-        ;; <table>
-
-        ;;     <td colspan="2" style="color: blue">
-
-        ;;         SUPPLEMENTAL: // created on Mon Jun 24 2002 04:33 PM
-                
-        ;;     </td>
-            
-        ;;     <tr/>
-            
-        ;;     <td bgcolor="#fa500" width="10">
-        ;;         &nbsp;
-        ;;     </td>
-
-        ;;     <td width="100%">
-
-        ;;         I don't know what I am doing here...
-                
-        ;;     </td>
-            
-        ;; </table>
-
-        ;;get rid of the body
-
-        ;;(delete-region begin end)
-
-        (insert "<hr/>\n")
-        
-        (insert "<table>\n")
-
-        (insert "<tr>\n")
-        
-        (insert "<td colspan=\"2\" style=\"color: blue\">\n")
-
-        (insert sup-title)
-        
-        (insert "</td>\n")
-
-        (insert "</tr>\n")
-
-        (insert "<tr>\n")
-        
-        (insert "<td bgcolor=\"#fa500\" width=\"5\">\n")
-        
-        (insert "</td>\n")
-
-        (insert "<td width=\"100%\">\n")
-
-        (insert sup-body)
-        
-        (insert "</td>\n")
-
-        (insert "</tr>\n")
-
-        (insert "</table>\n")))))
+        (insert "</span>\n"))
+      
+      (if (re-search-forward "^END_SUPPLEMENTAL.*$" nil t)
+           (replace-match "")
+         (error "Could not find end of supplemental")))))
 
 (defun records-rss-touch()
   "Touch an RSS article so that it's UUID is updated.  This is a nice feature

@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.9 2002/06/25 23:26:14 burtonator Exp $
+;; $Id: records-mode.el,v 1.10 2002/06/28 18:58:47 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -189,6 +189,7 @@ The key-bindings of this mode are:
 (define-key records-mode-map "\C-c/rf" 'records-rss-create-feature)
 (define-key records-mode-map "\C-c/rp" 'records-rss-preview-record-in-browser)
 (define-key records-mode-map "\C-c/re" 'records-rss-export-current-buffer)
+(define-key records-mode-map "\C-c/rt" 'records-rss-touch)
 
 (setq records-mode-menu-map
       '(["Today's Record" records-goto-today t]
@@ -214,6 +215,7 @@ The key-bindings of this mode are:
          ["Create RSS Feature" records-rss-create-feature t]
          ["Mark as Draft" records-rss-mark-draft t]
          ["Preview in Browser" records-rss-preview-record-in-browser t]
+         ["Touch Current Records" records-rss-touch t]
          ["Export Current Buffer" records-rss-export-current-buffer t])
         ("Tools"
          ["Create TODO" records-create-todo t]
