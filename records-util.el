@@ -1,13 +1,16 @@
 ;;;
-;;; notes-util.el
+;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.2 1997/01/23 00:02:35 ashvin Exp $
+;;; $Id: records-util.el,v 1.3 1997/05/01 21:21:23 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-util.el,v $
+; Revision 1.3  1997/05/01 21:21:23  ashvin
+; Changed names from notes to record.
+;
 ; Revision 1.2  1997/01/23 00:02:35  ashvin
 ; The first release
 ;
@@ -15,63 +18,63 @@
 ; Initial revision
 ;
 
-(defun notes-todo (&optional date)
-  "Insert the previous note files todo's into the date file.
-See the notes-todo-.*day variables on when it is automatically invoked."
+(defun records-todo (&optional date)
+  "Insert the previous record files todo's into the date file.
+See the records-todo-.*day variables on when it is automatically invoked."
   (interactive)
   (if (null date)
-      (setq date (notes-file-to-date)))
+      (setq date (records-file-to-date)))
   (save-excursion
     (let* ((date-buf (current-buffer))
-	   (prev-date (notes-goto-prev-note-file 1 t t))
+	   (prev-date (records-goto-prev-record-file 1 t t))
 	   (cur-buf (current-buffer)))
       (if (null prev-date)
 	  () ;; nothing to do
 	(goto-char (point-min))
-	(while (notes-goto-down-note nil t) ;; note exists
+	(while (records-goto-down-record nil t) ;; record exists
 	  ;; start the magic
-	  (let* ((subject (nth 0 (notes-subject-tag t))) ;; first note
-		 (bon-point (notes-mark-note))
+	  (let* ((subject (nth 0 (records-subject-tag t))) ;; first record
+		 (bon-point (records-mark-record))
 		 (eon-point (mark))
 		 bt-point et-point move subject-inserted)
-	    ;; process all the todo's in the current note
-	    (while (re-search-forward notes-todo-begin-regexp eon-point 'end)
+	    ;; process all the todo's in the current record
+	    (while (re-search-forward records-todo-begin-regexp eon-point 'end)
 	      ;; do the copy/move thing for the current todo
 	      (setq bt-point (match-beginning 0))
 	      (setq move (match-beginning 2))
 	      ;; goto end of todo
-	      (if (re-search-forward notes-todo-end-regexp eon-point 'end)
+	      (if (re-search-forward records-todo-end-regexp eon-point 'end)
 		  (setq et-point (match-end 0))
 		(setq et-point (point)))
 	      ;; for move, save the regions in the old file
-	      (if move (setq notes-todo-move-regions 
+	      (if move (setq records-todo-move-regions 
 			     (cons (list bt-point et-point)
-				   notes-todo-move-regions)))
+				   records-todo-move-regions)))
 	      ;; now copy the region to the new file
 	      (save-excursion
 		(set-buffer date-buf)
 		(goto-char (point-max))
 		(if (not subject-inserted)
-		    (progn (notes-insert-note subject) 
+		    (progn (records-insert-record subject) 
 			   (setq subject-inserted t)))
 		(insert-buffer-substring cur-buf bt-point et-point)
-		;; insert an extra newline - this is useful for empty notes
+		;; insert an extra newline - this is useful for empty records
 		(insert "\n")))))
-	;; end of note processing. for todo-move, remove regions from old file
+	;; end of record processing. for todo-move, remove regions from old file
 	(let ((modified (buffer-modified-p)))
-	  (while notes-todo-move-regions
-	    (goto-char (car (car notes-todo-move-regions)))
-	    (apply 'delete-region (car notes-todo-move-regions))
-	    ;; do the notes-todo-delete-empty-note
-	    (if (and notes-todo-delete-empty-note (notes-body-empty-p))
-		(notes-delete-note nil t))
-	    (setq notes-todo-move-regions
-		  (cdr notes-todo-move-regions)))
+	  (while records-todo-move-regions
+	    (goto-char (car (car records-todo-move-regions)))
+	    (apply 'delete-region (car records-todo-move-regions))
+	    ;; do the records-todo-delete-empty-record
+	    (if (and records-todo-delete-empty-record (records-body-empty-p))
+		(records-delete-record nil t))
+	    (setq records-todo-move-regions
+		  (cdr records-todo-move-regions)))
 	  (and (not modified) (buffer-modified-p) (save-buffer)))
 	))))
 
-(defun notes-user-name ()
-  "The user name of the notes user."
+(defun records-user-name ()
+  "The user name of the records user."
   (eval-when-compile (load "mc-pgp"))
   (cond ((boundp 'mc-ripem-user-id)
 	 mc-ripem-user-id)
@@ -79,56 +82,56 @@ See the notes-todo-.*day variables on when it is automatically invoked."
 	 mc-pgp-user-id)
 	(t (user-full-name))))
 
-(defun notes-encrypt-note (arg)
-  "Encrypt the current note for the current user.
-With prefix arg, start the encryption from point to the end of note.
-Notes encryption requires the mailcrypt and mc-pgp packages."
+(defun records-encrypt-record (arg)
+  "Encrypt the current record for the current user.
+With prefix arg, start the encryption from point to the end of record.
+Records encryption requires the mailcrypt and mc-pgp packages."
   (interactive "P")
   (if (not (fboundp 'mc-pgp-encrypt-region))
       (load "mc-pgp"))
   (save-excursion
     (let ((start (point)))
-      (notes-mark-note t)
+      (records-mark-record t)
       (if arg
 	  (goto-char start)
 	(setq start (point)))
       ;; sanity check
       (if (or (looking-at mc-pgp-msg-begin-line)
 	      (looking-at mc-pgp-signed-begin-line))
-	  (error "notes-encrypt-note: note is already encrypted."))
-      (mc-pgp-encrypt-region (list (notes-user-name)) start (mark)
-			  (notes-user-name) nil))))
+	  (error "records-encrypt-record: record is already encrypted."))
+      (mc-pgp-encrypt-region (list (records-user-name)) start (mark)
+			  (records-user-name) nil))))
 
-(defun notes-decrypt-note ()
-  "Decrypt the current note.
-Notes decryption requires the mailcrypt and mc-pgp packages."
+(defun records-decrypt-record ()
+  "Decrypt the current record.
+Records decryption requires the mailcrypt and mc-pgp packages."
   (interactive)
   (if (not (fboundp 'mc-pgp-decrypt-region))
       (load "mc-pgp"))
   (save-excursion
-    (notes-mark-note t)
+    (records-mark-record t)
     (if (not (re-search-forward
 	      (concat "\\(" mc-pgp-msg-begin-line "\\|" 
 		      mc-pgp-signed-begin-line "\\)") (mark) t))
-	(error "notes-decrypt-note: note is not encrypted."))
+	(error "records-decrypt-record: record is not encrypted."))
     (mc-pgp-decrypt-region (match-beginning 0) (mark))))
 
-(defun notes-concatenate-notes (num)
-  "Concatenate the current note with the notes on the same subject written
-in the last NUM days. Output these notes in the notes output buffer (see 
-notes-output-buffer). Without prefix arg, prompts for number of days.
-An empty string will output the current note only. A negative number
-will output all the past notes on the subject!!"
+(defun records-concatenate-records (num)
+  "Concatenate the current record with the records on the same subject written
+in the last NUM days. Output these records in the records output buffer (see 
+records-output-buffer). Without prefix arg, prompts for number of days.
+An empty string will output the current record only. A negative number
+will output all the past records on the subject!!"
   (interactive
    (list
     (if current-prefix-arg (int-to-string current-prefix-arg)
-      (read-from-minibuffer "Concat notes in last N days (default 1): "))))
-  (let* ((date (notes-file-to-date))
-	 (subject-tag (notes-subject-tag t))
+      (read-from-minibuffer "Concat records in last N days (default 1): "))))
+  (let* ((date (records-file-to-date))
+	 (subject-tag (records-subject-tag t))
 	 (subject (nth 0 subject-tag))
 	 (tag (nth 1 subject-tag))
 	 (arg (string-to-int num))
-	 (first-ndate (notes-add-date (notes-normalize-date date)
+	 (first-ndate (records-add-date (records-normalize-date date)
 				      (if (= arg 0) -1 (- arg))))
 	 cur-buf bon-point eon-point prev-date-tag)
 
@@ -137,58 +140,58 @@ will output all the past notes on the subject!!"
     ;; erase output buffer if needed
     ;; print subject
     (save-excursion
-      (set-buffer (get-buffer-create notes-output-buffer))
-      (if notes-erase-output-buffer
+      (set-buffer (get-buffer-create records-output-buffer))
+      (if records-erase-output-buffer
 	  (erase-buffer)
 	(goto-char (point-max)))
-      (insert (notes-subject-on-concat subject)))
-    ;; start with current note
+      (insert (records-subject-on-concat subject)))
+    ;; start with current record
     (save-excursion
       (while ;; do-while loop 
 	  (progn
-	    ;; get the current notes's buffer, beg-point and end-point.
-	    (notes-mark-note t)
+	    ;; get the current records's buffer, beg-point and end-point.
+	    (records-mark-record t)
 	    (setq cur-buf (buffer-name))
 	    (setq bon-point (point))
 	    (setq eon-point (mark))
-	    ;; insert the current note into notes-output-buffer
+	    ;; insert the current record into records-output-buffer
 	    (save-excursion
-	      (set-buffer (get-buffer notes-output-buffer))
+	      (set-buffer (get-buffer records-output-buffer))
 	      (goto-char (point-max))
-	      (insert (notes-date-on-concat (concat date (notes-tag tag))))
+	      (insert (records-date-on-concat (concat date (records-tag tag))))
 	      (insert-buffer-substring cur-buf bon-point eon-point))
-	    ;; goto the previous note
-	    (setq prev-date-tag (notes-goto-prev-note 1 subject date tag t t))
+	    ;; goto the previous record
+	    (setq prev-date-tag (records-goto-prev-record 1 subject date tag t t))
 	    (setq date (nth 0 prev-date-tag))
 	    (setq tag (nth 1 prev-date-tag))
-	    ;; check if this note should be copied
+	    ;; check if this record should be copied
 	    (and prev-date-tag 
-		 (notes-ndate-lessp first-ndate 
-				    (notes-normalize-date date))))))
+		 (records-ndate-lessp first-ndate 
+				    (records-normalize-date date))))))
     ;; display/select
-    (if notes-select-buffer-on-concat
-	(pop-to-buffer (get-buffer notes-output-buffer))
-      (display-buffer (get-buffer notes-output-buffer)))))
+    (if records-select-buffer-on-concat
+	(pop-to-buffer (get-buffer records-output-buffer))
+      (display-buffer (get-buffer records-output-buffer)))))
     
-(defun notes-concatenate-note-files (num)
-  "Concatenate all the notes in the notes files of the last NUM days.
-All the notes of a subject are collected together. Output these notes in the
-notes output buffer (see notes-output-buffer). Without prefix arg, prompts
-for number of days. An empty string will output the notes of the current file."
+(defun records-concatenate-record-files (num)
+  "Concatenate all the records in the records files of the last NUM days.
+All the records of a subject are collected together. Output these records in the
+records output buffer (see records-output-buffer). Without prefix arg, prompts
+for number of days. An empty string will output the records of the current file."
   (interactive
    (list
     (if current-prefix-arg (int-to-string current-prefix-arg)
-      (read-from-minibuffer "Concat notes files in last N days (default 1): "
+      (read-from-minibuffer "Concat records files in last N days (default 1): "
 			    ))))
-  (let* ((date (notes-file-to-date))
+  (let* ((date (records-file-to-date))
 	 (arg (string-to-int num))
-	 (first-ndate (notes-add-date (notes-normalize-date date)
+	 (first-ndate (records-add-date (records-normalize-date date)
 				      (if (= arg 0) -1 (- arg))))
-	 notes-subject-list)
+	 records-subject-list)
     ;; erase output buffer if needed
     (save-excursion
-      (set-buffer (get-buffer-create notes-output-buffer))
-      (if notes-erase-output-buffer
+      (set-buffer (get-buffer-create records-output-buffer))
+      (if records-erase-output-buffer
 	  (erase-buffer)
 	(goto-char (point-max))))
     (save-excursion
@@ -196,56 +199,56 @@ for number of days. An empty string will output the notes of the current file."
 	  (progn ;; do-while loop 
 	    ;; goto the beginning of the file
 	    (goto-char (point-min))
-	    ;; loop thru. all notes in a file
-	    (while (notes-goto-down-note nil t) 
-	      (let* ((subject (nth 0 (notes-subject-tag t)))
-		     (tag  (nth 1 (notes-subject-tag t)))
-		     (bon-point (notes-mark-note t))
+	    ;; loop thru. all records in a file
+	    (while (records-goto-down-record nil t) 
+	      (let* ((subject (nth 0 (records-subject-tag t)))
+		     (tag  (nth 1 (records-subject-tag t)))
+		     (bon-point (records-mark-record t))
 		     (eon-point (mark))
-		     subject-mark omark note)
+		     subject-mark omark record)
 		;; get subject-mark
-		(setq subject-mark (assoc subject notes-subject-list))
+		(setq subject-mark (assoc subject records-subject-list))
 		(if subject-mark
 		    ()
 		  (save-excursion
-		    (set-buffer (get-buffer notes-output-buffer))
+		    (set-buffer (get-buffer records-output-buffer))
 		    ;; make a new marker
 		    (setq omark (point-max-marker))
 		    (goto-char omark)
 		    ;; insert subject header 
-		    (insert-before-markers (notes-subject-on-concat subject))
+		    (insert-before-markers (records-subject-on-concat subject))
 		    (goto-char omark)
 		    (insert "\n")) ;; this does a lot of the trick for markers
 		  ;; add subject and new marker to list
 		  (setq subject-mark (list subject omark))
-		  (setq notes-subject-list
-			(append notes-subject-list (list subject-mark))))
-		(setq note (buffer-substring bon-point eon-point))
+		  (setq records-subject-list
+			(append records-subject-list (list subject-mark))))
+		(setq record (buffer-substring bon-point eon-point))
 		(save-excursion
-		  (set-buffer (get-buffer notes-output-buffer))
+		  (set-buffer (get-buffer records-output-buffer))
 		  (goto-char (nth 1 subject-mark))
 		  (insert-before-markers 
-		   (notes-date-on-concat (concat date (notes-tag tag))))
-		  (insert-before-markers note))
+		   (records-date-on-concat (concat date (records-tag tag))))
+		  (insert-before-markers record))
 		(goto-char eon-point)))
-	    (setq date (notes-goto-prev-note-file 1 t))
-	    ;; check if this note should be copied
-	    (and date (notes-ndate-lessp first-ndate 
-					 (notes-normalize-date date))))))
-    ;; clean up notes-subject-list
-    (while notes-subject-list
-      (set-marker (nth 1 (car notes-subject-list)) nil)
-      (setq notes-subject-list (cdr notes-subject-list)))
+	    (setq date (records-goto-prev-record-file 1 t))
+	    ;; check if this record should be copied
+	    (and date (records-ndate-lessp first-ndate 
+					 (records-normalize-date date))))))
+    ;; clean up records-subject-list
+    (while records-subject-list
+      (set-marker (nth 1 (car records-subject-list)) nil)
+      (setq records-subject-list (cdr records-subject-list)))
     ;; display/select
-    (if notes-select-buffer-on-concat
-	(pop-to-buffer (get-buffer notes-output-buffer))
-      (display-buffer (get-buffer notes-output-buffer)))))
+    (if records-select-buffer-on-concat
+	(pop-to-buffer (get-buffer records-output-buffer))
+      (display-buffer (get-buffer records-output-buffer)))))
 
-(defun notes-goto-calendar ()
-  "Goto the calendar date in the current note file."
+(defun records-goto-calendar ()
+  "Goto the calendar date in the current record file."
   (interactive)
-  (let* ((date (notes-file-to-date))
-	 (ndate (notes-normalize-date date))
+  (let* ((date (records-file-to-date))
+	 (ndate (records-normalize-date date))
 	 ;; convert normalized date to calendar date
 	 ;; the day and month are interchanged
 	 (cdate (list (nth 1 ndate) (nth 0 ndate) (nth 2 ndate))))
@@ -254,29 +257,29 @@ for number of days. An empty string will output the notes of the current file."
     (calendar-goto-date cdate)))
 
 ;;;###autoload
-(defun notes-calendar-to-note ()
-  "Goto the note file corresponding to the calendar date."
+(defun records-calendar-to-record ()
+  "Goto the record file corresponding to the calendar date."
   (interactive)
   (let* ((cdate (calendar-cursor-to-date))
 	 (ndate (list (nth 1 cdate) (nth 0 cdate) (nth 2 cdate)))
-	 (date (notes-denormalize-date ndate)))
-    (notes-goto-note nil date nil nil 'other)))
+	 (date (records-denormalize-date ndate)))
+    (records-goto-record nil date nil nil 'other)))
 
 ;;;###autoload
-(defun notes-insert-note-region (beg end)
-  "Insert the region in the current buffer into today's note.
+(defun records-insert-record-region (beg end)
+  "Insert the region in the current buffer into today's record.
 Prompts for subject."
   (interactive "r")
-  (let ((note-body (buffer-substring beg end)))
-    (notes-goto-today)
+  (let ((record-body (buffer-substring beg end)))
+    (records-goto-today)
     (goto-char (point-max))
-    (notes-insert-note nil note-body)))
+    (records-insert-record nil record-body)))
 
 ;;;###autoload
-(defun notes-insert-note-buffer ()
-  "Insert the current buffer into today's note.
+(defun records-insert-record-buffer ()
+  "Insert the current buffer into today's record.
 Prompts for subject."
   (interactive)
-  (notes-insert-note-region (point-min) (point-max)))
+  (records-insert-record-region (point-min) (point-max)))
 
-(provide 'notes-util)
+(provide 'records-util)

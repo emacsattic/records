@@ -1,80 +1,53 @@
-This is the first version of the notes mode that I am releasing. There is
+This is the first version of the records mode that I am releasing. There is
 not much documentation provided. However, most of the functionality is
-available from the Notes menu when you are visiting a notes file.
+available from the RECORDS menu when you are visiting a records file.
 
-A brief documentation on notes usage is described below.
+A brief documentation on records usage is described below.
 
 Steps:
 
 1. Since you are reading this file, you have untarred the gzip'ed file. The
 elisp files in the current directory (in which you are right now) will not be
 installed in any other directory, and installation will automatically add the
-current directory to the load path in emacs. So if you wish to move the notes
+current directory to the load path in emacs. So if you wish to move the records
 software to some other emacs-related directory, now is the time to do it.
 
 2. Read ./INSTALL and follow its instructions. The install procedure makes the
-byte compiled elisp files, reads in the user settings for notes (by running
-notesadmin), and installs these settings into the notes initialization file
-~/.emacs-notes. This initialization file is read by emacs and the notes
-administration program (notesadmin). Install also adds the loading of
-.emacs-notes into your .emacs. When you start emacs, all the notes defaults
+byte compiled elisp files, reads in the user settings for records (by running
+recordsadmin), and installs these settings into the records initialization file
+~/.emacs-records. This initialization file is read by emacs and the records
+administration program (recordsadmin). Install also adds the loading of
+.emacs-records into your .emacs. When you start emacs, all the records defaults
 will be automatically loaded.
 
 GO AHEAD AND DO THE INSTALLATION.
 
-3. Copy the next set of lines from ";;;; notes-mode" to ";;;; notes-mode end"
-into your ~/.emacs. I did not automate this process since users may wish to
-change the key settings. Users will probably use the notes-goto-today
-function most often. Bind it to a simple key.
+3. Type key "Ctrl-c n" (for records-goto-today). This will get you today's
+records file. If you are starting fresh, it will be empty. 
 
-;;;; notes-mode
-; Define key bindings for functions called from outside notes mode
+4. To insert a records subject type "Ctrl-c Ctrl-i" or look for "Insert Record"
+in the menu. Once you have added a subject, you can start typing ...
 
-; The preferred binding for notes-goto-today - uncomment to use it
-(define-key global-map [?\C-c ?n] 'notes-goto-today)
+5. Multiple subjects can be added in each day's records file. Infact the same
+subject can be added multiple times in each day's records file.
 
-; The Ctrl-x n map
-(define-key global-map [?\C-x ?n ?t] 'notes-goto-today)
-(define-key global-map [?\C-x ?n ?r] 'notes-insert-note-region)
-(define-key global-map [?\C-x ?n ?b] 'notes-insert-note-buffer)
-
-; Hook up to the calendar mode
-(add-hook 'calendar-load-hook 
-	  (function
-	   (lambda ()
-	     (define-key calendar-mode-map "n" 'notes-calendar-to-note))))
-
-;;;; notes-mode end
-
-4. Restart your emacs (unless you know how to evaluate regions in a buffer - in
-which case get the key bindings and load in .emacs-notes).
-
-5. Type key "Ctrl-c n" (for notes-goto-today). This will get you today's notes
-file. If you are starting fresh, it will be empty. 
-
-6. To insert a notes subject type "Ctrl-c Ctrl-i" or look for "Insert Note" in
-the menu. Once you have added a subject, you can start typing ...
-
-7. Multiple subjects can be added in each day's notes file. Infact the same
-subject can be added multiple times in each day's notes file.
-
-8. For all the other functionality, look at the notes menu. The menu has been
+6. For all the other functionality, look at the records menu. The menu has been
 divided so that most of the functionality at the top of the menu is related to
-notes traversal (up, down, prev, next, goto etc). The middle section adds,
-deletes and renames notes. The last section does administration tasks such as
-encryption, concatanation of notes by subject or days etc. Make sure you look
-at the notes TODO facility.
+records traversal (up, down, prev, next, goto etc). The middle section adds,
+deletes and renames records. The last section does administration tasks such as
+encryption, concatanation of records by subject or days etc. Make sure you look
+at the records TODO facility.
 
-9. Remember that if you just have one notes file (today's) then notes
+7. Remember that if you just have one records file (today's) then records
 traversal's are not very useful!
 
-10. The program notesadmin has been provided in order to do meta-level things -
-initialize (or reinitialize) your notes software, change date format, change
-directory structure and recreate notes indexes if they are broken (for example
-if your system crashes while emacs is updating your indexes on the fly). You
-should not need to use it in normal notes use.
+8. The program recordsadmin has been provided in order to do meta-level things
+- initialize (or reinitialize) your records software, change date format,
+change directory structure and recreate records indexes if they are broken (for
+example if your system crashes while emacs is updating your indexes on the
+fly). You should not need to use it in normal records use.
 
-11. Tell me if you like the package, have improvements to suggest, or have
+9. Tell me if you like the package, have improvements to suggest, or have
 found bugs.
 
 Good Luck.

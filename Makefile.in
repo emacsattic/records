@@ -1,13 +1,16 @@
 ###
 ### Makefile.in
 ###
-### $Id: Makefile.in,v 1.2 1997/01/23 00:02:35 ashvin Exp $
+### $Id: Makefile.in,v 1.3 1997/05/01 21:21:13 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: Makefile.in,v $
+# Revision 1.3  1997/05/01 21:21:13  ashvin
+# Changed names from notes to record.
+#
 # Revision 1.2  1997/01/23 00:02:35  ashvin
 # The first release
 #
@@ -54,19 +57,19 @@ TAR=tar
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-SOURCES = notes-vars.el notes-dindex.el notes-index.el notes-util.el notes.el
-OBJECTS = notes-vars.elc notes-dindex.elc notes-index.elc notes-util.elc notes.elc
+SOURCES = records-vars.el records-dindex.el records-index.el records-util.el records.el
+OBJECTS = records-vars.elc records-dindex.elc records-index.elc records-util.elc records.elc
 
-PRELOADS = -l notes-load.el -l notes-vars.el -l notes.el
+PRELOADS = -l records-load.el -l records-vars.el -l records.el
 EFLAGS =-batch -q -no-site-file $(PRELOADS)
 
 DISTFILES = $(SOURCES) INSTALL Makefile.in \
 	README configure configure.in install-sh \
-	mkinstalldirs notesadmin.in notes-load.el \
+	mkinstalldirs recordsadmin.in records-load.el \
 	encrypt/mailcrypt.el encrypt/mc-pgp.el \
 	encrypt/mc-remail.el encrypt/mc-toplev.el
 
-# notes.info notes.dvi notes.texi 
+# records.info records.dvi records.texi 
 
 .SUFFIXES:
 .SUFFIXES: .elc .el
@@ -75,11 +78,11 @@ DISTFILES = $(SOURCES) INSTALL Makefile.in \
 	$(EMACS) $(EFLAGS) -f batch-byte-compile $<
 
 all: $(OBJECTS)
-	notesadmin -i
+	recordsadmin -i
 
-# install: all installdirs $(infodir)/notes
+# install: all installdirs $(infodir)/records
 install: all
-	$(INSTALL) notesadmin $(bindir)
+	$(INSTALL) recordsadmin $(bindir)
 
 #	for f in $(SOURCES); do \
 #	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
@@ -94,34 +97,34 @@ installdirs: mkinstalldirs
 	$(srcdir)/mkinstalldirs $(infodir)
 
 # There may be a newer info file in . than in srcdir.
-$(infodir)/notes: notes.info
-	-if test -f notes.info; then d=.; \
+$(infodir)/records: records.info
+	-if test -f records.info; then d=.; \
 	 else d=$(srcdir); fi; \
-	$(INSTALL_DATA) $$d/notes.info $@; \
+	$(INSTALL_DATA) $$d/records.info $@; \
 	if $(SHELL) -c 'install-info --version'	>/dev/null 2>&1; then \
-	  install-info --infodir=$(infodir) $$d/notes.info; \
+	  install-info --infodir=$(infodir) $$d/records.info; \
 	else true; fi
 
-info: notes.info
+info: records.info
 
-notes.info: notes.texi
-	$(MAKEINFO) $(srcdir)/notes.texi
+records.info: records.texi
+	$(MAKEINFO) $(srcdir)/records.texi
 
-dvi: notes.dvi
+dvi: records.dvi
 
-notes.dvi: notes.texi
-	$(TEXI2DVI) $(srcdir)/notes.texi
+records.dvi: records.texi
+	$(TEXI2DVI) $(srcdir)/records.texi
 
-ps: notes.ps
+ps: records.ps
 
-notes.ps: notes.dvi
-	$(DVIPS) $(srcdir)/notes.dvi
+records.ps: records.dvi
+	$(DVIPS) $(srcdir)/records.dvi
 
 TAGS: $(SOURCES)
 	cd $(srcdir) && etags $(SOURCES)
 
 clean:
-	rm -f $(OBJECTS) notes.info
+	rm -f $(OBJECTS) records.info
 
 distclean: clean
 	-rm -f *~ *.tar.gz
@@ -130,16 +133,16 @@ distclean: clean
 ${srcdir}/configure: configure.in
 	cd ${srcdir} && autoconf
 
-Makefile: Makefile.in notesadmin.in config.status
+Makefile: Makefile.in recordsadmin.in config.status
 	./config.status
 
 config.status: ${srcdir}/configure
 	./config.status --recheck
 
 dist: $(DISTFILES)
-	version=`perl -ne 'print $$1 if /defconst notes-version \"(.*)\"/' \
-		 notes.el`; \
-	distname=notes-$$version; \
+	version=`perl -ne 'print $$1 if /defconst records-version \"(.*)\"/' \
+		 records.el`; \
+	distname=records-$$version; \
 	rm -rf $$distname; \
 	mkdir $$distname; \
 	mkdir $$distname/encrypt; \

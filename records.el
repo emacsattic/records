@@ -1,85 +1,88 @@
 ;;;
-;;; notes.el
+;;; records.el
 ;;;
-;;; $Id: records.el,v 1.14 1997/01/23 00:02:35 ashvin Exp $
+;;; $Id: records.el,v 1.15 1997/05/01 21:21:24 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
+; Revision 1.15  1997/05/01 21:21:24  ashvin
+; Changed names from notes to record.
+;
 ; Revision 1.14  1997/01/23 00:02:35  ashvin
 ; The first release
 ;
 ; Revision 1.13  1996/12/18  16:38:23  asgoel
 ; 1. Added autoload functions.
 ; 2. Removed user customizable variables to separate file.
-; 3. Removed notes-todo and notes-concatenate-notes etc. to a separate file.
+; 3. Removed records-todo and records-concatenate-records etc. to a separate file.
 ;
 ; Revision 1.12  1996/12/16  17:31:39  asgoel
-; Cleaned up notes-todo.
+; Cleaned up records-todo.
 ;
 ; Revision 1.11  1996/12/16  16:55:20  asgoel
-; Added more notes-concatenate variables for customization.
+; Added more records-concatenate variables for customization.
 ;
 ; Revision 1.10  1996/12/15  05:02:06  asgoel
-; 1. Major: Added notes encryption and  decryption.
-;    func: notes-encrypt-note
-;          notes-decrypt-note
+; 1. Major: Added records encryption and  decryption.
+;    func: records-encrypt-record
+;          records-decrypt-record
 ; 2. Major: Implemented concatenation of subjects.
-;    func: notes-concatenate-notes
-;          notes-concatenate-note-files
-;    vars: notes-output-buffer
-; 	 notes-select-buffer-on-concat
-;          notes-erase-output-buffer
+;    func: records-concatenate-records
+;          records-concatenate-record-files
+;    vars: records-output-buffer
+; 	 records-select-buffer-on-concat
+;          records-erase-output-buffer
 ; 3. Fixed most todo's.
-; 4. Fixed notes-ndate-lessp.
-; 5. Added notes-add-date.
+; 4. Fixed records-ndate-lessp.
+; 5. Added records-add-date.
 ; 6. Added striping of file:// and file://localhost.
-; 7. Identical note files are not put in the history consecutively.
+; 7. Identical record files are not put in the history consecutively.
 ; 8. Added documentation about function return values.
-; 9. Changed name from notes-goto-prev/next/relative-date to
-;    notes-goto-prev/next/relative-note-file
+; 9. Changed name from records-goto-prev/next/relative-date to
+;    records-goto-prev/next/relative-record-file
 ;
 ; Revision 1.9  1996/12/13  19:58:26  asgoel
 ; Fixed error messages.
-; Added support for notes-goto-last-note.
+; Added support for records-goto-last-record.
 ;
 ; Revision 1.8  1996/12/11  21:17:52  asgoel
-; Added notes menu.
+; Added records menu.
 ;
 ; Revision 1.7  1996/12/11  01:55:27  asgoel
-; Added notes-body-empty-p
-; Added removal of empty notes after todo moves
+; Added records-body-empty-p
+; Added removal of empty records after todo moves
 ;
 ; Revision 1.6  1996/12/10  01:34:31  asgoel
-; Made notes-initialize interactive (binding : C-c C-z).
-; notes-directory does not have to have a slash following it.
+; Made records-initialize interactive (binding : C-c C-z).
+; records-directory does not have to have a slash following it.
 ;
 ; Revision 1.5  1996/12/05  21:02:40  asgoel
-; Added initialization from notes-init-file.
-; Added date index code for going to the previous notes file.
+; Added initialization from records-init-file.
+; Added date index code for going to the previous records file.
 ; Added todo functionality.
 ; Fixed a normalize year bug.
-; Added subject completion code before notes-read-subject is called.
-; Added note subject fontification and read-only text.
-; Added no-switch, directory and todo parameters to notes-goto-note.
-; Added directory creation support in notes-goto-note.
-; Added on-next parameter to notes-goto-down-note.
-; Added no-switch and todo parameters to notes-goto-relative-day.
-; Added no-switch parameter to notes-goto-prev/next-day.
-; Added optional subject parameter to notes-insert-note.
-; Added key bindings for notes-goto-prev/next-date.
-; Fixed loading order of notes and notes-index.
+; Added subject completion code before records-read-subject is called.
+; Added record subject fontification and read-only text.
+; Added no-switch, directory and todo parameters to records-goto-record.
+; Added directory creation support in records-goto-record.
+; Added on-next parameter to records-goto-down-record.
+; Added no-switch and todo parameters to records-goto-relative-day.
+; Added no-switch parameter to records-goto-prev/next-day.
+; Added optional subject parameter to records-insert-record.
+; Added key bindings for records-goto-prev/next-date.
+; Fixed loading order of records and records-index.
 ;
 ; Revision 1.4  1996/11/26  02:01:01  asgoel
-; Move notes-subject-table to notes.el
+; Move records-subject-table to records.el
 ;
 ; Revision 1.3  1996/11/22  12:43:49  asgoel
 ; A working version that supports the old functionality + auto insertion,
-; deletion and renaming of notes.
+; deletion and renaming of records.
 ; However it can not be tested since I have to write a perl script
-; to change my notes files to the new format. In the process, a script
+; to change my records files to the new format. In the process, a script
 ; that can regenerate the index should also be written.
 ;
 ; Revision 1.2  1996/11/21  03:05:47  asgoel
@@ -89,129 +92,129 @@
 ; Initial revision
 ;
 
-(require 'notes-vars)
-(require 'notes-index)
-(require 'notes-dindex)
-(require 'notes-util)
+(require 'records-vars)
+(require 'records-index)
+(require 'records-dindex)
+(require 'records-util)
 
 ;;;
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
 ;;;
-(defconst notes-version "1.1")
+(defconst records-version "1.1")
 
-(defvar notes-mode-menu-map nil
-  "Notes Menu Map. Internal variable.")
+(defvar records-mode-menu-map nil
+  "Records Menu Map. Internal variable.")
 
-(defvar notes-subject-table (make-vector 127 0)
-  "List of subjects for notes subject completion.
-Reloaded by loading the notes-index file.")
+(defvar records-subject-table (make-vector 127 0)
+  "List of subjects for records subject completion.
+Reloaded by loading the records-index file.")
 
-(defvar notes-date-regexp ""
-  "Regexp matching a notes date. Internal variable.")
+(defvar records-date-regexp ""
+  "Regexp matching a records date. Internal variable.")
 
-(defvar notes-tag-regexp ""
-  "Regexp matching a notes tag. Internal variable.")
+(defvar records-tag-regexp ""
+  "Regexp matching a records tag. Internal variable.")
 
-(defvar notes-date-tag-regexp ""
-  "Regexp matching links in a note index. Internal variable.")
+(defvar records-date-tag-regexp ""
+  "Regexp matching links in a record index. Internal variable.")
 
-(defvar notes-day-length 0
-  "The length of a notes file day. Internal variable.")
+(defvar records-day-length 0
+  "The length of a records file day. Internal variable.")
 
-(defvar notes-month-length 0 
-  "The length of a notes file month. Internal variable.")
+(defvar records-month-length 0 
+  "The length of a records file month. Internal variable.")
 
-(defvar notes-date-length 0
-  "The length of a notes file date. Internal variable.")
+(defvar records-date-length 0
+  "The length of a records file date. Internal variable.")
 
-(defvar notes-date-order '(() () ())
-  "The order of a notes date. Internal variable.")
+(defvar records-date-order '(() () ())
+  "The order of a records date. Internal variable.")
 
-(defvar notes-date '((day 0 0) (month 0 0) (year 0 0))
+(defvar records-date '((day 0 0) (month 0 0) (year 0 0))
   "The second and third values in each sublist are the start point
 and the length of each component in a date. Internal variable.")
 
-(defvar notes-todo-begin-regexp ""
+(defvar records-todo-begin-regexp ""
   "Either the todo copy or move regexp. Internal variable.")
 
-(defvar notes-todo-move-regions nil
-  "All the regions that have to be removed from the preivous notes file.
+(defvar records-todo-move-regions nil
+  "All the regions that have to be removed from the preivous records file.
 Internal variable.")
 
-(defvar notes-history nil
-  "List of notes a user has visited. Elements of the list consist of args
-to notes-goto-note. Internal variable.")
+(defvar records-history nil
+  "List of records a user has visited. Elements of the list consist of args
+to records-goto-record. Internal variable.")
 
-(defvar notes-initialize nil
-  "Has function notes-initialize been invoked atleast once.
+(defvar records-initialize nil
+  "Has function records-initialize been invoked atleast once.
 Internal variable.")
 
 ;;;###autoload
-(defun notes-initialize ()
-  "Reads the notes init file and sets the notes internal variables
-like notes-date, notes-date-length, etc."
+(defun records-initialize ()
+  "Reads the records init file and sets the records internal variables
+like records-date, records-date-length, etc."
   (interactive)
-  (if (file-exists-p notes-init-file)
-      (load notes-init-file))
-  (setq notes-day-length 2)
-  (setq notes-month-length 2)
-  (setq notes-date-length 0)
+  (if (file-exists-p records-init-file)
+      (load records-init-file))
+  (setq records-day-length 2)
+  (setq records-month-length 2)
+  (setq records-date-length 0)
 
-  ;; set notes-date-order
-  (setcar (nthcdr notes-day-order notes-date-order) 'day) 
-  (setcar (nthcdr notes-month-order notes-date-order) 'month) 
-  (setcar (nthcdr notes-year-order notes-date-order) 'year) 
+  ;; set records-date-order
+  (setcar (nthcdr records-day-order records-date-order) 'day) 
+  (setcar (nthcdr records-month-order records-date-order) 'month) 
+  (setcar (nthcdr records-year-order records-date-order) 'year) 
 
-  ;; set notes-date
+  ;; set records-date
   (let ((i 0))
     (mapcar 
      '(lambda (x)
 	(let ((len (symbol-value 
-		    (intern (concat "notes-" (symbol-name x) "-length")))))
-	  (setcdr (assq x notes-date)
-		  (list notes-date-length len))
-	  (setq notes-date-length
-		(+ notes-date-length len))
+		    (intern (concat "records-" (symbol-name x) "-length")))))
+	  (setcdr (assq x records-date)
+		  (list records-date-length len))
+	  (setq records-date-length
+		(+ records-date-length len))
 	  (setq i (1+ i))))
-     notes-date-order))
+     records-date-order))
 
-  (setq notes-date-regexp 
+  (setq records-date-regexp 
 	(concat "\\(" (let ((i 0) regexp)
-			(while (< i notes-date-length)
+			(while (< i records-date-length)
 			  (setq regexp (concat regexp "[0-9]"))
 			  (setq i (1+ i))) regexp)
 		"\\)"))
-  (setq notes-tag-regexp "#\\([0-9]+\\|\\)")
-  (setq notes-date-tag-regexp 
-	(concat notes-date-regexp "\\(\\|" notes-tag-regexp "\\)\\s-"))
+  (setq records-tag-regexp "#\\([0-9]+\\|\\)")
+  (setq records-date-tag-regexp 
+	(concat records-date-regexp "\\(\\|" records-tag-regexp "\\)\\s-"))
 
-  (setq notes-todo-begin-regexp
-	(concat "\\(" notes-todo-begin-copy-regexp "\\)\\|\\("
-		notes-todo-begin-move-regexp "\\)"))
+  (setq records-todo-begin-regexp
+	(concat "\\(" records-todo-begin-copy-regexp "\\)\\|\\("
+		records-todo-begin-move-regexp "\\)"))
   ;; do some cleaning up
-  (if (and (boundp 'notes-dindex-buffer) 
-	   notes-dindex-buffer
-	   (get-buffer notes-dindex-buffer))
-      (kill-buffer notes-dindex-buffer))
-  (if (and (boundp 'notes-index-buffer) 
-	   notes-index-buffer
-	   (get-buffer notes-index-buffer))
-      (kill-buffer notes-index-buffer))
+  (if (and (boundp 'records-dindex-buffer) 
+	   records-dindex-buffer
+	   (get-buffer records-dindex-buffer))
+      (kill-buffer records-dindex-buffer))
+  (if (and (boundp 'records-index-buffer) 
+	   records-index-buffer
+	   (get-buffer records-index-buffer))
+      (kill-buffer records-index-buffer))
   )
 
 ;; load when interactive
 (if (null noninteractive)
-    (notes-initialize))
+    (records-initialize))
 
-(defmacro notes-date-count-regexp (&optional date)
-  "Regexp matching a date in the notes date-index file."
+(defmacro records-date-count-regexp (&optional date)
+  "Regexp matching a date in the records date-index file."
   ( `(if (, date)
 	 (concat "\\(" (, date) "\\)#\\([0-9]+\\) ")
-       (concat notes-date-regexp "#\\([0-9]+\\) "))))
+       (concat records-date-regexp "#\\([0-9]+\\) "))))
 
-(defmacro notes-subject-regexp (&optional subject)
-  "Regexp matching the beginning of a note."
+(defmacro records-subject-regexp (&optional subject)
+  "Regexp matching the beginning of a record."
   ;; TODO: the underline should be of length(subject) + 2
   ;; not easy to do when subject is nil
   (` (if (, subject)
@@ -220,16 +223,16 @@ like notes-date, notes-date-length, etc."
        "^\\* \\(.*\\)\n\\-\\-\\-+$"
        )))
 
-(defmacro notes-subject-on-concat (subject)
-  "Make subject for notes concatenation."
-  (` (let ((sub (concat notes-subject-prefix-on-concat (, subject)
-			notes-subject-suffix-on-concat)))
+(defmacro records-subject-on-concat (subject)
+  "Make subject for records concatenation."
+  (` (let ((sub (concat records-subject-prefix-on-concat (, subject)
+			records-subject-suffix-on-concat)))
        (concat sub "\n" (make-string (length sub) ?-) "\n"))))
 
-(defmacro notes-date-on-concat (date)
-  "Make date for notes concatenation."
-  (` (let ((d (concat notes-date-prefix-on-concat (, date)
-			notes-date-suffix-on-concat)))
+(defmacro records-date-on-concat (date)
+  "Make date for records concatenation."
+  (` (let ((d (concat records-date-prefix-on-concat (, date)
+			records-date-suffix-on-concat)))
        (concat d "\n" (make-string (length d) ?-) "\n"))))
 
 (defun point-boln ()
@@ -244,15 +247,15 @@ like notes-date, notes-date-length, etc."
     (end-of-line)
     (point)))
 
-(defun notes-date-equalp (date-a date-b)
+(defun records-date-equalp (date-a date-b)
   "Are two dates equal?"
   (equal date-a date-b))
 
-(defun notes-ndate-equalp (ndate-a ndate-b)
+(defun records-ndate-equalp (ndate-a ndate-b)
   "Are two normalized dates equal?"
   (equal ndate-a ndate-b))
 
-(defun notes-ndate-lessp (ndate-a ndate-b)
+(defun records-ndate-lessp (ndate-a ndate-b)
   "Returns T if ndate-a is less than ndate-b."
   (or (< (nth 2 ndate-a) (nth 2 ndate-b))
       (and (= (nth 2 ndate-a) (nth 2 ndate-b))
@@ -261,7 +264,7 @@ like notes-date, notes-date-length, etc."
 	   (= (nth 1 ndate-a) (nth 1 ndate-b))
 	   (< (nth 0 ndate-a) (nth 0 ndate-b)))))
 
-(defun notes-add-date (ndate arg)
+(defun records-add-date (ndate arg)
   "Adds (positive or negative) arg days to ndate and 
 returns new normalized date."
   (let ((tmp-ndate ndate)
@@ -275,26 +278,26 @@ returns new normalized date."
     ;; return new date
     new-ndate))
 
-(defun notes-file-to-date (&optional file-name)
+(defun records-file-to-date (&optional file-name)
   "Get the date associated with file-name.
 If file-name is not specified, the current buffers file-name is used."
     (if file-name
 	()
       ;; get the file-name of the current buffer
       (if (null buffer-file-name)
-	  (error "notes-file-to-date: buffer has no associated file."))
+	  (error "records-file-to-date: buffer has no associated file."))
       (setq file-name (file-name-nondirectory buffer-file-name)))
     ;; check that length of file name is meaningful
-    (if (= (length file-name) notes-date-length)
+    (if (= (length file-name) records-date-length)
 	file-name
-      (error (concat "notes-file-to-date: bad file-name: " file-name))))
+      (error (concat "records-file-to-date: bad file-name: " file-name))))
 
-(defun notes-denormalize-date (ndate)
+(defun records-denormalize-date (ndate)
   "Get the file name associated with  date.
 The ndate is normalized and in (day month year) format."
   (let ((cdate ndate)
-	(date (make-string notes-date-length ? )))
-    (if (= notes-year-length 2)
+	(date (make-string records-date-length ? )))
+    (if (= records-year-length 2)
 	;; convert to 2 digit year
 	(if (> (nth 2 cdate) 90)
 	    (setcar (nthcdr 2 cdate) (- (nth 2 cdate) 1900))
@@ -311,10 +314,10 @@ The ndate is normalized and in (day month year) format."
 			(format (concat "%0" len "d") (nth i ndate))
 			(substring date (+ start len))))
 	    (setq i (1+ i))))
-       notes-date))
+       records-date))
     date))
 
-(defun notes-normalize-date (date)
+(defun records-normalize-date (date)
   "Returns date in (day month year) format with year in four digits"
   (let ((ndate '(0 0 0))
 	(i 0))
@@ -324,137 +327,137 @@ The ndate is normalized and in (day month year) format."
 				  (substring date (nth 1 x) 
 					     (+ (nth 2 x) (nth 1 x)))))
 	(setq i (1+ i)))
-     notes-date)
-    (if (= notes-year-length 2)
+     records-date)
+    (if (= records-year-length 2)
 	;; convert to four digit year
 	(if (> (nth 2 ndate) 90)
 	    (setcar (nthcdr 2 ndate) (+ (nth 2 ndate) 1900))
 	  (setcar (nthcdr 2 ndate) (+ (nth 2 ndate) 2000))))
     (copy-sequence ndate)))
 
-(defun notes-directory-path (date &optional absolute)
-  "Get the relative directory path to a notes file.
+(defun records-directory-path (date &optional absolute)
+  "Get the relative directory path to a records file.
 With absolute set, get the absolute path."
-  (cond ((= notes-directory-structure 0) (if absolute notes-directory ""))
-	((= notes-directory-structure 1) 
-	 (concat (if absolute notes-directory "..") "/"
-		 (substring date (nth 1 (nth 2 notes-date))
-			    (+ (nth 2 (nth 2 notes-date)) 
-			       (nth 1 (nth 2 notes-date))))))
-	((= notes-directory-structure 2)
-	 (concat (if absolute notes-directory "../..") "/"
-		 (substring date (nth 1 (nth 2 notes-date))
-			    (+ (nth 2 (nth 2 notes-date))
-			       (nth 1 (nth 2 notes-date)))) 
+  (cond ((= records-directory-structure 0) (if absolute records-directory ""))
+	((= records-directory-structure 1) 
+	 (concat (if absolute records-directory "..") "/"
+		 (substring date (nth 1 (nth 2 records-date))
+			    (+ (nth 2 (nth 2 records-date)) 
+			       (nth 1 (nth 2 records-date))))))
+	((= records-directory-structure 2)
+	 (concat (if absolute records-directory "../..") "/"
+		 (substring date (nth 1 (nth 2 records-date))
+			    (+ (nth 2 (nth 2 records-date))
+			       (nth 1 (nth 2 records-date)))) 
 		 "/"
-		 (substring date (nth 1 (nth 1 notes-date))
-			    (+ (nth 2 (nth 1 notes-date))
-			       (nth 1 (nth 1 notes-date))))))
+		 (substring date (nth 1 (nth 1 records-date))
+			    (+ (nth 2 (nth 1 records-date))
+			       (nth 1 (nth 1 records-date))))))
 	(t 
-	 (error "notes-directory-path: bad notes-directory-structure value"))))
+	 (error "records-directory-path: bad records-directory-structure value"))))
 
-(defun notes-read-subject (&optional subject)
-  "Read the notes subject to be inserted from the minibuffer.
+(defun records-read-subject (&optional subject)
+  "Read the records subject to be inserted from the minibuffer.
 Completion is possible."
   (interactive
-   (progn (notes-index-buffer) ; initializes notes-subject-table if required
-	  (list (completing-read "Notes subject: " notes-subject-table))))
+   (progn (records-index-buffer) ; initializes records-subject-table if required
+	  (list (completing-read "Records subject: " records-subject-table))))
   subject)
 
-(defun notes-compose-region (beg end)
-  "Fontify a notes region, make read-only etc.
-Look at variables notes-fontify and notes-subject-read-only.
-This function is currently only invoked for a notes subject.
+(defun records-compose-region (beg end)
+  "Fontify a records region, make read-only etc.
+Look at variables records-fontify and records-subject-read-only.
+This function is currently only invoked for a records subject.
 Although the region is read-only, it is possible to edit at the beginning
-of the region. This can mess up a notes subject. If this were disallowed,
+of the region. This can mess up a records subject. If this were disallowed,
 then users would not be able to add text before a subject.
 Any better solution?"
-  (if notes-fontify
+  (if records-fontify
       (progn
 	(add-text-properties (1- end) end '(rear-nonsticky t))
 	;; partial fix to a probable emacs bug
-	;; (if notes-subject-read-only
+	;; (if records-subject-read-only
 	;;	  if (> beg (point-min)) 
 	;;     (add-text-properties beg (1+ beg) 
 	;;	    '(front-sticky (read-only)))
 	;;	      ))
 	(add-text-properties beg end '(face bold))
-	(if notes-subject-read-only
-	    (add-text-properties beg end '(read-only notes-subject))))))
+	(if records-subject-read-only
+	    (add-text-properties beg end '(read-only records-subject))))))
 
-(defun notes-parse-buffer ()
-  "Parses the notes buffer and fontifies note subjects etc."
+(defun records-parse-buffer ()
+  "Parses the records buffer and fontifies record subjects etc."
   (save-excursion
     (goto-char (point-min))
-    ;; goto first note
-    (if (notes-goto-down-note nil t)
+    ;; goto first record
+    (if (records-goto-down-record nil t)
 	(let ((modified (buffer-modified-p)));; should always be false
 	  (while (progn;;  a do-while loop
-		   (notes-mark-subject)
+		   (records-mark-subject)
 		   ;; fontify region, make read-only etc.
-		   (notes-compose-region (point) (mark))
-		   ;; goto next note - returns nil when no more exist
-		   (notes-goto-down-note)))
+		   (records-compose-region (point) (mark))
+		   ;; goto next record - returns nil when no more exist
+		   (records-goto-down-record)))
 	  (and (not modified) (buffer-modified-p)
 	       (set-buffer-modified-p nil))))))
 
-(defun notes-make-link (subject date tag)
-  "Make a notes link."
+(defun records-make-link (subject date tag)
+  "Make a records link."
   (concat "link: <"
-	  (notes-directory-path date) "/"
+	  (records-directory-path date) "/"
 	  date "#" tag "* " subject ">"))
 
-(defun notes-goto-subject ()
-  "Goto the subject on the current note and return the subject."
+(defun records-goto-subject ()
+  "Goto the subject on the current record and return the subject."
   (beginning-of-line)
   (if (looking-at "^\\s-*-+\\s-*$")
       (progn 
 	(previous-line 1)
 	(beginning-of-line)))
-  (if (looking-at (notes-subject-regexp))
+  (if (looking-at (records-subject-regexp))
       ()
-    (if (notes-goto-up-note) 
+    (if (records-goto-up-record) 
 	()
-      (error "notes-goto-subject: no subject found.")))
+      (error "records-goto-subject: no subject found.")))
   (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
-(defmacro notes-tag (tag)
+(defmacro records-tag (tag)
   (` (if (> (length (, tag)) 0) (concat "#" (, tag)) "")))
 
-(defun notes-subject-tag (&optional no-str)
-  "Returns subject#tag of the note where point is located.
+(defun records-subject-tag (&optional no-str)
+  "Returns subject#tag of the record where point is located.
 If no-str is t, return (subject, tag)."
   (save-excursion
-    (let ((subject (notes-goto-subject))
+    (let ((subject (records-goto-subject))
 	  tag)
       (next-line 2)
-      (if (re-search-forward notes-tag-regexp (point-eoln) t)
+      (if (re-search-forward records-tag-regexp (point-eoln) t)
 	  (setq tag (buffer-substring-no-properties 
 		     (match-beginning 1) (match-end 1))))
       (if no-str (list subject tag)
-	(concat subject (notes-tag tag))))))
+	(concat subject (records-tag tag))))))
 
-(defun notes-mark-note (&optional arg)
-  "Put mark at the end of the current note and point at the beginning
-of the note subject. With non-null prefix arg, the point is placed
-at the beginning of the note body.
+(defun records-mark-record (&optional arg)
+  "Put mark at the end of the current record and point at the beginning
+of the record subject. With non-null prefix arg, the point is placed
+at the beginning of the record body.
 TODO: non interactive calls should pop-mark also."
   (interactive "P")
   (let (pt)
     (if arg
-	(progn (notes-mark-subject) (setq pt (mark)) (pop-mark)))
-    (notes-goto-down-note)
+	(progn (records-mark-subject) (setq pt (mark)) (pop-mark)))
+    (records-goto-down-record)
     (push-mark (point))
     (if pt (goto-char pt) 
-      (notes-goto-up-note)
+      (records-goto-up-record)
       (point))))
 
-(defun notes-mark-subject ()
-  "Put mark at the end of subject in this note and point at beginning.
-The note marked is the one that contains point or follows point.
+(defun records-mark-subject ()
+  "Put mark at the end of subject in this record and point at beginning.
+The record marked is the one that contains point or follows point.
 TODO: non interactive calls should pop-mark also."
-  (if (null (notes-goto-subject))
-      (error "notes-mark-subject: no subject found."))
+  (if (null (records-goto-subject))
+      (error "records-mark-subject: no subject found."))
   (let ((pt (point)))
     (next-line 2)
     (beginning-of-line)
@@ -466,51 +469,51 @@ TODO: non interactive calls should pop-mark also."
     ;; also return value
     (goto-char pt)))
 
-(defun notes-body-empty-p ()
-  "Is the body of the note under point empty?"
+(defun records-body-empty-p ()
+  "Is the body of the record under point empty?"
   (save-excursion
-    (notes-mark-note t)
+    (records-mark-record t)
     (and (looking-at "\\s-*")
 	 (eq (match-end 0) (mark)))))
 
-(defun notes-link ()
-  "Returns the notes link of the note around the current point."
+(defun records-link ()
+  "Returns the records link of the record around the current point."
   (save-excursion
-    (if (null (notes-goto-subject))
-	(error "notes-link: no subject found."))
+    (if (null (records-goto-subject))
+	(error "records-link: no subject found."))
     (next-line 2)
     (beginning-of-line)
     (if (looking-at "link: \\(<.*>\\)")
 	(buffer-substring-no-properties (match-beginning 1) (match-end 1)))))
 
-(defun notes-link-as-kill ()
-  "Put the notes link of the note around the current point in the kill ring."
+(defun records-link-as-kill ()
+  "Put the records link of the record around the current point in the kill ring."
   (interactive)
-  (kill-new (notes-link)))
+  (kill-new (records-link)))
 
-(defun notes-make-note (subject date tag &optional note-body)
-  "Make a basic note with it's link name." 
+(defun records-make-record (subject date tag &optional record-body)
+  "Make a basic record with it's link name." 
   (if (not (bolp))
       (insert "\n"))
   (let ((opoint (point)))
     (insert "* " subject "\n")
     (insert-char ?- (+ (length subject) 2))
-    (insert (concat "\n" (notes-make-link subject date tag) "\n"))
-    (notes-compose-region opoint (point))
-    (if note-body
-	(insert note-body))))
+    (insert (concat "\n" (records-make-link subject date tag) "\n"))
+    (records-compose-region opoint (point))
+    (if record-body
+	(insert record-body))))
 
-(defun notes-free-note (&optional keep-body)
-  "Remove the current note. 
+(defun records-free-record (&optional keep-body)
+  "Remove the current record. 
 With arg., keep the body and remove the subject only."
   (save-excursion
-    (let ((inhibit-read-only '(notes-subject)))
-      (if keep-body (notes-mark-subject) (notes-mark-note))
+    (let ((inhibit-read-only '(records-subject)))
+      (if keep-body (records-mark-subject) (records-mark-record))
       (delete-region (point) (mark))
       (pop-mark))))
 
 ;;;###autoload
-(defun notes-underline-line ()
+(defun records-underline-line ()
   "Underline the current line to the length of the line."
   ;; check to see if current line is already underlined
   ;; remove that underlining first.
@@ -528,8 +531,8 @@ With arg., keep the body and remove the subject only."
       (insert "\n" (buffer-substring bol bospaces))
       (insert-char ?- (- eol bospaces)))))
 
-(defun notes-goto-link ()
-  "Goto the link around point in the notes file.
+(defun records-goto-link ()
+  "Goto the link around point in the records file.
 A link can be any of the following enclosed in <>.
 1. a (relative or absolute) pathname 
 2. a pathname followed by \"#* Subject\"
@@ -539,10 +542,10 @@ A link can be any of the following enclosed in <>.
   (if (not (or (looking-at "<")
 	       (re-search-backward "<" (point-boln) t)))
       ;; not a link I know about
-      (error "notes-goto-link: invalid link under point.")
+      (error "records-goto-link: invalid link under point.")
     ;; try to figure out a link
     (if (looking-at (concat "<\\(.*\\)/\\([0-9]+\\)\\(" 
-			    notes-tag-regexp "\\* \\(.*\\)\\|\\)>"))
+			    records-tag-regexp "\\* \\(.*\\)\\|\\)>"))
 	;; found a link
 	(let ((dir (buffer-substring-no-properties (match-beginning 1)
 						   (match-end 1)))
@@ -558,29 +561,29 @@ A link can be any of the following enclosed in <>.
 	  ;; at the beginning of dir, strip it ... guess why?
 	  (if (string-match "^file://\\(localhost\\|\\)" dir)
 	      (setq dir (substring dir (match-end 0))))
-	  (notes-goto-note subject date tag nil nil nil nil dir))
-      (error "notes-goto-link: invalid link under point."))))
+	  (records-goto-record subject date tag nil nil nil nil dir))
+      (error "records-goto-link: invalid link under point."))))
 
-(defun notes-goto-mouse-link (e)
+(defun records-goto-mouse-link (e)
   "Goto the link where mouse is clicked."
   (interactive "e")
   (mouse-set-point e)
-  (notes-goto-link))
+  (records-goto-link))
 
-(defun notes-goto-note (subject date tag 
+(defun records-goto-record (subject date tag 
 				&optional no-hist no-switch todo no-error dir)
-  "Goto the note on date with subject and tag.
+  "Goto the record on date with subject and tag.
 If subject is nil, goto date only.
-If no-hist is t, then don't add this link to the notes-history list.
-If no-switch is t, then do not switch to the new notes buffer.
+If no-hist is t, then don't add this link to the records-history list.
+If no-switch is t, then do not switch to the new records buffer.
 Instead, the buffer is made ready for editing (via set-buffer).
-If no-switch is 'other, then switch to the new notes buffer in another window.
-If todo is t, then invoke notes-todo when a note-less file is being visited.
-If todo is not nil and not t, ask user whether notes-todo should be called.
-If no-error is t, do not signal error, if the note is not found.
+If no-switch is 'other, then switch to the new records buffer in another window.
+If todo is t, then invoke records-todo when a record-less file is being visited.
+If todo is not nil and not t, ask user whether records-todo should be called.
+If no-error is t, do not signal error, if the record is not found.
 If dir is specified, then the file is assumed to be \"dir/date\"."
   (if (null dir)
-      (setq dir (notes-directory-path date t)))
+      (setq dir (records-directory-path date t)))
   (let ((file (concat dir "/" date))
 	found)
     (if (not (file-directory-p dir))
@@ -588,70 +591,70 @@ If dir is specified, then the file is assumed to be \"dir/date\"."
       (if (y-or-n-p (concat "Make directory: " dir " "))
 	  (make-directory (expand-file-name dir) t)
 	(if no-error nil
-	  (error (concat "note: " file " not found.")))))
+	  (error (concat "record: " file " not found.")))))
     (cond ((null no-switch) (find-file file))
 	  ((eq no-switch 'other) (find-file-other-window file))
 	  (t (set-buffer (find-file-noselect file))))
-    ;; handler for new notes files
-    (if (and todo (null (save-excursion (notes-dindex-goto-date date t))))
+    ;; handler for new records files
+    (if (and todo (null (save-excursion (records-dindex-goto-date date t))))
 	(if (or (eq todo t) 
-		(y-or-n-p "Invoke notes-todo (default n): "))
-	    (notes-todo date)))
+		(y-or-n-p "Invoke records-todo (default n): "))
+	    (records-todo date)))
 
     (if (null subject)
-	;; this is for going to a specific day and not a note
+	;; this is for going to a specific day and not a record
 	(setq found t)
       (goto-char (point-min))
       ;; TODO: this search forward will fail to get to the right spot
       ;; if a string matching this regexp has been added to a
-      ;; previous subject in the file. We should check for the notes subject.
+      ;; previous subject in the file. We should check for the records subject.
       (if (re-search-forward 
 	   (concat "^link: <.*" date "#" tag "\\* " subject ">") 
 	   (point-max) t)
 	  ;; found
-	  (progn (setq found t) (notes-goto-subject))
+	  (progn (setq found t) (records-goto-subject))
 	(if no-error
 	    nil
 	  (error 
-	   (concat "Notes subject: " subject 
+	   (concat "Records subject: " subject 
 		   (if (> (length tag) 0) (concat ", tag: " tag))
 		   " not found.")))))
     
-    ;; support for goto last note
+    ;; support for goto last record
     (if (and found (null no-hist))
 	(let ((hist (list subject date tag t nil nil nil dir))
 	      hist-last)
-	  (if (equal hist (car notes-history))
-	      () ;; don't add identical notes.
-	    (setq notes-history (cons hist notes-history))
+	  (if (equal hist (car records-history))
+	      () ;; don't add identical records.
+	    (setq records-history (cons hist records-history))
 	    (setq hist-last 
-		  (nthcdr (- notes-history-length 1) notes-history))
+		  (nthcdr (- records-history-length 1) records-history))
 	    (if hist-last
 		(setcdr hist-last nil)))))))
 
-(defun notes-goto-up-note (&optional subject)
-  "Go to the beginning of the current note.
-If the point is currently at the beginning of a note, go to the note above.
-If subject is specified, go up to the beginning of a note with subject."
+(defun records-goto-up-record (&optional subject)
+  "Go to the beginning of the current record.
+If the point is currently at the beginning of a record, go to the record above.
+If subject is specified, go up to the beginning of a record with subject."
   (interactive)
-  (re-search-backward (notes-subject-regexp subject) (point-min) 'start))
+  (re-search-backward (records-subject-regexp subject) (point-min) 'start))
 
-(defun notes-goto-down-note (&optional subject on-next)
-  "Go to the beginning of the next note. 
-If subject is specified, go down to the beginning of a note with subject.
+(defun records-goto-down-record (&optional subject on-next)
+  "Go to the beginning of the next record. 
+If subject is specified, go down to the beginning of a record with subject.
 If on-next is t, then don't move if we are at the beginning of a subject."
   (interactive)
-  (let ((regexp (notes-subject-regexp subject)))
+  (let ((regexp (records-subject-regexp subject)))
     (if (and (null on-next) 
 	     (looking-at regexp))
 	(goto-char (match-end 0)))
-    ;; find next note and leave cursor at section beginning
+    ;; find next record and leave cursor at section beginning
     (if (re-search-forward regexp (point-max) 'end)
 	(goto-char (match-beginning  0)))
     ))
 
 ;;;###autoload
-(defun notes-goto-index(&optional arg subject date tag no-error)
+(defun records-goto-index(&optional arg subject date tag no-error)
   "If arg is nil or zero, goto the index on date and tag.
 With positive arg, go to the index arg-times next to date and tag.
 With negative arg, go to the index arg-times previous to date and tag.
@@ -659,334 +662,334 @@ Returns the new (date, tag) if found."
   (interactive "P")
   (if (not (and subject date))
       ;; initialize subject date and tag
-      (let ((subject-tag (notes-subject-tag t)))
+      (let ((subject-tag (records-subject-tag t)))
 	(setq subject (nth 0 subject-tag))
 	(setq tag (nth 1 subject-tag))
-	(setq date (notes-file-to-date))))
-  (if (notes-index-goto-subject subject (interactive-p) no-error)
-      (notes-index-goto-relative-date-tag arg date tag)))
+	(setq date (records-file-to-date))))
+  (if (records-index-goto-subject subject (interactive-p) no-error)
+      (records-index-goto-relative-date-tag arg date tag)))
   
-(defun notes-goto-relative-day(&optional arg no-switch todo)
-  "With positive arg, go arg days ahead of current note's date. 
-With negative arg, go arg days behind current note's date.
-The no-switch and todo arguments are passed to notes-goto-note."
+(defun records-goto-relative-day(&optional arg no-switch todo)
+  "With positive arg, go arg days ahead of current record's date. 
+With negative arg, go arg days behind current record's date.
+The no-switch and todo arguments are passed to records-goto-record."
   (interactive "P")
-  (let* ((ndate (notes-normalize-date (notes-file-to-date)))
-	 (new-ndate (notes-add-date ndate arg))
-	 (new-date (notes-denormalize-date new-ndate)))
-    (notes-goto-note nil new-date "" nil no-switch todo)))
+  (let* ((ndate (records-normalize-date (records-file-to-date)))
+	 (new-ndate (records-add-date ndate arg))
+	 (new-date (records-denormalize-date new-ndate)))
+    (records-goto-record nil new-date "" nil no-switch todo)))
 
-(defun notes-goto-prev-day(&optional arg no-switch)
-  "Go to the notes file of the previous day.
+(defun records-goto-prev-day(&optional arg no-switch)
+  "Go to the records file of the previous day.
 With numeric prefix arg. go that many days back.
-See also notes-goto-prev-note-file."
+See also records-goto-prev-record-file."
   (interactive "P")
-  (notes-goto-relative-day (if arg (- arg) -1) no-switch notes-todo-prev-day))
+  (records-goto-relative-day (if arg (- arg) -1) no-switch records-todo-prev-day))
 
-(defun notes-goto-next-day(&optional arg no-switch)
-  "Go to the notes file of the next day.
+(defun records-goto-next-day(&optional arg no-switch)
+  "Go to the records file of the next day.
 With numeric prefix arg. go that many days forward.
-See also notes-goto-next-note-file."
+See also records-goto-next-record-file."
   (interactive "P")
-  (notes-goto-relative-day (if arg arg 1) no-switch notes-todo-next-day))
+  (records-goto-relative-day (if arg arg 1) no-switch records-todo-next-day))
 
 ;;;###autoload
-(defun notes-goto-today ()
-  "Go to the notes file of today."
+(defun records-goto-today ()
+  "Go to the records file of today."
   (interactive)
   (let ((ndate (nthcdr 3 (decode-time)))
 	date)
     (setcdr (nthcdr 2 ndate) nil)
     ;; denormalize the date to get the file name
-    (setq date (notes-denormalize-date ndate))
-    (notes-goto-note nil date "" nil nil notes-todo-today)))
+    (setq date (records-denormalize-date ndate))
+    (records-goto-record nil date "" nil nil records-todo-today)))
 
-(defun notes-goto-relative-note-file(&optional arg no-switch no-error)
-  "With positive arg, go arg files ahead of current notes file. 
-With negative arg, go arg files behind of current notes file.
+(defun records-goto-relative-record-file(&optional arg no-switch no-error)
+  "With positive arg, go arg files ahead of current records file. 
+With negative arg, go arg files behind of current records file.
 Returns the new date."
   (interactive "P")
   (let ((new-date
 	 (save-excursion 
 	   (nth 0
-		(notes-dindex-goto-relative-date arg (notes-file-to-date))))))
+		(records-dindex-goto-relative-date arg (records-file-to-date))))))
     (if (null new-date)
 	(if (null no-error)
 	    (error
-	     (concat "notes-goto-relative-note-file: " 
+	     (concat "records-goto-relative-record-file: " 
 		     (if (> arg 0) "next" "previous") 
-		     " note file not found.")))
-      (notes-goto-note nil new-date "" nil no-switch))
+		     " record file not found.")))
+      (records-goto-record nil new-date "" nil no-switch))
     new-date))
 
-(defun notes-goto-prev-note-file(&optional arg no-switch no-error)
-  "Go to the previous notes file. With arg. go that many notes files back.
-Returns the new date. See also notes-goto-prev-day."
+(defun records-goto-prev-record-file(&optional arg no-switch no-error)
+  "Go to the previous records file. With arg. go that many records files back.
+Returns the new date. See also records-goto-prev-day."
   (interactive "P")
-  (notes-goto-relative-note-file (if arg (- arg) -1) no-switch no-error))
+  (records-goto-relative-record-file (if arg (- arg) -1) no-switch no-error))
 
-(defun notes-goto-next-note-file(&optional arg no-switch no-error)
-  "Go to the next notes file. With arg. go that many notes files forward.
-Returns the new date. See also notes-goto-next-day."
+(defun records-goto-next-record-file(&optional arg no-switch no-error)
+  "Go to the next records file. With arg. go that many records files forward.
+Returns the new date. See also records-goto-next-day."
   (interactive "P")
-  (notes-goto-relative-note-file (if arg arg 1) no-switch no-error))
+  (records-goto-relative-record-file (if arg arg 1) no-switch no-error))
 
-(defun notes-goto-relative-note (&optional arg subject date tag no-switch 
+(defun records-goto-relative-record (&optional arg subject date tag no-switch 
 					   no-error)
-  "If arg is nil or zero, goto the note on subject date and tag.
-With positive arg, goto the note arg-times next to date and tag.
-With negative arg, goto the note arg-times previous to date and tag.
+  "If arg is nil or zero, goto the record on subject date and tag.
+With positive arg, goto the record arg-times next to date and tag.
+With negative arg, goto the record arg-times previous to date and tag.
 Returns the new (date, tag) if found."
   (interactive "P")
   (if (not (and subject date))
       ;; initialize subject date and tag
-      (let ((subject-tag (notes-subject-tag t)))
+      (let ((subject-tag (records-subject-tag t)))
 	(setq subject (nth 0 subject-tag))
 	(setq tag (nth 1 subject-tag))
-	(setq date (notes-file-to-date))))
+	(setq date (records-file-to-date))))
   (let ((date-tag 
 	 (save-excursion
-	   (notes-goto-index arg subject date tag no-error))))
+	   (records-goto-index arg subject date tag no-error))))
     (if date-tag
-	;; goto the note
-	(notes-goto-note subject (nth 0 date-tag) (nth 1 date-tag) nil 
+	;; goto the record
+	(records-goto-record subject (nth 0 date-tag) (nth 1 date-tag) nil 
 			 no-switch nil no-error)
       (if (null no-error)
-	  (error (concat "notes-goto-relative-note: " 
+	  (error (concat "records-goto-relative-record: " 
 			 (if (> arg 0) "next" "previous") 
-			 " note not found."))))
+			 " record not found."))))
     ;; return value
     date-tag))
 
-(defun notes-goto-prev-note (&optional arg subject date tag no-switch no-error)
-  "Find the previous note on subject starting from date and tag.
+(defun records-goto-prev-record (&optional arg subject date tag no-switch no-error)
+  "Find the previous record on subject starting from date and tag.
 Returns the new (date, tag) if found."
   (interactive "P")
-  (notes-goto-relative-note (if arg (- arg) -1) subject date tag no-switch 
+  (records-goto-relative-record (if arg (- arg) -1) subject date tag no-switch 
 			    no-error))
 
-(defun notes-goto-next-note (&optional arg subject date tag no-switch no-error)
-  "Find the next note on subject starting from date and tag.
+(defun records-goto-next-record (&optional arg subject date tag no-switch no-error)
+  "Find the next record on subject starting from date and tag.
 Returns the new (date, tag) if found."
   (interactive "P")
-  (notes-goto-relative-note (if arg arg 1) subject date tag no-switch 
+  (records-goto-relative-record (if arg arg 1) subject date tag no-switch 
 			    no-error))
 
-(defun notes-goto-last-note ()
-  "Go back to the last note file visited.
-Identical note files are not put in the history consecutively."
+(defun records-goto-last-record ()
+  "Go back to the last record file visited.
+Identical record files are not put in the history consecutively."
   (interactive)
-  (let ((link (car (cdr notes-history))))
+  (let ((link (car (cdr records-history))))
     (or link
-	(error "notes-goto-last-note: this is the first note."))
-    (setq notes-history (cdr notes-history))
-    (apply 'notes-goto-note link)))
+	(error "records-goto-last-record: this is the first record."))
+    (setq records-history (cdr records-history))
+    (apply 'records-goto-record link)))
 
-(defun notes-insert-note(&optional subject note-body)
-  "Insert a new note for the current date. Asks for the subject."
+(defun records-insert-record(&optional subject record-body)
+  "Insert a new record for the current date. Asks for the subject."
   (interactive)
   (let* ((subject (if subject
-		      subject (call-interactively 'notes-read-subject)))
-	 (date (notes-file-to-date))
+		      subject (call-interactively 'records-read-subject)))
+	 (date (records-file-to-date))
 	 (tag ""))
-    ;; we don't currently allow a note insertion 
-    ;; if another note with the same subject exists below this note.
+    ;; we don't currently allow a record insertion 
+    ;; if another record with the same subject exists below this record.
     (save-excursion
-      (if (notes-goto-down-note subject)
+      (if (records-goto-down-record subject)
 	  (error 
-	   (concat "notes-insert-note: can't insert out-of-order note: "
+	   (concat "records-insert-record: can't insert out-of-order record: "
 		   subject))))
-    ;; check if another note with same subject exists above 
+    ;; check if another record with same subject exists above 
     ;; to get a new tag value
     (save-excursion
-      (if (notes-goto-up-note subject)
+      (if (records-goto-up-record subject)
 	  ;; get tag
 	  (setq tag (int-to-string (1+ (string-to-int 
-					(nth 1 (notes-subject-tag t))))))))
+					(nth 1 (records-subject-tag t))))))))
 
-    ;; add a notes index entry 
-    (notes-index-insert-note subject date tag)
+    ;; add a records index entry 
+    (records-index-insert-record subject date tag)
 
     ;; add the date to the date-index
-    (notes-dindex-insert-note date)
+    (records-dindex-insert-record date)
 
-    ;; now make the note body
-    (notes-make-note subject date tag note-body)))
+    ;; now make the record body
+    (records-make-record subject date tag record-body)))
 
-(defun notes-delete-note (&optional keep-body no-prompt)
-  "Delete the current note for the current date.
+(defun records-delete-record (&optional keep-body no-prompt)
+  "Delete the current record for the current date.
 With arg, removes the subject only."
   (interactive "P")
-  (let* ((date (notes-file-to-date))
-	 (subject-tag (notes-subject-tag t))
+  (let* ((date (records-file-to-date))
+	 (subject-tag (records-subject-tag t))
 	 (subject (nth 0 subject-tag))
 	 (tag (nth 1 subject-tag)))
     
     (if (if no-prompt     ;; prompt?
-	    t (y-or-n-p (concat "Delete note: " subject " ")))
+	    t (y-or-n-p (concat "Delete record: " subject " ")))
 	(progn
-	  ;; remove the note subject and optionally the body
-	  (notes-free-note keep-body)
+	  ;; remove the record subject and optionally the body
+	  (records-free-record keep-body)
 	  ;; remove the date from the date-index
-	  (notes-dindex-delete-note date)
-	  ;; remove the notes index entry
-	  (notes-index-delete-note subject date tag)))
+	  (records-dindex-delete-record date)
+	  ;; remove the records index entry
+	  (records-index-delete-record subject date tag)))
     ))
 	
-(defun notes-rename-note ()
-  "Renames the subject of the current note for the current date."
+(defun records-rename-record ()
+  "Renames the subject of the current record for the current date."
   (interactive)
-  (notes-delete-note 'keep-body)
-  (notes-insert-note))
+  (records-delete-record 'keep-body)
+  (records-insert-record))
 
-(define-derived-mode notes-mode text-mode "Notes"
-  "Enable notes-mode for a buffer.
+(define-derived-mode records-mode text-mode "Records"
+  "Enable records-mode for a buffer.
 The key-bindings of this mode are:
-\\{notes-mode-map}"
+\\{records-mode-map}"
 
   ;; key-bindings
 
-  (define-key notes-mode-map "\C-c\C-i" 'notes-insert-note)
-  (define-key notes-mode-map "\C-c\C-d" 'notes-delete-note)
-  (define-key notes-mode-map "\C-c\C-r" 'notes-rename-note)
+  (define-key records-mode-map "\C-c\C-i" 'records-insert-record)
+  (define-key records-mode-map "\C-c\C-d" 'records-delete-record)
+  (define-key records-mode-map "\C-c\C-r" 'records-rename-record)
 
-  (define-key notes-mode-map "\M-\C-a" 'notes-goto-up-note)
-  (define-key notes-mode-map "\M-\C-e" 'notes-goto-down-note)
+  (define-key records-mode-map "\M-\C-a" 'records-goto-up-record)
+  (define-key records-mode-map "\M-\C-e" 'records-goto-down-record)
 
-  (define-key notes-mode-map "\C-c\C-p" 'notes-goto-prev-note)
-  (define-key notes-mode-map "\C-c\C-n" 'notes-goto-next-note)
+  (define-key records-mode-map "\C-c\C-p" 'records-goto-prev-record)
+  (define-key records-mode-map "\C-c\C-n" 'records-goto-next-record)
 
-  (define-key notes-mode-map "\C-c\C-y" 'notes-goto-prev-day) ;; yesterday
-  (define-key notes-mode-map "\C-c\C-t" 'notes-goto-next-day) ;; tomorrow
-  (define-key notes-mode-map "\C-c\C-b" 'notes-goto-prev-note-file) ;; back file
-  (define-key notes-mode-map "\C-c\C-f" 'notes-goto-next-note-file) ;; front file
+  (define-key records-mode-map "\C-c\C-y" 'records-goto-prev-day) ;; yesterday
+  (define-key records-mode-map "\C-c\C-t" 'records-goto-next-day) ;; tomorrow
+  (define-key records-mode-map "\C-c\C-b" 'records-goto-prev-record-file) ;; back file
+  (define-key records-mode-map "\C-c\C-f" 'records-goto-next-record-file) ;; front file
 
-  (define-key notes-mode-map "\C-c\C-j" 'notes-goto-index);; jump!!
+  (define-key records-mode-map "\C-c\C-j" 'records-goto-index);; jump!!
 
-  (define-key notes-mode-map "\C-c\C-l" 'notes-goto-last-note)
+  (define-key records-mode-map "\C-c\C-l" 'records-goto-last-record)
 
-  (define-key notes-mode-map "\C-c\C-g" 'notes-goto-link)
-  (define-key notes-mode-map [M-S-mouse-1] 'notes-goto-mouse-link)
+  (define-key records-mode-map "\C-c\C-g" 'records-goto-link)
+  (define-key records-mode-map [M-S-mouse-1] 'records-goto-mouse-link)
 
   ;; utility functions have C-c/ prefix keys
-  (define-key notes-mode-map "\C-c/e" 'notes-encrypt-note)
-  (define-key notes-mode-map "\C-c/d" 'notes-decrypt-note)
+  (define-key records-mode-map "\C-c/e" 'records-encrypt-record)
+  (define-key records-mode-map "\C-c/d" 'records-decrypt-record)
 
-  (define-key notes-mode-map "\C-c/t" 'notes-todo)
-  (define-key notes-mode-map "\C-c/c" 'notes-concatenate-notes)
-  (define-key notes-mode-map "\C-c/f" 'notes-concatenate-note-files)
-  (define-key notes-mode-map "\C-c/n" 'notes-goto-calendar)
+  (define-key records-mode-map "\C-c/t" 'records-todo)
+  (define-key records-mode-map "\C-c/c" 'records-concatenate-records)
+  (define-key records-mode-map "\C-c/f" 'records-concatenate-record-files)
+  (define-key records-mode-map "\C-c/n" 'records-goto-calendar)
 
 
-  (define-key notes-mode-map "\C-c\C-k" 'notes-link-as-kill)
-  (define-key notes-mode-map [?\C-c ?\C--] 'notes-underline-line)
-  (define-key notes-mode-map "\M-\C-h" 'notes-mark-note)
-  (define-key notes-mode-map "\C-c\C-z" 'notes-initialize);; zap it in
+  (define-key records-mode-map "\C-c\C-k" 'records-link-as-kill)
+  (define-key records-mode-map [?\C-c ?\C--] 'records-underline-line)
+  (define-key records-mode-map "\M-\C-h" 'records-mark-record)
+  (define-key records-mode-map "\C-c\C-z" 'records-initialize);; zap it in
 
-  (if notes-mode-menu-map
+  (if records-mode-menu-map
       ()
-    (setq notes-mode-menu-map (make-sparse-keymap))
-    (define-key notes-mode-map [menu-bar] (make-sparse-keymap))
-    (define-key notes-mode-map [menu-bar notes] (cons "Notes" 
-						      notes-mode-menu-map))
+    (setq records-mode-menu-map (make-sparse-keymap))
+    (define-key records-mode-map [menu-bar] (make-sparse-keymap))
+    (define-key records-mode-map [menu-bar records] (cons "Records" 
+						      records-mode-menu-map))
 
-    (define-key notes-mode-menu-map [notes-initialize] 
-      '("Re-Init Notes" . notes-initialize))
+    (define-key records-mode-menu-map [records-initialize] 
+      '("Re-Init Records" . records-initialize))
 
-    (define-key notes-mode-menu-map [separator-0] '("--"))
+    (define-key records-mode-menu-map [separator-0] '("--"))
 
-    (define-key notes-mode-menu-map [notes-underline-line] 
-      '("Underline Line" . notes-underline-line))
-    (define-key notes-mode-menu-map [notes-link-as-kill] 
-      '("Copy Notes Link" . notes-link-as-kill))
-    (define-key notes-mode-menu-map [notes-mark-note] 
-      '("Mark Note" . notes-mark-note))
+    (define-key records-mode-menu-map [records-underline-line] 
+      '("Underline Line" . records-underline-line))
+    (define-key records-mode-menu-map [records-link-as-kill] 
+      '("Copy Records Link" . records-link-as-kill))
+    (define-key records-mode-menu-map [records-mark-record] 
+      '("Mark Record" . records-mark-record))
 
-    (define-key notes-mode-menu-map [separator-3] '("--"))
+    (define-key records-mode-menu-map [separator-3] '("--"))
 
-    (define-key notes-mode-menu-map [notes-goto-calendar] 
-      '("Goto Calendar" . notes-goto-calendar))
-    (define-key notes-mode-menu-map [notes-todo] 
-      '("Get TODO's" . notes-todo))
-    (define-key notes-mode-menu-map [notes-concatenate-note-files] 
-      '("Concat Note Files" . notes-concatenate-note-files))
-    (define-key notes-mode-menu-map [notes-concatenate-notes] 
-      '("Concat Notes" . notes-concatenate-notes))
+    (define-key records-mode-menu-map [records-goto-calendar] 
+      '("Goto Calendar" . records-goto-calendar))
+    (define-key records-mode-menu-map [records-todo] 
+      '("Get TODO's" . records-todo))
+    (define-key records-mode-menu-map [records-concatenate-record-files] 
+      '("Concat Record Files" . records-concatenate-record-files))
+    (define-key records-mode-menu-map [records-concatenate-records] 
+      '("Concat Records" . records-concatenate-records))
 
-    (define-key notes-mode-menu-map [separator-6] '("--"))
+    (define-key records-mode-menu-map [separator-6] '("--"))
 
-    (define-key notes-mode-menu-map [notes-encrypt-note]
-      '("Encrypt Note" . notes-encrypt-note))
-    (define-key notes-mode-menu-map [notes-decrypt-note]
-      '("Decrypt Note" . notes-decrypt-note))
+    (define-key records-mode-menu-map [records-encrypt-record]
+      '("Encrypt Record" . records-encrypt-record))
+    (define-key records-mode-menu-map [records-decrypt-record]
+      '("Decrypt Record" . records-decrypt-record))
 
-    (define-key notes-mode-menu-map [separator-9] '("--"))
+    (define-key records-mode-menu-map [separator-9] '("--"))
 
-    (define-key notes-mode-menu-map  [notes-rename-note] 
-      '("Rename Note" . notes-rename-note))
-    (define-key notes-mode-menu-map  [notes-delete-note] 
-      '("Delete Note" . notes-delete-note))
-    (define-key notes-mode-menu-map  [notes-insert-note] 
-      '("Insert Note" . notes-insert-note))
+    (define-key records-mode-menu-map  [records-rename-record] 
+      '("Rename Record" . records-rename-record))
+    (define-key records-mode-menu-map  [records-delete-record] 
+      '("Delete Record" . records-delete-record))
+    (define-key records-mode-menu-map  [records-insert-record] 
+      '("Insert Record" . records-insert-record))
 
-    (define-key notes-mode-menu-map [separator-12] '("--"))
+    (define-key records-mode-menu-map [separator-12] '("--"))
 
-    (define-key notes-mode-menu-map [notes-goto-last-note] 
-      '("Goto Last Note" . notes-goto-last-note))
-    (define-key notes-mode-menu-map [notes-goto-link] 
-      '("Goto Notes Link" . notes-goto-link))
-    (define-key notes-mode-menu-map  [notes-goto-index] 
-      '("Goto Index" . notes-goto-index))
+    (define-key records-mode-menu-map [records-goto-last-record] 
+      '("Goto Last Record" . records-goto-last-record))
+    (define-key records-mode-menu-map [records-goto-link] 
+      '("Goto Records Link" . records-goto-link))
+    (define-key records-mode-menu-map  [records-goto-index] 
+      '("Goto Index" . records-goto-index))
 
-    (define-key notes-mode-menu-map [separator-15] '("--"))
+    (define-key records-mode-menu-map [separator-15] '("--"))
 
-    (define-key notes-mode-menu-map  [notes-goto-next-day] 
-      '("Next Day" . notes-goto-next-day))
-    (define-key notes-mode-menu-map  [notes-goto-prev-day] 
-      '("Prev Day" . notes-goto-prev-day))
+    (define-key records-mode-menu-map  [records-goto-next-day] 
+      '("Next Day" . records-goto-next-day))
+    (define-key records-mode-menu-map  [records-goto-prev-day] 
+      '("Prev Day" . records-goto-prev-day))
 
-    (define-key notes-mode-menu-map [separator-18] '("--"))
+    (define-key records-mode-menu-map [separator-18] '("--"))
 
-    (define-key notes-mode-menu-map  [notes-goto-next-note-file] 
-      '("Next Note File" . notes-goto-next-note-file))
-    (define-key notes-mode-menu-map  [notes-goto-prev-note-file] 
-      '("Prev Note File" . notes-goto-prev-note-file))
+    (define-key records-mode-menu-map  [records-goto-next-record-file] 
+      '("Next Record File" . records-goto-next-record-file))
+    (define-key records-mode-menu-map  [records-goto-prev-record-file] 
+      '("Prev Record File" . records-goto-prev-record-file))
 
-    (define-key notes-mode-menu-map [separator-21] '("--"))
+    (define-key records-mode-menu-map [separator-21] '("--"))
 
-    (define-key notes-mode-menu-map  [notes-goto-next-note] 
-      '("Next Note" . notes-goto-next-note))
-    (define-key notes-mode-menu-map  [notes-goto-prev-note] 
-      '("Prev Note" . notes-goto-prev-note))
+    (define-key records-mode-menu-map  [records-goto-next-record] 
+      '("Next Record" . records-goto-next-record))
+    (define-key records-mode-menu-map  [records-goto-prev-record] 
+      '("Prev Record" . records-goto-prev-record))
 
-    (define-key notes-mode-menu-map [separator-24] '("--"))
+    (define-key records-mode-menu-map [separator-24] '("--"))
 
-    (define-key notes-mode-menu-map [notes-goto-down-note] 
-      '("Down Note" . notes-goto-down-note))
-    (define-key notes-mode-menu-map [notes-goto-up-note] 
-      '("Up Note" . notes-goto-up-note))
+    (define-key records-mode-menu-map [records-goto-down-record] 
+      '("Down Record" . records-goto-down-record))
+    (define-key records-mode-menu-map [records-goto-up-record] 
+      '("Up Record" . records-goto-up-record))
 
-    (define-key notes-mode-menu-map [separator-27] '("--"))
+    (define-key records-mode-menu-map [separator-27] '("--"))
 
-    (define-key notes-mode-menu-map [notes-goto-today] 
-      '("Today's Note" . notes-goto-today))
+    (define-key records-mode-menu-map [records-goto-today] 
+      '("Today's Record" . records-goto-today))
     )
 
   ;; imenu stuff 
   (eval-when-compile (require 'imenu))
   (make-variable-buffer-local 'imenu-prev-index-position-function)
   (make-variable-buffer-local 'imenu-extract-index-name-function)
-  (setq imenu-prev-index-position-function 'notes-goto-up-note)
-  (setq imenu-extract-index-name-function 'notes-subject-tag)
+  (setq imenu-prev-index-position-function 'records-goto-up-record)
+  (setq imenu-extract-index-name-function 'records-subject-tag)
 
-  (notes-parse-buffer)
-  (if notes-initialize
+  (records-parse-buffer)
+  (if records-initialize
       ()
-    (message "HI")
-    (notes-initialize)
-    (setq notes-initialize t))
-  (run-hooks 'notes-mode-hooks)
+    ;; (message "HI")
+    (records-initialize)
+    (setq records-initialize t))
+  (run-hooks 'records-mode-hooks)
   )
 
-(run-hooks 'notes-load-hooks)
-(provide 'notes)
+(run-hooks 'records-load-hooks)
+(provide 'records)
