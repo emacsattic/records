@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.7 2001/05/14 09:51:25 burtonator Exp $
+;; $Id: records-rss.el,v 1.8 2001/05/14 13:06:47 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -70,7 +70,12 @@
 ;; - If a record ALREADY exists in the RSS index delete it and insert a new
 ;;   record.  This is necessary because if we update a record we want the index
 ;;   to reflect this.
-
+;;
+;; - Is it possible to export RSS in the background???  Maybe when specific
+;;   operations are performed.  It only takes a second.
+;;
+;; - Support images for RSS items.  This might be tough because RSS doesn't
+;;   support this and there isn't really an additional namespace I can use.
 
 ;;;History:
 ;;
@@ -99,6 +104,26 @@
   :type 'string
   :group 'records-rss)
 
+(defcustom records-rss-images-default ""
+  "Default image to use for RSS export."
+  :type 'string
+  :group 'records-rss)
+
+
+;;FIXME: maybe I should move this to use some generic metainfo on each subject.
+(defcustom records-rss-images-subjects-alist '()
+  "Associated list for storing subject to image mappings."
+  :type '(alist (cons 'string 'string))
+  :group 'records-rss)
+
+
+(defcustom records-rss-item-default-url "http://www.sourceforge.net/projects/records"
+  "Default URL for RSS content.  This is used when you want to export a record
+as RSS but don't want to provide a URL.  Use the default if you just want to
+export your activity."
+  :type 'string
+  :group 'records-rss)
+  
 (defvar records-rss-index-file (concat records-rss-export-directory "/index.rss")
   "File used for RSS index output.")
 
@@ -115,7 +140,7 @@
     (completing-read "Subject: " 
                      records-subject-table)
     (read-string "Title: ")
-    (read-string "URL: ")))
+    (read-string "URL: " records-rss-item-default-url)))
 
   (records-insert-record subject)
 
@@ -138,7 +163,10 @@
       ;;search for RSS metainfo tags
       (while (re-search-forward "^type: rss$" nil t)
 
-        (let(record-link title url description created buffer)
+        (let(record-link subject title url description created buffer)
+
+          (save-excursion
+            (setq subject (records-goto-subject)))
 
           (setq title (records-metainfo-get "title"))
           (setq url (records-metainfo-get "url"))
@@ -147,23 +175,25 @@
           
           (setq description (records-format-get-body))
           
-          (setq buffer (find-file-noselect records-rss-index-file))
-
-          (records-rss-init-buffer buffer)
-
-          ;;FIXME: make sure that the link doesn't already exist.
-
-          (if (not (records-rss-link-exists record-link))
-              (progn 
-                
-                (setq count (1+ count))
-
-                (records-rss-export-record record-link
-                                           title
-                                           url
-                                           created
-                                           description
-                                           buffer)))
+          (save-excursion
+            (setq buffer (find-file-noselect records-rss-index-file))
+            
+            (records-rss-init-buffer buffer)
+            
+            ;;FIXME: make sure that the link doesn't already exist.
+            
+            (if (not (records-rss-link-exists record-link))
+                (progn 
+                  
+                  (setq count (1+ count))
+                  
+                  (records-rss-export-record record-link
+                                             subject
+                                             title
+                                             url
+                                             created
+                                             description
+                                             buffer))))
           ))
 
       (records-rss-save)
@@ -188,7 +218,13 @@
 
     (save-buffer)))
 
-(defun records-rss-export-record(record-link title url created description buffer)
+(defun records-rss-export-record(record-link
+                                 subject
+                                 title
+                                 url
+                                 created
+                                 description
+                                 buffer)
   "Export the current record and output the XML to the buffer.  "
 
   ;;FIXME: insert the 'created' date
@@ -211,6 +247,19 @@
   ;;add a dublin core 'date' item so that we know when this record was created.
 
   (records-rss-insert-element "dc:date" created 1)
+
+  ;;(records-rss-insert-element "dc:date" created 1)
+
+  ;;get the image
+  (let(image)
+
+    ;;OK.  now try to pull out the images to use for the image-subject alist....
+    (setq image (cdr (assoc subject records-rss-images-subjects-alist)))
+
+    (if (null image)
+        (setq image records-rss-images-default))    
+    
+    (records-rss-insert-element "im:image" image))
   
   ;;description
   (records-rss-insert-element "description" description)
@@ -248,7 +297,6 @@ nested, default is 0"
   (if (not (file-directory-p records-rss-export-directory))
       (make-directory records-rss-export-directory))
 
-
   )
 
 (defun records-rss-init-buffer(buffer)
@@ -269,13 +317,14 @@ nested, default is 0"
           (beginning-of-buffer)
 
           ;;doesn't have XML information... insert it.
-          (insert "<?xml version=\"1.0\">\n")
+          (insert "<?xml version=\"1.0\"?>\n")
 
           ;;FIXME: need output channel information
 
           (insert "<rdf:RDF ")
           (insert "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ")
           (insert "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" ")
+          (insert "xmlns:im=\"http://purl.org/rss/1.0/item-images/\" ")
           (insert "xmlns=\"http://purl.org/rss/1.0/\"")
           (insert ">")
           (insert "\n\n")

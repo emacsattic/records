@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.4 2001/05/14 09:05:37 burtonator Exp $
+;; $Id: records-query.el,v 1.5 2001/05/14 13:06:47 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -375,6 +375,13 @@ right of `value' to equal `width'."
     (read-string "Body (regexp): ")))
 
   (records-query-exec nil nil body))
+
+(defun records-query-on-type-rss()
+  "Query on the body."
+  (interactive)
+
+  (records-query-exec nil "^type: rss$" nil))
+
 
 (define-key records-query-result-mode-map  [return] 'records-query-results-goto-record)
 
