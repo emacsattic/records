@@ -1,13 +1,11 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.10 2000/01/27 20:55:07 ashvin Exp $
+;;; $Id: records-util.el,v 1.11 2000/01/27 21:19:07 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
-
-(autoload 'mc-encrypt-generic "mc-toplev" nil t)
 
 (defun records-create-todo ()
   "Create a records todo entry in the current record"
@@ -87,8 +85,12 @@ See the records-todo-.*day variables on when it is automatically invoked."
             (records-delete-empty-record-file)
             ))))))
 
+(autoload 'mc-encrypt-generic "mc-toplev" nil t)
+
 (defun records-user-name ()
   "The user name of the records user."
+  (if (not (boundp 'mc-default-scheme))
+      (require 'mailcrypt))
   (let ((user (cdr (assoc 'user-id (funcall mc-default-scheme)))))
     (cond ((boundp 'mc-ripem-user-id)
            mc-ripem-user-id)
@@ -100,6 +102,8 @@ See the records-todo-.*day variables on when it is automatically invoked."
 With prefix arg, start the encryption from point to the end of record.
 Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   (interactive "P")
+  (if (not (boundp 'mc-default-scheme))
+      (load "mailcrypt"))
   (save-excursion
     (let ((point-pair (records-record-region t))
           start end)
@@ -121,6 +125,8 @@ Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   "Decrypt the current record.
 Records decryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   (interactive)
+  (if (not (boundp 'mc-default-scheme))
+      (load "mailcrypt"))
   (save-excursion
     (let ((point-pair (records-record-region t)))
       (goto-char (first point-pair))
