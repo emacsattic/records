@@ -2,14 +2,19 @@
 
 ### notesadmin
 ###
-### $Id: recordsadmin.in,v 1.3 1996/12/05 21:27:57 asgoel Exp $
+### $Id: recordsadmin.in,v 1.4 1996/12/10 20:58:47 asgoel Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
-# Revision 1.3  1996/12/05 21:27:57  asgoel
+# Revision 1.4  1996/12/10 20:58:47  asgoel
+# Added notes -c : converts from one notes date and directory format to another.
+# Modified various functions to accept an alternate set of variables.
+# Modified notes -i : initializes/installs notes init file.
+#
+# Revision 1.3  1996/12/05  21:27:57  asgoel
 # Added generation of date index.
 # Adding new options for notes initialization, conversion -
 #   haven't done the work.
@@ -27,89 +32,161 @@
 # Initial revision
 #
 #
-use File::Basename;
 use Getopt::Std;
+use File::Basename;
 
 # global - should be set by makefile
 $notes_init_file="$ENV{HOME}/.emacs-notes";
 
 # external global variables read from .emacs-notes
+# with their documentation
 # initialized here to sane defaults 
-$notes_directory = "$ENV{HOME}/notes/";
+
+@notes_external_vars = (
+    "notes_directory", 1, 'Directory under which all notes are stored.',
+    "notes_index_file", 1, 'File name in which notes subject index is stored.',
+    "notes_dindex_file", 1, 'File name in which notes date index is stored.',
+    "notes_directory_structure", 0, 'The directory structure for notes files.
+Its values can be 
+0 => all notes are stored in the variable notes-directory. 
+1 => notes are stored by year.
+2 => notes are stored by year and month.',
+    "notes_day_order", 0, 'A notes file name is composed of a day, month and year.
+This variable determines the order of the day in date. 
+Valid values are 0, 1 or 2 only.',
+    "notes_month_order", 0, 'A notes file name is composed of a day, month and year.
+This variable determines the order of the month in date. 
+Valid values are 0, 1 or 2 only.',
+    "notes_year_order", 0, 'A notes file name is composed of a day, month and year.
+This variable determines the order of the month in date. 
+Valid values are 0, 1 or 2 only.',
+    "notes_year_length", 0, 'The length of a notes file year. 
+Valid values are 2 or 4 only.',
+);
+
+$notes_directory = "$ENV{HOME}/notes";
+$notes_index_file = "${notes_directory}/index";
+$notes_dindex_file = "${notes_directory}/dindex";
 $notes_directory_structure = 1;
-$notes_index_file = "${notes_directory}index";
-$notes_dindex_file = "${notes_directory}dindex";
-$notes_year_length = 4;
 $notes_day_order = 0;
 $notes_month_order = 1;
 $notes_year_order = 2;
+$notes_year_length = 4;
 
 # internal global variables
-# initialized in notes_initialize()
+# initialized in &notes_initialize_vars
 $notes_date_length = 0;
 @notes_date_order = ();
-@notes_date = (['year', 0, 0], ['month', 0, 0], ['day', 0, 0]); 
+@notes_date = ();
+@notes_glob_regexp = ();
 
 # other global variables
 $notes_day_length = 0;
 $notes_month_length = 0;
 %notes_raw_index = ();
 %notes_date_index = ();
+$alternate = 1; # alternate set of variables
+
+$notes_init_mesg = ";;; AUTOMATICALLY GENERATED: DO NOT ALTER OR DELETE FROM THIS LINE ONWARDS";
+
+$notes_more_init_mesg = "
+;;; This part of the file is also read by perl.
+;;; Add any emacs customization before this comment.
+
+";
 
 #
 # Start the bang bang
 #
  
-if (!getopts('dvirc')) {
+if (!getopts('hdvic')) {
+    &usage();
+}
+
+# testing
+# &notes_initialize_vars(1);
+# &notes_query_vars($alternate);
+# &notes_initialize_vars(0, $alternate);
+# &notes_update_links("/home/asgoel/notes/96/961209", $alternate);
+# exit(0);
+
+
+&usage() if ($opt_h);
+$debug = 1 if ($opt_d);
+$verbose = 1 if ($opt_v);
+
+if ($opt_i) {
+    &notes_install_init_file();
+}
+
+if ($opt_c) {
+    &notes_convert_format();
+}
+
+&notes_recreate_indexes();
+exit(0);
+
+sub usage {
     print STDERR "Usage: $0 [-options ...]
 
+This program will recreate the notes indexes and modifed notes files
+to reflect the new indexes. With more options, it will also
+install notes defaults, convert date and directory formats, etc.
+
 where options are:
-	[-i]	initialize notes
-	[-r]	recreates notes indexes
-	[-c]	converts one date/directory format to another
+	[-h]	this usage message
+	[-i]	install notes defaults
+	[-c]	converts one date and directory format to another
 	[-d]	run in debug mode
 	[-v]	run in verbose mode
 ";
     exit(1);
 }
 
-if ($opt_i) {
-    $initialize_notes = 1;
+# make directory hierarchy
+sub mkdirhier {
+    local($dir, $mode) = @_;
+    local($pdir) = dirname($dir);
+
+    if (!(-d $pdir)) {
+	&mkdirhier($pdir, $mode);
+    }
+    mkdir($dir, $mode) ||
+	die "Couldn't make directory $dir: $!\n";
 }
 
-if ($opt_r) {
-    $recreate_notes = 1;
+sub notes_write_file {
+    local($file, *notes_file) = @_;
+
+    print "$file is modified.\n" if ($verbose);
+    # rewrite the new file
+    if (!rename("$file", "$file~")) {
+	warn("Could not rename $file: $!\n");
+	return;
+    }
+    if (!open(OUT, ">$file")) {
+	warn("Could not open $file for writing: $!\n");
+	# get back old file
+	rename("$file~", "$file");
+	return;
+    }
+    print OUT @notes_file;
+    close (OUT);
 }
 
-if ($opt_c) {
-    $convert_notes = 1;
-}
-
-if ($opt_d) {
-    $debug = 1;
-}
-
-if ($opt_v) {
-    $verbose = 1;
-}
-
-&notes_initialize();
-@notes_files = &notes_find_notes();
-
-foreach (@notes_files) {
-    &notes_update_file($_);
-}
-&notes_make_index();
-&notes_make_dindex();
-exit(0);
-
-sub notes_initialize_external {
+# returns 1 if the init file has the generated stuff in it or else 0
+sub notes_read_init_file {
     local($var);
+    local($init_msg_seen) = 0;
 
     if (!open(IN, "< $notes_init_file")) {
-        return;
+        return 0;
     }
     while(<IN>) {
+	if (!$init_msg_seen) {
+	    next unless /$notes_init_mesg/;
+	    $init_msg_seen = 1;
+	}
 	next if /^\s*$/;
 	next if /^\s*;/;
 	if (/\s*\(\s*setq\s+([A-Za-z-]+)\s+([0-9]+)\s*\)/) {
@@ -130,28 +207,203 @@ sub notes_initialize_external {
 	}
     }
     close(IN);
+    return $init_msg_seen;
 }
 
-sub notes_initialize {
-    local($i, $dmy, $dmylen);
-    &notes_initialize_external();
+# will take alternate set of variables
+sub notes_write_init_file {
+    local($init, $val) = @_;
+    local($len) = $#notes_external_vars; # length of the array
+    local($i, $var, $value, $str);
 
-    $notes_day_length = 2;
-    $notes_month_length = 2;
-    $notes_date_length = 0;
-    # initialize notes_date_order
-    $notes_date_order[$notes_day_order] = 'day';
-    $notes_date_order[$notes_month_order] = 'month';
-    $notes_date_order[$notes_year_order] = 'year';
-    # initialize notes_date
-    foreach $dmy (@notes_date_order) {
-	for ($i = 0; $i < 3; $i++) {
-	    if ($notes_date[$i][0] eq $dmy) {
-		$dmylen = eval("\$" . "notes_" . $dmy . "_length");
-		$notes_date[$i][1] = $notes_date_length;
-		$notes_date[$i][2] = $dmylen;
-		$notes_date_length += $dmylen;
+
+    # if init file exists 
+    # we have to remove the generated stuff from it.
+    if ($init) {
+	if (!rename("$notes_init_file", "$notes_init_file~")) {
+	    warn("Could not rename $notes_init_file: $!\n");
+	    return;
+	}
+	if (!open(IN, "< $notes_init_file~")) {
+	    die "Couldn't open $notes_init_file~: $!\n";
+	}
+    }
+    if (!open(AP, ">> $notes_init_file")) {
+	die "Couldn't write to $notes_init_file: $!\n";
+    }
+    if ($init) {
+	# get stuff from $notes_init_file~
+	while(<IN>) {
+	    if (!/$notes_init_mesg/) {
+		print AP;
+		next;
 	    }
+	    last;
+	}
+	close(IN);	
+    }
+    print AP $notes_init_mesg;
+    print AP $notes_more_init_mesg;
+    for ($i = 0; $i < $len; $i += 3) {
+	$var = $notes_external_vars[$i];
+	$str = $notes_external_vars[$i+1];
+	$value = ${$var . $val};
+	$var =~ s/_/-/g;
+	if ($str) {
+	    print AP "(setq ", $var, " ", "\"",  $value, "\"", ")\n";
+        } else {
+	    print AP "(setq ", $var, " ", $value, ")\n";
+        }
+    }
+    close(AP);
+}
+
+# will take alternate set of variables
+# returns 1 if the validate is unsuccessful or else 0
+sub notes_validate_vars {
+    local($val) = @_;
+    local($ret) = 0;
+
+    local(*notes_directory_structure_a)
+	= \${"notes_directory_structure_a" . $val};
+    local(*notes_day_order_a) = \${"notes_day_order" . $val};
+    local(*notes_month_order_a) = \${"notes_month_order" . $val};
+    local(*notes_year_order_a) = \${"notes_year_order" . $val};
+    local(*notes_year_length_a) = \${"notes_year_length" . $val};
+
+    if ($notes_directory_structure_a != 0 && 
+	$notes_directory_structure_a != 1 &&
+	$notes_directory_structure_a != 2) {
+	print "notes_directory_structure: should have a value of 0, 1 or 2.\n";
+	$ret = 1;
+    }
+    if ($notes_day_order_a != 0 &&
+	$notes_day_order_a != 1 &&
+	$notes_day_order_a != 2) {
+	print "notes_day_order: should have a value of 0, 1 or 2.\n";
+	$ret = 1;
+    }
+    if ($notes_month_order_a != 0 &&
+	$notes_month_order_a != 1 &&
+	$notes_month_order_a != 2) {
+	print "notes_month_order: should have a value of 0, 1 or 2.\n";
+	$ret = 1;
+    }
+    if ($notes_year_order_a != 0 && 
+	$notes_year_order_a != 1 &&
+	$notes_year_order_a != 2) {
+	print "notes_year_order: should have a value of 0, 1 or 2.\n";
+	$ret = 1;
+    }
+    if (($notes_day_order_a == $notes_month_order_a) ||
+	($notes_month_order_a == $notes_year_order_a) ||
+	($notes_year_order_a == $notes_day_order_a)) {
+	print "notes_{day|month|year}_order: should have different values.\n";
+	$ret = 1;
+    }
+    if (!($notes_year_length_a == 2 || $notes_year_length_a == 4)) {
+	print "notes_year_length: should have a value of 2 or 4.\n";
+    }
+    return $ret;
+}
+
+# will take alternate set of variables
+sub notes_initialize_vars {
+    local($read_init, $val) = @_;
+    local($i, $dmy, $dmylen);
+    local($dir_regexp, $file_regexp);
+
+    local(*notes_day_length_a) = \${"notes_day_length" . $val};
+    local(*notes_month_length_a) = \${"notes_month_length" . $val};
+    local(*notes_year_length_a) = \${"notes_year_length" . $val};
+
+    local(*notes_day_order_a) = \${"notes_day_order" . $val};
+    local(*notes_month_order_a) = \${"notes_month_order" . $val};
+    local(*notes_year_order_a) = \${"notes_year_order" . $val};
+
+    local(*notes_date_length_a) = \${"notes_date_length" . $val};
+    local(*notes_date_order_a) = \@{"notes_date_order" . $val};
+    local(*notes_date_a) = \@{"notes_date" . $val};
+
+    local(*notes_directory_structure_a)
+	= \${"notes_directory_structure" . $val};
+    local(*notes_glob_regexp_a) = \@{"notes_glob_regexp" . $val};
+
+    if ($read_init) {
+	&notes_read_init_file();
+    }
+
+    $notes_day_length_a = 2;
+    $notes_month_length_a = 2;
+    $notes_date_length_a = 0;
+    @notes_date_a = (['year', 0, 0], ['month', 0, 0], ['day', 0, 0]); 
+
+    # initialize notes_date_order
+    $notes_date_order_a[$notes_day_order_a] = 'day';
+    $notes_date_order_a[$notes_month_order_a] = 'month';
+    $notes_date_order_a[$notes_year_order_a] = 'year';
+    # initialize notes_date
+    foreach $dmy (@notes_date_order_a) {
+	for ($i = 0; $i < 3; $i++) {
+	    if ($notes_date_a[$i][0] eq $dmy) {
+		$dmylen = ${"notes_" . $dmy . "_length_a"};
+		$notes_date_a[$i][1] = $notes_date_length_a;
+		$notes_date_a[$i][2] = $dmylen;
+		$notes_date_length_a += $dmylen;
+	    }
+	}
+    }
+
+    # initialize notes_glob_regexp 
+    # directory structure + date length considered
+    if ($notes_directory_structure_a == 0) {
+	$dir_regexp = '';
+    } elsif ($notes_directory_structure_a == 1) {
+	for ($i = 0; $i < $notes_year_length_a; $i++) {
+	    $dir_regexp .= "[0-9]";
+	}
+	$dir_regexp .= "/";	
+    } elsif ($notes_directory_structure_a == 2) {
+	for ($i = 0; $i < $notes_year_length_a; $i++) {
+	    $dir_regexp .= "[0-9]";
+	}
+	$dir_regexp .= "/[0-9][0-9]/";	
+    }
+    for ($i = 0; $i < $notes_date_length_a; $i++) {
+	$file_regexp .= "[0-9]";
+    }
+    @notes_glob_regexp_a = ($dir_regexp, $file_regexp);
+}
+
+# will take alternate set of variables
+# query the user for values
+sub notes_query_vars {
+    local($val) = @_;
+
+    local($len) = $#notes_external_vars; # length of the array
+    local($i);
+    local($var, $doc, $value);
+    local($do_validate) = 1;
+
+    while ($do_validate) {
+	for ($i = 0; $i < $len; $i += 3) {
+	    $var = $notes_external_vars[$i];
+	    $doc = $notes_external_vars[$i+2];
+	    if ($val) {
+		${$var . $val} = ${$var};
+	    }
+	    print $doc, "\n";
+	    print $var, " (", ${$var}, "): "; 
+            chop($value = <>);
+	    if ($value ne "") {
+		${$var . $val} = $value;
+	    }
+	    print "\n";
+	}
+	# validate input
+	$do_validate = &notes_validate_vars($val);
+	if ($do_validate) {
+	    print "You have input bad values. Try again.\n\n";
 	}
     }
 }
@@ -165,25 +417,7 @@ sub notes_find_notes {
 
     chdir $notes_directory ||
 	die "Can't change directory to $notes_directory: $!\n";
-    # directory structure + date length considered
-    if ($notes_directory_structure == 0) {
-	$dir_regexp = '';
-    } elsif ($notes_directory_structure == 1) {
-	for ($i = 0; $i < $notes_year_length; $i++) {
-	    $dir_regexp .= "[0-9]";
-	}
-	$dir_regexp .= "/";	
-    } elsif ($notes_directory_structure == 2) {
-	for ($i = 0; $i < $notes_year_length; $i++) {
-	    $dir_regexp .= "[0-9]";
-	}
-	$dir_regexp .= "/[0-9][0-9]/";	
-    }
-    for ($i = 0; $i < $notes_date_length; $i++) {
-	$file_regexp .= "[0-9]";
-    }
-    $regexp = $dir_regexp . $file_regexp;
-    @files = glob($regexp);
+    @files = glob($notes_glob_regexp[0] . $notes_glob_regexp[1]);
     return @files;
 }
 
@@ -208,33 +442,51 @@ sub notes_normalize_date {
     return $date[0] . $date[1] . $date[2];
 }
 
+# will take alternate set of variables
 sub notes_denormalize_date {
-    local($ndate) = @_;
-    local($date) = sprintf("%${notes_date_length}s", " ");
-    if ($notes_date[0][2] == 2) {
+    local($ndate, $val) = @_;
+    local(*notes_date_length_a) = \${"notes_date_length" . $val};
+    local(*notes_date_a) = \@{"notes_date" . $val};
+
+    local($date) = sprintf("%${notes_date_length_a}s", " ");
+    if ($notes_date_a[0][2] == 2) {
 	# denormalize year
-	substr($date, $notes_date[0][1], $notes_date[0][2]) = 
+	substr($date, $notes_date_a[0][1], $notes_date_a[0][2]) = 
 	    substr($ndate, 2, 2);
     } else {
-	substr($date, $notes_date[0][1], $notes_date[0][2]) = 
+	substr($date, $notes_date_a[0][1], $notes_date_a[0][2]) = 
 	    substr($ndate, 0, 4);
     }
-    substr($date, $notes_date[1][1], $notes_date[1][2]) = substr($ndate, 4, 2);
-    substr($date, $notes_date[2][1], $notes_date[2][2]) = substr($ndate, 6, 2);
+    substr($date, $notes_date_a[1][1], $notes_date_a[1][2])
+	= substr($ndate, 4, 2);
+    substr($date, $notes_date_a[2][1], $notes_date_a[2][2])
+	= substr($ndate, 6, 2);
     return $date;
 }
 
+# will take alternate set of variables
+# absolute =  0 => relative path from a notes file
+#	   =  1 => full absolute path
+#	   = -1 => relative path from the notes directory
 sub notes_directory_path {
-    local($date, $absolute) = @_;
-    if ($notes_directory_structure == 0) {
-	return $absolute ? $notes_directory : '';
-    } elsif ($notes_directory_structure == 1) {
-	return ($absolute ? $notes_directory : "../") . 
-	    substr($date, $notes_date[0][1], $notes_date[0][2]) . "/"; 
-    } elsif ($notes_directory_structure == 2) {
-	return ($absolute ? $notes_directory : "../../") . 
-	    substr($date, $notes_date[0][1], $notes_date[0][2]) . "/" . 
-		substr($date, $notes_date[1][1], $notes_date[1][2]) . "/"; 
+    local($date, $absolute, $val) = @_;
+    local(*notes_date_a) = \@{"notes_date" . $val};
+    local(*notes_directory_a) = \${"notes_directory" . $val};
+    local(*notes_directory_structure_a) = 
+	\${"notes_directory_structure" . $val};
+
+    if ($notes_directory_structure_a == 0) {
+	return ($absolute >= 1) ? $notes_directory_a : '';
+    } elsif ($notes_directory_structure_a == 1) {
+	return (($absolute >= 1) ? $notes_directory_a . "/" : 
+		($absolute <= -1) ? '' : "../") .
+		    substr($date, $notes_date_a[0][1], $notes_date_a[0][2]); 
+    } elsif ($notes_directory_structure_a == 2) {
+	return (($absolute >= 1) ? $notes_directory_a . "/" : 
+		($absolute <= -1) ? '' : "../../") .
+		    substr($date, $notes_date_a[0][1], $notes_date_a[0][2]) .
+			"/" . substr($date, $notes_date_a[1][1], 
+				     $notes_date_a[1][2]); 
     } else {
 	die "notes_directory_path: bad value\n";
     }
@@ -316,15 +568,15 @@ sub notes_update_file {
 		    $link_found = 1;
 		    $state = 4;
 		} else {
-		    $file_modified = 1;
+		    $file_modified = 1 unless ($file_modified);
 		    $state = 1;
 		}
 		next;
 	    } else {
 		if (!$link_found) {
-		    $file_modified = 1;
+		    $file_modified = 1 unless ($file_modified);
 		    push(@notes_file, "link: <" . &notes_directory_path($date)
-			 . $date . "#" . $tag . "* " . $subject . ">\n");
+			 . "/" . $date . "#" . $tag . "* " . $subject . ">\n");
 		}
 		$a_link_found = 0;
 		$link_found = 0;
@@ -342,20 +594,45 @@ sub notes_update_file {
     }
     close (IN);
     if ($file_modified) {
-	print "$file is modified\n" if ($verbose);
-	# rewrite the new file
-	if (!rename("$file", "$file~")) {
-	    warn("Could not rename $file: $!\n");
-	    return;
+	&notes_write_file($file, *notes_file);
+    } else {
+	print "$file unchanged.\n" if ($verbose);
+    }
+}
+
+# TODO: finish writing it
+# will take alternate set of variables
+# after format conversion, update the links in file. 
+sub notes_update_links {
+    local($file, $val) = @_;
+    local(@notes_file, $file_modified);
+    local($newdate, $newdir);
+
+    local($link_regexp) = "<(.*)" . $notes_glob_regexp[0] . "("
+	. $notes_glob_regexp[1] . ")(#[0-9]*\\* .*)>";
+
+    if (!open(IN, "< $file")) {
+        warn("$0: cannot open $file.  Skipped.\n");
+        return;
+    }
+    while (<IN>) {
+	if (!/$link_regexp/) {
+	    push(@notes_file, $_);
+	} else {
+	    $file_modified = 1 unless ($file_modified);
+	    $newdate = &notes_denormalize_date(&notes_normalize_date($2),
+					       $val);
+	    $newdir = &notes_directory_path($newdate, 0, $val);
+	    # TODO: broken
+	    push(@notes_file, $` . "<" . $newdir . "/" . $newdate 
+		 . $3 . ">" . $');
 	}
-	if (!open(OUT, ">$file")) {
-	    warn("Could not open $file for writing: $!\n");
-	    # get back old file
-	    rename("$file~", "$file");
-	    return;
-	}
-	print OUT @notes_file;
-	close (OUT);
+    }
+    close(IN);
+    if ($file_modified) {
+	&notes_write_file($file, *notes_file);
+    } else {
+	print "$file unchanged.\n" if ($verbose);
     }
 }
 
@@ -429,3 +706,71 @@ sub notes_make_dindex {
     }
     close (DINDEX);
 }
+
+sub notes_install_init_file {
+    local($init) = &notes_read_init_file();
+    if ($init) {
+	print "You have a valid $notes_init_file.
+I will use its values to initialize your notes.
+Unless you know what you are doing, do not change these values.
+If you wish to change the date or directory format, use 
+$0 -c\n\n";
+    }
+
+    print "The default values of the variables are shown in parenthesis.
+If you want the default value, press return.\n\n";
+
+    # query the user for values
+    &notes_query_vars();
+    # write out the init file
+    &notes_write_init_file($init);
+}
+
+sub notes_convert_format {
+    local($file, @notes_files, $newfile, $newdir);
+    local($date, $ndate, $newdate);
+    
+    if (!&notes_read_init_file()) {
+	print "Notes init file has not been initialized.\n";
+	print "Run $0 -i to initialize the init file before
+attempting to convert notes formats.\n\n";
+	exit(1);
+    }
+    # original set of variables has been read and initialized
+    &notes_initialize_vars(1);
+    # read the new set of vars.
+    print "You must input the new values of the notes variables.\n\n";
+    &notes_query_vars($alternate);
+    &notes_initialize_vars(0, $alternate);
+    @notes_files = &notes_find_notes();
+    foreach $file (@notes_files) {
+	$date = basename($file);
+	$ndate = &notes_normalize_date($date);
+	$newdate = &notes_denormalize_date($ndate, $alternate);
+	$newdir = &notes_directory_path($newdate, 1, $alternate);
+	$newfile =  $newdir . "/" . $newdate;
+	if ($file eq $newfile) {
+	    die "The old and new variable settings are the same.
+We will not go any further!!\n";
+	}
+	&mkdirhier($newdir, 0700) unless ( -d $newdir);
+	rename($file, $newfile) ||
+	    warn "Couldn't rename $file to $newfile: $!\n";
+	&notes_update_links($newfile, $alternate);
+    }
+    &notes_write_init_file(1, $alternate);
+}
+
+sub notes_recreate_indexes {
+    local(@notes_files);
+
+    &notes_initialize_vars(1);
+    @notes_files = &notes_find_notes();
+
+    foreach (@notes_files) {
+	&notes_update_file($_);
+    }
+    &notes_make_index();
+    &notes_make_dindex();
+}
+
