@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.12 2001/05/26 18:37:18 burtonator Exp $
+;; $Id: records-rss.el,v 1.13 2001/05/26 18:59:17 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -156,7 +156,8 @@ export your activity."
   (records-type-set "rss"))
 
 (defun records-rss-export-current-buffer()
-  "Export the current buffer to RSS format."
+  "Export the current buffer to RSS format and return the number of records
+exported."
   (interactive)
 
   (records-format-require-version "1.0.1")
@@ -203,7 +204,8 @@ export your activity."
                                              buffer))))))
 
       (records-rss-save)
-      (message "Exported %i RSS record(s)." count))))
+      (message "Exported %i RSS record(s)." count)
+      count)))
 
 (defun records-rss-export()
   "Try to export the RSS database over the last X days."
@@ -214,9 +216,13 @@ export your activity."
   ;;backup files first...
   (records-rss-export-backup)
   
-  (save-excursion
-    (let(buffer day-index)
+  (let(buffer day-index count)
+    (save-excursion
 
+      ;;count should add up to the number of records successfully exported.
+
+      (setq count 0)
+      
       ;;clear the records buffer...
       
       (setq buffer (find-file-noselect records-rss-index-file))
@@ -247,11 +253,14 @@ export your activity."
 
           ;;don't do anything if we error out...
           (catch 'error
-            (records-rss-export-current-buffer))
+            (setq count (+ count (records-rss-export-current-buffer))))
           
-          (setq day-index (1- day-index))))))
+          (setq day-index (1- day-index))))
 
-  (message "Exporting RSS records... done"))
+
+      (message "Exported %i total RSS record(s) over the last %i days."
+               count
+               records-rss-export-days))))
 
 (defun records-rss-export-backup()
   "Backup all necessary files prior to an export."
