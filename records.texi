@@ -707,7 +707,13 @@ with @code{emacs} by default, it is included in the records distribution
 under the directory @file{mailcrypt}. However, this directory will
 probably not be in your load-path (@inforef{Loading,,xemacs}).
 So if you don't have these packages by default, copy the files in the
-@file{mailcrypt} directory into the top level records directory.
+@file{mailcrypt} directory into the top level records directory. The
+mailcrypt version is 3.5.5 which supports PGP version 2.6, PGP version
+5.0 and the GNU gpg.
+
+By default PGP version 2.6 is used for encryption and decryption. You
+can set the value of the variable mc-default-scheme to mc-scheme-pgp50
+to enable PGP version 5.0.
 
 If you don't have PGP software then you either don't care about
 encryption or need to get it so you can use it with records. 
