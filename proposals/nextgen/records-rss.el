@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.4 2001/05/14 08:18:24 burtonator Exp $
+;; $Id: records-rss.el,v 1.5 2001/05/14 08:43:51 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -61,6 +61,8 @@
 
 ;;; TODO:
 ;;
+;; - Support for XSLT after exporting.
+;;
 ;; - Support for images
 ;;
 ;; - Support for optional channel info (title, description, etc)
@@ -69,13 +71,12 @@
 ;;
 ;; - Incorporate indentation so that this can be understood easily.
 
-
 (defcustom records-rss-export-directory (concat records-directory "/rss")
   "Main directory for RSS export."
   :type 'string
   :group 'records-rss)
 
-(defvar records-rss-index-file (concat records-rss-export-directory "/index.rss")  
+(defvar records-rss-index-file (concat records-rss-export-directory "/index.rss")
   "File used for RSS index output.")
 
 (defconst records-rss-tag-begin-items "<!-- BEGIN ITEMS -->"
@@ -83,8 +84,6 @@
 
 (defconst records-rss-tag-end-items "<!-- END ITEMS -->"
   "Tag which marks the end of RSS items.")
-
-
 
 (defun records-rss-create-record(subject title url)
   "Create an RSS compatible record."
@@ -115,12 +114,14 @@
 
       ;;search for RSS metainfo tags
       (while (re-search-forward "^type: rss$" nil t)
-        (let(record-link title url description buffer)
+
+        (let(record-link title url description buffer body)
 
           (setq title (records-metainfo-get "title"))
           (setq url (records-metainfo-get "url"))
           (setq record-link (records-metainfo-get "link"))
 
+          (setq body (records-format-get-body))
           
           (setq buffer (find-file-noselect records-rss-index-file))
 
@@ -136,7 +137,7 @@
                 (records-rss-export-record record-link
                                            title
                                            url
-                                           "FIXME: description... asdf"
+                                           body
                                            buffer)))
           ))
 
@@ -183,7 +184,7 @@
   (records-rss-insert-element "link" url 1)
   
   ;;description
-  (records-rss-insert-element "description" description 1)
+  (records-rss-insert-element "description" description)
   
   (insert "</item>\n"))
 
