@@ -1,14 +1,17 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.3 1996/11/22 12:43:49 asgoel Exp $
+;;; $Id: records.el,v 1.4 1996/11/26 02:01:01 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.3  1996/11/22 12:43:49  asgoel
+; Revision 1.4  1996/11/26 02:01:01  asgoel
+; Move notes-subject-table to notes.el
+;
+; Revision 1.3  1996/11/22  12:43:49  asgoel
 ; A working version that supports the old functionality + auto insertion,
 ; deletion and renaming of notes.
 ; However it can not be tested since I have to write a perl script
@@ -87,6 +90,10 @@ in a file name and their lengths.")
 (defvar notes-date-tag-regexp 
   (concat notes-date-regexp "\\(\\|" notes-tag-regexp "\\)\\s-")
   "Regexp matching links in a note index.")
+
+(defvar notes-subject-table (make-vector 127 0)
+  "List of subjects for notes subject completion.
+Reloaded by loading the notes-index file.")
 
 (defun point-boln ()
   "Return the boln as a position."
@@ -548,7 +555,8 @@ The key-bindings of this mode are:
 	(setq font-lock-keywords notes-font-lock-keywords)
 	(font-lock-mode 1)))
 
-  (run-hooks 'notes-mode-hooks))
+  (run-hooks 'notes-mode-hooks)
+  )
 
 (run-hooks 'notes-load-hooks)
 (provide 'notes)
