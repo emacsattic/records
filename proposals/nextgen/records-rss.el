@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.5 2001/05/14 08:43:51 burtonator Exp $
+;; $Id: records-rss.el,v 1.6 2001/05/14 09:05:37 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -115,13 +115,14 @@
       ;;search for RSS metainfo tags
       (while (re-search-forward "^type: rss$" nil t)
 
-        (let(record-link title url description buffer body)
+        (let(record-link title url description created buffer)
 
           (setq title (records-metainfo-get "title"))
           (setq url (records-metainfo-get "url"))
           (setq record-link (records-metainfo-get "link"))
-
-          (setq body (records-format-get-body))
+          (setq created (records-metainfo-get "created"))
+          
+          (setq description (records-format-get-body))
           
           (setq buffer (find-file-noselect records-rss-index-file))
 
@@ -137,7 +138,8 @@
                 (records-rss-export-record record-link
                                            title
                                            url
-                                           body
+                                           created
+                                           description
                                            buffer)))
           ))
 
@@ -163,7 +165,7 @@
 
     (save-buffer)))
 
-(defun records-rss-export-record(record-link title url description buffer)
+(defun records-rss-export-record(record-link title url created description buffer)
   "Export the current record and output the XML to the buffer.  "
 
   ;;FIXME: insert the 'created' date
@@ -182,6 +184,10 @@
   
   ;;link/url
   (records-rss-insert-element "link" url 1)
+
+  ;;add a dublin core 'date' item so that we know when this record was created.
+
+  (records-rss-insert-element "dc:date" created 1)
   
   ;;description
   (records-rss-insert-element "description" description)
@@ -246,6 +252,7 @@ nested, default is 0"
 
           (insert "<rdf:RDF ")
           (insert "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ")
+          (insert "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" ")
           (insert "xmlns=\"http://purl.org/rss/1.0/\"")
           (insert ">")
           (insert "\n\n")

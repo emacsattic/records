@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.3 2001/05/14 06:09:21 burtonator Exp $
+;; $Id: records-query.el,v 1.4 2001/05/14 09:05:37 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -183,8 +183,13 @@ query across.  "
 
                   (setq body (buffer-substring-no-properties start end))))
 
-              
-              (setq excerpt (records-query-get-excerpt body))
+
+              ;;try to get the title and use that as the excerpt if it is provided
+              (setq excerpt (records-metainfo-get "title"))
+
+              ;;now if the excerpt is still null this means there is no title so we should probably guess something.
+              (if (null excerpt)
+                  (setq excerpt (records-query-get-excerpt body)))
               
               ;;now remove all the properties from these strings
 
