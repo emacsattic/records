@@ -1,19 +1,26 @@
 #!/usr/local/bin/perl -- -*- perl -*-
 
-### makenotes
+### notesadmin
 ###
-### $Id: recordsadmin.in,v 1.1 1996/11/27 04:33:26 asgoel Exp $
+### $Id: recordsadmin.in,v 1.2 1996/12/03 02:15:08 asgoel Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
-# Revision 1.1  1996/11/27 04:33:26  asgoel
+# Revision 1.2  1996/12/03 02:15:08  asgoel
+# Getopts introduced.
+# Changed name of file to notesadmin.
+# Introduced verbose and debug flags.
+# Fixed subject searches.
+#
+# Revision 1.1  1996/11/27  04:33:26  asgoel
 # Initial revision
 #
 #
 use File::Basename;
+use Getopt::Std;
 
 # global - should be set by makefile
 $notes_init_file="$ENV{HOME}/.emacs-notes";
@@ -27,9 +34,6 @@ $notes_year_length = 4;
 $notes_day_order = 0;
 $notes_month_order = 1;
 $notes_year_order = 2;
-
-# testing
-$notes_index_file = "${notes_directory}index2";
 
 # internal global variables
 # initialized in notes_initialize()
@@ -45,6 +49,19 @@ $notes_month_length = 0;
 # Start the bang bang
 #
 
+if (!getopts('dv')) {
+    print STDERR "Usage: $0 [-d] [-v]\n";
+    exit(1);
+}
+
+if ($opt_d) {
+    $debug = 1;
+}
+
+if ($opt_v) {
+    $verbose = 1;
+}
+
 &notes_initialize();
 @notes_files = &notes_find_notes();
 
@@ -54,7 +71,7 @@ foreach (@notes_files) {
 &notes_make_index();
 exit(0);
 
-sub notes_external_initialize {
+sub notes_initialize_external {
     local($var);
 
     if (!open(IN, "< $notes_init_file")) {
@@ -67,7 +84,7 @@ sub notes_external_initialize {
 	    # numeric quantity found
 	    $var = $1;
 	    $val = $2;
-	    $var =~ s/-/_/g; #
+	    $var =~ s/-/_/g;
 	    ${$var} = $val;
 	    next;
         }
@@ -75,7 +92,7 @@ sub notes_external_initialize {
 	    # string quantity found
 	    $var = $1;
 	    $val = $2;
-	    $var =~ s/-/_/g; #
+	    $var =~ s/-/_/g;
 	    ${$var} = $val;
 	    next;
 	}
@@ -85,7 +102,7 @@ sub notes_external_initialize {
 
 sub notes_initialize {
     local($i, $dmy, $dmylen);
-    &notes_external_initialize();
+    &notes_initialize_external();
 
     $notes_day_length = 2;
     $notes_month_length = 2;
@@ -231,7 +248,7 @@ sub notes_update_file {
 	} elsif ($state == 2) {
 	    # look for subject
 	    if (!$subject_found) {
-		if (/^\* ((\w|-)*)\s*$/) {
+		if (/^\* (\S*)\s*$/) {
 		    # partial subject was found
 		    # get potential subject name
 		    $subject = $1;
@@ -295,6 +312,7 @@ sub notes_update_file {
     }
     close (IN);
     if ($file_modified) {
+	print "$file is modified\n" if ($verbose);
 	# rewrite the new file
 	if (!rename("$file", "$file~")) {
 	    warn("Could not rename $file: $!\n");
@@ -338,7 +356,7 @@ sub notes_make_index {
     # index start up 
     print INDEX "-*- notes-index -*- ";
     foreach $subject_ndate (sort keys(%notes_raw_index)) {
-	($subject, $ndate) = split(/ /, $subject_ndate);
+	($subject, $ndate) = split(/\s+/, $subject_ndate);
 	$date = &notes_denormalize_date($ndate);
 	$tags = $notes_raw_index{$subject_ndate};
 	if ($subject ne $old_subject) {
