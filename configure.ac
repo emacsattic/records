@@ -5,7 +5,7 @@ dnl
 AC_PREREQ(2.53)
 
 dnl Remember to update the version
-AC_INIT(records.el, 1.5.0)
+AC_INIT(records, 1.5.0)
 AM_INIT_AUTOMAKE
 
 dnl for cygwin windows environment

@@ -9,6 +9,17 @@ bin_SCRIPTS = recordsadmin
 info_TEXINFOS = records.texi
 pkgdata_DATA = records-templ.tex
 
+MAILCRYPT =					\
+	mailcrypt/FSF-timer.el			\
+	mailcrypt/expect.el			\
+	mailcrypt/mailcrypt.el			\
+	mailcrypt/mc-gpg.el			\
+	mailcrypt/mc-pgp.el			\
+	mailcrypt/mc-pgp5.el			\
+	mailcrypt/mc-remail.el			\
+	mailcrypt/mc-setversion.el		\
+	mailcrypt/mc-toplev.el
+
 # list of Lisp files to be installed in lispdir
 lisp_LISP =					\
 	records-autoloads.el			\
@@ -39,6 +50,7 @@ EXTRA_DIST =					\
 	FAQ					\
 	INSTALL-UNIX				\
 	INSTALL-NT				\
+	$(MAILCRYPT)				\
 	records-templ.tex			\
 	records-autoloads.el			\
 	records-dindex.el			\
