@@ -1,6 +1,6 @@
 ;;; records-type.el --- record type information
 
-;; $Id: records-type.el,v 1.1 2001/05/14 06:10:30 burtonator Exp $
+;; $Id: records-type.el,v 1.2 2001/05/15 14:01:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -35,7 +35,7 @@
 
 ;;; Code:
 
-(defvar records-type-values '("rss" "log" "definition") 
+(defvar records-type-values '("rss" "log" "definition" "bug" "rfe") 
   "Known values for the type of a record.")
 
 (defun records-type-set(value)

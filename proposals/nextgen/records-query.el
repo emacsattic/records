@@ -1,6 +1,6 @@
 ;;; FILE.el --- ADD BASIC DESCRIPTION
 
-;; $Id: records-query.el,v 1.6 2001/05/14 16:48:37 burtonator Exp $
+;; $Id: records-query.el,v 1.7 2001/05/15 14:01:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -108,15 +108,22 @@ query across.  "
     (read-string "Header regexp")
     (read-string "Body regexp")))
 
+  ;;FIXME: this method needs to be shortened.  It should NOT be longer than the screen.  
 
+  ;;FIXME: report the number of days and number of hits this query found after
+  ;;it is executed.
+  
   (if (null num-days)
       (setq num-days records-query-default-days))
 
   (records-query-setup-results-buffer)
 
-  (catch 'error
-    (let(subject header body current-day-index date ndate)
+  (let(subject header body current-day-index date ndate hit-count)
+    (catch 'error
 
+      ;;init the hit-count.  This should be the number of records found by this
+      ;;query.
+      (setq hit-count 0)
       
       ;;date should be a raw date (12052001), ndate should be normalized.  We
       ;;need to make sure these are always synched up.
@@ -124,7 +131,6 @@ query across.  "
       (setq date (records-todays-date))
       
       (setq ndate (records-normalize-date date))
-      
       
       (save-window-excursion
         
@@ -152,21 +158,9 @@ query across.  "
 
               (setq created (records-metainfo-get "created"))
 
-              ;;now get the header info.
-              (save-excursion
-                (let(start end)
-                  (forward-line 1)
-                  (beginning-of-line)
-                  
-                  (setq start (point))
-                  
-                  (assert (re-search-forward records-format-header-end-regexp nil t)
-                          nil "Could not find end of header")
-                
-                  (setq end (match-beginning 0))
-                
-                  (setq header (buffer-substring-no-properties start end))))
-
+              ;;get the header
+              (setq header (records-format-get-header))
+              
               ;;now get the body
 
               (setq body (records-format-get-body))
@@ -178,19 +172,10 @@ query across.  "
               (if (null excerpt)
                   (setq excerpt (records-query-get-excerpt body)))
               
-              ;;now remove all the properties from these strings
-
-              (if (and subject-regexp
-                       (string-match subject-regexp subject))
-                  (records-query-add-result created subject link excerpt))
-
-              (if (and header-regexp
-                       (string-match header-regexp header))
-                  (records-query-add-result created subject link excerpt))
-
-              (if (and body-regexp
-                       (string-match body-regexp body))
-                  (records-query-add-result created subject link excerpt))))
+              ;;see if we have a match
+              (if (records-query-exec--match subject body header subject-regexp
+                                             body-regexp header-regexp)
+                  (setq hit-count (1+ hit-count)))))
 
           (setq current-day-index (1+ current-day-index))
 
@@ -203,11 +188,45 @@ query across.  "
           ;; need to require format version 1.0.1 in all records files.
           (records-format-require-version "1.0.1")
           
-          (end-of-buffer)))))
+          (end-of-buffer))))
+    
+    (pop-to-buffer records-query-results-buffer-name)
+    (records-query-result-mode)
+    
+    (message "Query found %i records over the last %i days." hit-count records-query-default-days)))
 
-  (pop-to-buffer records-query-results-buffer-name)
-  (records-query-result-mode))
+(defun records-query-exec--match(subject
+                                 body
+                                 header
+                                 subject-regexp
+                                 body-regexp
+                                 header-regexp)
+  "Try to match on the subject, body or header with the given regexps.  If a
+match is found add it to the results.  Return true if a hit was found."
 
+
+  (let((found nil))
+
+    (if (and subject-regexp
+             (string-match subject-regexp subject))
+        (progn
+          (setq found t)
+          (records-query-add-result created subject link excerpt)))
+    
+    (if (and header-regexp
+             (string-match header-regexp header))
+        (progn
+          (setq found t)
+          (records-query-add-result created subject link excerpt)))
+    
+    (if (and body-regexp
+             (string-match body-regexp body))
+        (progn
+          (setq found t)
+          (records-query-add-result created subject link excerpt)))
+
+    found))
+  
 (defun records-query-get-excerpt(string)
   "From a string get an excerpt."
 
@@ -275,9 +294,12 @@ right of `value' to equal `width'."
     
     (insert value)
     
-    ;;FIXME: this will break if the length of the value is greater than the width
-    (if width
-        (insert (make-string (- width (length value) ) ? )))
+    ;;FIXME: this will break if the length of the value is greater than the
+    ;;width.  If this happens just insert three spaces.
+    (if (and width
+             (< (length value) width))
+        (insert (make-string (- width (length value) ) ? ))
+      (insert "   "))
 
     (setq end (point))
 

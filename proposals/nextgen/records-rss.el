@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.8 2001/05/14 13:06:47 burtonator Exp $
+;; $Id: records-rss.el,v 1.9 2001/05/15 14:01:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -256,8 +256,9 @@ export your activity."
     ;;OK.  now try to pull out the images to use for the image-subject alist....
     (setq image (cdr (assoc subject records-rss-images-subjects-alist)))
 
-    (if (null image)
-        (setq image records-rss-images-default))    
+    (if (and (null image)
+             records-rss-images-default)
+        (setq image records-rss-images-default))
     
     (records-rss-insert-element "im:image" image))
   

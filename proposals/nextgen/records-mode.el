@@ -1,6 +1,6 @@
 ;;; records.el ---
 
-;; $Id: records-mode.el,v 1.1 2001/05/13 02:08:18 burtonator Exp $
+;; $Id: records-mode.el,v 1.2 2001/05/15 14:01:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -55,6 +55,7 @@ font-lock-mode-disable-list.")
      (1 font-lock-variable-name-face)
      (2 font-lock-reference-face)) ; metainfo
     ("<\\.\\./\\.\\..*>" 0 font-lock-reference-face) ;; inline links
+    ("\\*.*\\*" 0 font-lock-keyword-face) ;; *highlighted strings*
     ("\\(//.*$\\)" 1 font-lock-comment-face)) ;; // comments
   "* Font-lock keywords for records mode.")
 

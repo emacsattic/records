@@ -1,6 +1,6 @@
 ;;; records-format.el --- functions used for parsing and formating records file.
 
-;; $Id: records-format.el,v 1.3 2001/05/14 16:48:37 burtonator Exp $
+;; $Id: records-format.el,v 1.4 2001/05/15 14:01:39 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -177,6 +177,30 @@ version in the current records file.  "
       (setq body (buffer-substring-no-properties start end))
 
       body)))
+
+(defun records-format-get-header()
+  "Get the header of the current record as a string."
+
+  (save-excursion
+    (let(start end)
+
+      (records-goto-subject)
+      
+      (forward-line 1)
+      (beginning-of-line)
+      
+      (setq start (point))
+      
+      (assert (re-search-forward records-format-header-end-regexp nil t)
+              nil "Could not find end of header")
+      
+      (setq end (match-beginning 0))
+      
+      (setq header (buffer-substring-no-properties start end))
+
+      header)))
+  
+  
 
 (provide 'records-format)
 
