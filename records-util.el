@@ -1,13 +1,25 @@
 ;;;
 ;;; records-util.el
 ;;;
-;;; $Id: records-util.el,v 1.3 1997/05/01 21:21:23 ashvin Exp $
+;;; $Id: records-util.el,v 1.4 1999/04/14 17:13:53 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-util.el,v $
+; Revision 1.4  1999/04/14 17:13:53  ashvin
+; 1. Fixed code so that it does not use records-mark-record directly.
+; Added records-record-region that does the work for records-mark-record. Code
+; uses this function now. Similarly changed records-mark-subject to
+; records-subject-region.
+;
+; 2. Fixed records-encrypt-record and records-decrypt-record.
+;
+; 3. Added start-open to read-only subjects. So text can be added right at the
+;    beginning of subjects. The only thing that users should add is
+;    newlines. This code is required to fix records-encrypt-record.
+;
 ; Revision 1.3  1997/05/01 21:21:23  ashvin
 ; Changed names from notes to record.
 ;
@@ -34,9 +46,11 @@ See the records-todo-.*day variables on when it is automatically invoked."
 	(while (records-goto-down-record nil t) ;; record exists
 	  ;; start the magic
 	  (let* ((subject (nth 0 (records-subject-tag t))) ;; first record
-		 (bon-point (records-mark-record))
-		 (eon-point (mark))
+                 (point-pair (records-record-region))
+                 (bon-point (first point-pair))
+                 (eon-point (second point-pair))
 		 bt-point et-point move subject-inserted)
+            (goto-char bon-point)
 	    ;; process all the todo's in the current record
 	    (while (re-search-forward records-todo-begin-regexp eon-point 'end)
 	      ;; do the copy/move thing for the current todo
@@ -90,17 +104,19 @@ Records encryption requires the mailcrypt and mc-pgp packages."
   (if (not (fboundp 'mc-pgp-encrypt-region))
       (load "mc-pgp"))
   (save-excursion
-    (let ((start (point)))
-      (records-mark-record t)
-      (if arg
-	  (goto-char start)
-	(setq start (point)))
+    (let ((point-pair (records-record-region t))
+          start)
+      (if arg (setq start (point))
+        (setq start (first point-pair)))
+      (goto-char start)
       ;; sanity check
       (if (or (looking-at mc-pgp-msg-begin-line)
 	      (looking-at mc-pgp-signed-begin-line))
 	  (error "records-encrypt-record: record is already encrypted."))
-      (mc-pgp-encrypt-region (list (records-user-name)) start (mark)
-			  (records-user-name) nil))))
+      (mc-pgp-encrypt-region (list (records-user-name)) 
+                             start 
+                             (second point-pair)
+                             (records-user-name) nil))))
 
 (defun records-decrypt-record ()
   "Decrypt the current record.
@@ -109,12 +125,15 @@ Records decryption requires the mailcrypt and mc-pgp packages."
   (if (not (fboundp 'mc-pgp-decrypt-region))
       (load "mc-pgp"))
   (save-excursion
-    (records-mark-record t)
-    (if (not (re-search-forward
-	      (concat "\\(" mc-pgp-msg-begin-line "\\|" 
-		      mc-pgp-signed-begin-line "\\)") (mark) t))
-	(error "records-decrypt-record: record is not encrypted."))
-    (mc-pgp-decrypt-region (match-beginning 0) (mark))))
+    (let ((point-pair (records-record-region t)))
+      (goto-char (first point-pair))
+      (if (not (re-search-forward
+                (concat "\\(" mc-pgp-msg-begin-line "\\|" 
+                        mc-pgp-signed-begin-line "\\)") (mark) t))
+          (error "records-decrypt-record: record is not encrypted."))
+      (mc-pgp-decrypt-region (match-beginning 0) 
+                             (second point-pair)
+                             ))))
 
 (defun records-concatenate-records (num)
   "Concatenate the current record with the records on the same subject written
@@ -133,7 +152,7 @@ will output all the past records on the subject!!"
 	 (arg (string-to-int num))
 	 (first-ndate (records-add-date (records-normalize-date date)
 				      (if (= arg 0) -1 (- arg))))
-	 cur-buf bon-point eon-point prev-date-tag)
+	 cur-buf point-pair bon-point eon-point prev-date-tag)
 
     (if (< arg 0)
 	(setq first-ndate '(0 0 0)))
@@ -150,10 +169,11 @@ will output all the past records on the subject!!"
       (while ;; do-while loop 
 	  (progn
 	    ;; get the current records's buffer, beg-point and end-point.
-	    (records-mark-record t)
+	    (setq point-pair (records-record-region t))
 	    (setq cur-buf (buffer-name))
-	    (setq bon-point (point))
-	    (setq eon-point (mark))
+	    (setq bon-point (first point-pair))
+	    (setq eon-point (second point-pair))
+            (goto-char bon-point)
 	    ;; insert the current record into records-output-buffer
 	    (save-excursion
 	      (set-buffer (get-buffer records-output-buffer))
@@ -203,8 +223,9 @@ for number of days. An empty string will output the records of the current file.
 	    (while (records-goto-down-record nil t) 
 	      (let* ((subject (nth 0 (records-subject-tag t)))
 		     (tag  (nth 1 (records-subject-tag t)))
-		     (bon-point (records-mark-record t))
-		     (eon-point (mark))
+                     (point-pair (records-record-region t))
+		     (bon-point (first point-pair))
+		     (eon-point (second point-pair))
 		     subject-mark omark record)
 		;; get subject-mark
 		(setq subject-mark (assoc subject records-subject-list))

@@ -1,13 +1,25 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.18 1998/11/05 23:12:34 ashvin Exp $
+;;; $Id: records.el,v 1.19 1999/04/14 17:12:47 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
+; Revision 1.19  1999/04/14 17:12:47  ashvin
+; 1. Fixed code so that it does not use records-mark-record directly.
+; Added records-record-region that does the work for records-mark-record. Code
+; uses this function now. Similarly changed records-mark-subject to
+; records-subject-region.
+;
+; 2. Fixed records-encrypt-record and records-decrypt-record.
+;
+; 3. Added start-open to read-only subjects. So text can be added right at the
+;    beginning of subjects. The only thing that users should add is
+;    newlines. This code is required to fix records-encrypt-record.
+;
 ; Revision 1.18  1998/11/05 23:12:34  ashvin
 ; Fixes to easymenu for the new emacs.
 ;
@@ -364,34 +376,30 @@ With absolute set, get the absolute path."
 			    (+ (nth 2 (nth 1 records-date))
 			       (nth 1 (nth 1 records-date))))))
 	(t 
-	 (error "records-directory-path: bad records-directory-structure value"))))
+         (error "records-directory-path: bad records-directory-structure value"))))
 
 (defun records-read-subject (&optional subject)
   "Read the records subject to be inserted from the minibuffer.
 Completion is possible."
   (interactive
-   (progn (records-index-buffer) ; initializes records-subject-table if required
+   (progn (records-index-buffer); initializes records-subject-table if required
 	  (list (completing-read "Records subject: " records-subject-table))))
   subject)
 
 (defun records-add-text-properties (beg end)
   "Fontify a records region, make read-only etc.
-Look at variables records-fontify and records-subject-read-only.
-This function is currently only invoked for a records subject.
-Although the region is read-only, it is possible to edit at the beginning
-of the region. This can mess up a records subject. If this were disallowed,
-then users would not be able to add text before a subject.
-Any better solution?"
+Look at variables records-fontify and records-subject-read-only.  
+This function is currently only invoked for a records subject.  
+
+Although the region is read-only, it is possible to edit at the beginning of
+the subject. This can mess up a records subject if anything but a newline is
+inserted. We could close the beginning of the region (see start-close), but
+then users would not be able to add newlines before a subject, and it screws up
+records-encrypt-record and records-decrypt-record. What we need is that 
+insertion of any character automatically inserts a newline also. TODO"
   (if records-fontify
       (progn
-	(add-text-properties (1- end) end '(rear-nonsticky t))
-	;; partial fix to a probable emacs bug
-	;; (if records-subject-read-only
-	;;	  if (> beg (point-min)) 
-	;;     (add-text-properties beg (1+ beg) 
-	;;	    '(front-sticky (read-only)))
-	;;	      ))
-	(add-text-properties beg end '(face bold))
+	(add-text-properties beg end '(face bold start-open t))
 	(if records-subject-read-only
 	    (add-text-properties beg end '(read-only records-subject))))))
 
@@ -407,11 +415,13 @@ Called when killing a region in records mode."
     (goto-char (point-min))
     ;; goto first record
     (if (records-goto-down-record nil t)
-	(let ((modified (buffer-modified-p)));; should always be false
+	(let ((modified (buffer-modified-p))  ;; should always be false
+              point-pair)
 	  (while (progn;;  a do-while loop
-		   (records-mark-subject)
+		   (setq point-pair (records-subject-region))
 		   ;; fontify region, make read-only etc.
-		   (records-add-text-properties (point) (mark))
+		   (records-add-text-properties (first point-pair) 
+                                                (second point-pair))
 		   ;; goto next record - returns nil when no more exist
 		   (records-goto-down-record)))
 	  (and (not modified) (buffer-modified-p)
@@ -456,41 +466,53 @@ If no-str is t, return (subject, tag)."
 (defun records-mark-record (&optional arg)
   "Put mark at the end of the current record and point at the beginning
 of the record subject. With non-null prefix arg, the point is placed
-at the beginning of the record body.
-TODO: non interactive calls should pop-mark also."
+at the beginning of the record body."
   (interactive "P")
-  (let (pt)
-    (if arg
-	(progn (records-mark-subject) (setq pt (mark)) (pop-mark)))
-    (records-goto-down-record)
-    (push-mark (point) t t)
-    (if pt (goto-char pt) 
-      (records-goto-up-record)
-      (point))))
+  (let ((point-pair (records-record-region arg)))
+    (push-mark (second point-pair) nil t)
+    (goto-char (first point-pair))))
 
-(defun records-mark-subject ()
-  "Put mark at the end of subject in this record and point at beginning.
-The record marked is the one that contains point or follows point.
-TODO: non interactive calls should pop-mark also."
-  (if (null (records-goto-subject))
-      (error "records-mark-subject: no subject found."))
-  (let ((pt (point)))
-    (next-line 2)
-    (beginning-of-line)
-    (if (looking-at "link: <.*>")
-	(progn
-	  (next-line 1)
-	  (beginning-of-line)))
-    (push-mark (point) t t)
-    ;; also return value
-    (goto-char pt)))
+(defun records-record-region (&optional arg)
+  "Return a pair of points marking the beginning and the end of the current
+record. The record marked is the one that contains point or follows
+point. With non-null prefix arg, the point is placed at the beginning of the
+record body. Note, that the point and the mark in the buffer are not
+affected."
+  (interactive "P")
+  (save-excursion
+    (let (begin end)
+      (if arg (setq begin (second (records-subject-region))))
+      (records-goto-down-record)
+      (setq end (point))
+      (if begin t 
+        (records-goto-up-record)
+        (setq begin (point)))
+      (list begin end))))
+
+(defun records-subject-region ()
+  "Return a pair of points marking the beginning and the end of the current
+subject. The record subject marked is the one that contains point or follows 
+point. Note, that the point and the mark in the buffer are not affected."
+  (save-excursion
+    (if (null (records-goto-subject))
+        (error "records-subject-region: no subject found."))
+    (let ((pt (point)))
+      (next-line 2)
+      (beginning-of-line)
+      (if (looking-at "link: <.*>")
+          (progn
+            (next-line 1)
+            (beginning-of-line)))
+      ;; return beginning and end of subject
+      (list pt (point)))))
 
 (defun records-body-empty-p ()
   "Is the body of the record under point empty?"
-  (save-excursion
-    (records-mark-record t)
-    (and (looking-at "\\s-*")
-	 (eq (match-end 0) (mark)))))
+  (let ((point-pair (records-record-region t)))
+    (save-excursion
+      (goto-char (first point-pair))
+      (and (looking-at "\\s-*")
+           (eq (match-end 0) (second point-pair))))))
 
 (defun records-link ()
   "Returns the records link of the record around the current point."
@@ -503,7 +525,8 @@ TODO: non interactive calls should pop-mark also."
 	(buffer-substring-no-properties (match-beginning 1) (match-end 1)))))
 
 (defun records-link-as-kill ()
-  "Put the records link of the record around the current point in the kill ring."
+  "Put the records link of the record around the current point in the kill
+ring."
   (interactive)
   (kill-new (records-link)))
 
@@ -523,9 +546,12 @@ TODO: non interactive calls should pop-mark also."
   "Remove the current record. 
 With arg., keep the body and remove the subject only."
   (save-excursion
-    (let ((inhibit-read-only '(records-subject)))
-      (if keep-body (records-mark-subject) (records-mark-record))
-      (delete-region (point) (mark))
+    (let ((inhibit-read-only '(records-subject))
+          point-pair)
+      (if keep-body 
+          (setq point-pair (records-subject-region))
+        (setq point-pair (records-record-region)))
+      (delete-region (first point-pair) (second point-pair))
       (pop-mark))))
 
 ;;;###autoload
@@ -547,42 +573,54 @@ With arg., keep the body and remove the subject only."
       (insert "\n" (buffer-substring bol bospaces))
       (insert-char ?- (- eol bospaces)))))
 
+;; Thanks to Kaarthik Sivakumar, 04/13/99 for the http, ftp, mailto 
+;; and gopher handling code
 (defun records-goto-link ()
   "Goto the link around point in the records file.
-A link can be any of the following enclosed in <>.
-1. a (relative or absolute) pathname 
-2. a pathname followed by \"#* Subject\"
-3. a pathname followed by \"#tag* Subject\"
-4. a file:// or file://localhost prepended to a pathname."
+A link can be any of the following. They must be enclosed in <>.
+A tag is a number.
+1. <dir/date> : a (relative or absolute) pathname 
+2. <dir/date#* Subject>
+3. <dir/date#tag* Subject>
+4. file:// or file://localhost prepended any of the three above
+5. http:// or mailto:// or ftp:// gopher://  
+   The last case is handled by browse-url-browser-function. 
+   Refer to Options/\"Open URL with\" in XEmacs. 
+   Spaces and other funky characters in the url can break this code."
   (interactive)
   (save-excursion
     (if (not (or (looking-at "<")
 		 (re-search-backward "<" (point-boln) t)))
 	;; not a link I know about
-	(error "records-goto-link: invalid link under point.")
-      ;; try to figure out a link
-      (if (not (looking-at 
-		;; (concat "<\\(.*\\)/\\([0-9]+\\)\\(" records-tag-regexp 
-		;; "\\* \\(.*\\)\\|\\)>")
-		(concat "<\\(.*\\)/\\([^/#]+\\)\\(" records-tag-regexp 
-			"\\* \\(.*\\)\\|\\)>")))
-	  (error "records-goto-link: invalid link under point."))))
-  ;; found a link
-  (let ((dir (buffer-substring-no-properties (match-beginning 1)
-					     (match-end 1)))
-	(date (buffer-substring-no-properties (match-beginning 2)
-					      (match-end 2)))
-	(tag (if (match-beginning 4)
-		 (buffer-substring-no-properties (match-beginning 4)
-						 (match-end 4))))
-	(subject (if (match-beginning 5)
-		     (buffer-substring-no-properties (match-beginning 5)
-						     (match-end 5)))))
-    ;; if "file://" or "file://localhost" is present 
-    ;; at the beginning of dir, strip it ... guess why?
-    (if (string-match "^file://\\(localhost\\|\\)" dir)
-	(setq dir (substring dir (match-end 0))))
-    (records-goto-record subject date tag nil nil nil nil dir)))
+	(error "records-goto-link: invalid link under point."))
+    ;; try to figure out a link
+    (cond 
+     ((looking-at (concat "<\\(.*\\)/\\([^/#]+\\)\\(" records-tag-regexp 
+                          "\\* \\(.*\\)\\|\\)>")) 
+      ;; found a link
+      (let ((dir (buffer-substring-no-properties (match-beginning 1) 
+                                                 (match-end 1)))
+            (date (buffer-substring-no-properties (match-beginning 2) 
+                                                  (match-end 2)))
+            (tag (if (match-beginning 4) 
+                     (buffer-substring-no-properties (match-beginning 4) 
+                                                     (match-end 4))))
+            (subject (if (match-beginning 5) 
+                         (buffer-substring-no-properties (match-beginning 5) 
+                                                         (match-end 5)))))
+        (cond 
+         ((string-match "^http:\\|^mailto:\\|^ftp:\\|^gopher:" dir)
+          (funcall browse-url-browser-function (concat dir "/" date)))
+         ;; if "file://" or "file://localhost" is present 
+         ;; at the beginning of dir, strip it ... guess why?
+         (t (if (string-match "^file://\\(localhost\\|\\)" dir)
+                (setq dir (substring dir (match-end 0))))
+            (records-goto-record subject date tag nil nil nil nil dir)))))
+     ((looking-at "<\\(\\(http\\|mailto\\|ftp\\|gopher\\):[^>]+\\)>")
+      (funcall browse-url-browser-function 
+               (buffer-substring-no-properties (match-beginning 1) 
+                                               (match-end 1))))
+     (t (error "records-goto-link: invalid link under point.")))))
 
 (defun records-goto-mouse-link (e)
   "Goto the link where mouse is clicked."
@@ -597,11 +635,11 @@ If subject is nil, goto date only.
 If no-hist is t, then don't add this link to the records-history list.
 If no-switch is t, then do not switch to the new records buffer.
 Instead, the buffer is made ready for editing (via set-buffer).
-If no-switch is 'other, then switch to the new records buffer in another window.
-If todo is t, then invoke records-todo when a record-less file is being visited.
-If todo is not nil and not t, ask user whether records-todo should be called.
-If no-error is t, do not signal error, if the record is not found.
-If dir is specified, then the file is assumed to be \"dir/date\"."
+If no-switch is 'other, then switch to the new records buffer in another 
+window. If todo is t, then invoke records-todo when a record-less file is 
+being visited. If todo is not nil and not t, ask user whether records-todo 
+should be called. If no-error is t, do not signal error, if the record is 
+not found. If dir is specified, then the file is assumed to be \"dir/date\"."
   (if (null dir)
       (setq dir (records-directory-path date t)))
   (let ((file (concat dir "/" date))
@@ -704,7 +742,8 @@ The no-switch and todo arguments are passed to records-goto-record."
 With numeric prefix arg. go that many days back.
 See also records-goto-prev-record-file."
   (interactive "P")
-  (records-goto-relative-day (if arg (- arg) -1) no-switch records-todo-prev-day))
+  (records-goto-relative-day (if arg (- arg) -1) no-switch 
+                             records-todo-prev-day))
 
 (defun records-goto-next-day(&optional arg no-switch)
   "Go to the records file of the next day.
@@ -732,7 +771,8 @@ Returns the new date."
   (let ((new-date
 	 (save-excursion 
 	   (nth 0
-		(records-dindex-goto-relative-date arg (records-file-to-date))))))
+		(records-dindex-goto-relative-date arg 
+                                                   (records-file-to-date))))))
     (if (null new-date)
 	(if (null no-error)
 	    (error
@@ -781,14 +821,16 @@ Returns the new (date, tag) if found."
     ;; return value
     date-tag))
 
-(defun records-goto-prev-record (&optional arg subject date tag no-switch no-error)
+(defun records-goto-prev-record (&optional arg subject date tag 
+                                           no-switch no-error)
   "Find the previous record on subject starting from date and tag.
 Returns the new (date, tag) if found."
   (interactive "P")
   (records-goto-relative-record (if arg (- arg) -1) subject date tag no-switch 
 			    no-error))
 
-(defun records-goto-next-record (&optional arg subject date tag no-switch no-error)
+(defun records-goto-next-record (&optional arg subject date tag 
+                                           no-switch no-error)
   "Find the next record on subject starting from date and tag.
 Returns the new (date, tag) if found."
   (interactive "P")
@@ -863,7 +905,12 @@ With arg, removes the subject only."
   (records-insert-record))
 
 (define-derived-mode records-mode text-mode "Records"
-  "Enable records-mode for a buffer.
+  "Enable records-mode for a buffer. Currently, the documentation of this 
+mode exists in three places: the INSTALL and README files and the menubar!
+The install automates most of the things you need to do to use records. Please
+use it!  After that, look at the file records-vars.el for the customization
+variables.
+
 The key-bindings of this mode are:
 \\{records-mode-map}"
 
@@ -879,12 +926,14 @@ The key-bindings of this mode are:
   (define-key records-mode-map "\C-c\C-p" 'records-goto-prev-record)
   (define-key records-mode-map "\C-c\C-n" 'records-goto-next-record)
 
-  (define-key records-mode-map "\C-c\C-y" 'records-goto-prev-day) ;; yesterday
-  (define-key records-mode-map "\C-c\C-t" 'records-goto-next-day) ;; tomorrow
-  (define-key records-mode-map "\C-c\C-b" 'records-goto-prev-record-file) ;; back file
-  (define-key records-mode-map "\C-c\C-f" 'records-goto-next-record-file) ;; front file
+  (define-key records-mode-map "\C-c\C-y" 'records-goto-prev-day); yesterday
+  (define-key records-mode-map "\C-c\C-t" 'records-goto-next-day); tomorrow
+  (define-key records-mode-map "\C-c\C-b" 'records-goto-prev-record-file)
+                                        ; back file
+  (define-key records-mode-map "\C-c\C-f" 'records-goto-next-record-file) 
+                                        ; front file
 
-  (define-key records-mode-map "\C-c\C-j" 'records-goto-index);; jump!!
+  (define-key records-mode-map "\C-c\C-j" 'records-goto-index); jump!!
 
   (define-key records-mode-map "\C-c\C-l" 'records-goto-last-record)
 
