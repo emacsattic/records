@@ -1,7 +1,7 @@
 ;;;
 ;;; records.el
 ;;;
-;;; $Id: records.el,v 1.35 2001/04/11 18:14:12 ashvin Exp $
+;;; $Id: records.el,v 1.36 2001/04/12 18:25:11 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996-2000 by Ashvin Goel
 ;;;
@@ -474,8 +474,30 @@ ring."
   (interactive)
   (kill-new (records-subject-link)))
 
+(defun records-insert-template (arg)
+  "Insert a template into the current record based on the subject and the
+association list records-template-alist (see the variable). 
+Inserts template at end of record. With non-null argument, inserts at
+beginning of record body."
+  (eval-when-compile (require 'tempo))
+  (let ((subject nil)
+        (tmpl nil)
+        point-pair)
+    (save-excursion
+      (setq subject (records-goto-subject)))
+    (setq tmpl (cdr (assoc subject records-template-alist)))
+    (if tmpl
+        (progn
+          (setq point-pair (records-record-region t))
+          (if arg
+              (goto-char (first point-pair))
+            (goto-char (second point-pair)))
+          (tempo-insert-template 'tmpl nil)
+          ))))
+
 (defun records-make-record (subject date tag &optional record-body)
-  "Make a basic record with it's link name." 
+  "Make a basic record with it's link name and add a template (see 
+records-template-alist)." 
   (if (not (bolp))
       (insert "\n"))
   (let ((opoint (point)))
@@ -485,6 +507,7 @@ ring."
     (records-add-text-properties opoint (point))
     (if record-body
 	(insert record-body))
+    (records-insert-template current-prefix-arg)
     (run-hooks 'records-make-record-hook)
     ))
 
@@ -1044,8 +1067,8 @@ The key-bindings of this mode are:
             ["Get TODO's" records-get-todo t]
             ["Decrypt Record" records-decrypt-record t]
             ["Encrypt Record" records-encrypt-record t]
-            ["Switch to LaTeX mode" records-narrow-latex t]
-            ["Toggle Outline mode" records-outline-mode t]
+            ["Switch to LaTeX Mode" records-narrow-latex t]
+            ["Toggle Outline Mode" records-outline-mode t]
             "--"
             ;; records concatenate submenu
             ("Concatenate Records"
@@ -1106,6 +1129,9 @@ The key-bindings of this mode are:
              (make-local-variable 'font-lock-defaults)
              (setq font-lock-defaults '(records-mode-font-lock-keywords))
              (font-lock-mode 1)))
+  ;; outline mode
+  (if records-start-in-outline-mode
+      (records-outline-mode))
   (run-hooks 'records-mode-hooks)
   )
 

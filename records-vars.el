@@ -1,7 +1,7 @@
 ;;;
 ;;; records-vars.el
 ;;;
-;;; $Id: records-vars.el,v 1.11 2001/04/11 18:14:12 ashvin Exp $
+;;; $Id: records-vars.el,v 1.12 2001/04/12 18:25:11 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
@@ -98,6 +98,13 @@ font-lock-mode-disable-list."
   "* If t, records subjects are made read-only.
 This disables any accidental updates to a records subject. 
 This variable has a local value for each records buffer."
+  :type 'boolean
+  :group 'records
+  )
+
+(defcustom records-start-in-outline-mode nil
+  "* If t, records files start up in outline minor mode. Outline minor 
+mode can be toggled by using the function records-outline-mode."
   :type 'boolean
   :group 'records
   )

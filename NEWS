@@ -1,6 +1,6 @@
 ;; -*-text-*-
 Version 1.4.9
-        * Installation now works for native Windows NT port of xemacs. Look at
+        * Installation now works for native Windows NT port of XEmacs. Look at
           the INSTALL-NT file for more details.
         * Added a mode specific menu that pops up when the right button is
           pressed. This button pops up a link specific menu when the button is
@@ -11,7 +11,7 @@ Version 1.4.9
         * Added support for editing a record in outline minor mode.
         * Added support for editing a record in latex mode (interaction with
           outline minor mode not tested).
-        * Added support for outputing the concatenation of records in latex
+        * Added support for outputting the concatenation of records in latex
           mode (see records-concatenate-records-latex and
           records-concatenate-record-files-latex).
         * Records can now be concatenated and presented in most-recent first or
@@ -40,7 +40,7 @@ Version 1.4.9
           functions.
 
 Version 1.4.8
-        * Fix fontification bugs in gnu emacs introduced in 1.4.7.
+        * Fix fontification bugs in gnu Emacs introduced in 1.4.7.
 
 Version 1.4.7
         * Clicking with the middle button on a records link invokes
@@ -61,12 +61,12 @@ Version 1.4.6
         * Fixed a Y2K bug when years were specified in 2 digits!
         * Added functionality so that records of the same subject can be 
           searched across records files. Thanks to Kaarthik Sivakumar.
-        * Fixed fontification bug for emacs so that the first character after
+        * Fixed fontification bug for Emacs so that the first character after
           the record subject is not read-only. This fixes an
-          encryption/decryption bug in emacs also.
+          encryption/decryption bug in Emacs also.
 
 Version 1.4.5
-        * configure now takes an argument so that xemacs can be specified
+        * configure now takes an argument so that XEmacs can be specified
           for byte compiling the elisp files.
         * recordsadmin now updates the load path in ~/.emacs-records even 
           when the user specifies that the init file variables should not be
@@ -97,3 +97,7 @@ Version 1.3
         * Records now has an info file available.
         * Bug fixes in encryption and decryption of records.
 
+ LocalWords:  customizable goto html dindex recordsadmin decryption pgp gpg com
+ LocalWords:  ripem autoloads autoloaded fontification Mihram urls deja mc init
+ LocalWords:  encrypting decrypting mailcrypt Kaarthik Sivakumar elisp TODO
+ LocalWords:  todo todos

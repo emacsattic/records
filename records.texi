@@ -95,14 +95,14 @@ by the Free Software Foundation.
 
 @chapter Introduction
 
-The @emph{records-mode} for emacs allows creation of an online
+The @emph{records-mode} for Emacs allows creation of an online
 diary. Users can create records in their diary for different subjects
 each day. Records provides linking and indexing facilities so that users
 can easily collect their thoughts on a subject over a period of
 time. For instance, it is easy to find out whether you were thinking of
 quitting school two months back! Records provides a reminder service by
 collecting your list of 'to do' things. A simple integration with the
-emacs calendar is also available.
+Emacs calendar is also available.
 
 @menu
 * Location::                    Where to find records.
@@ -143,9 +143,9 @@ the install is doing (or not doing) to your computer!
 The install procedure makes the byte compiled elisp files, reads in the
 user settings for records and installs these settings into the records
 initialization file @file{~/.emacs-records}. This initialization file is
-read by emacs and the records administration program
+read by Emacs and the records administration program
 (@file{recordsadmin}). Install also adds the loading of
-@file{~/.emacs-records} into your @file{~/.emacs}. When you start emacs,
+@file{~/.emacs-records} into your @file{~/.emacs}. When you start Emacs,
 all the records defaults will be automatically loaded.
 
 @enumerate
@@ -153,8 +153,8 @@ all the records defaults will be automatically loaded.
 Since you are reading this file, you have untarred the gzip'ed file. The
 elisp files in the current directory (in which you are right now) will
 @emph{not} be installed in any other directory, and installation will
-automatically add the current directory to the load path in emacs. So if
-you wish to move the records software to some other emacs-related
+automatically add the current directory to the load path in Emacs. So if
+you wish to move the records software to some other Emacs related
 directory, now is the time to do it.
 
 @item
@@ -252,11 +252,6 @@ often. Bind the function to a simple key.
            (lambda () 
              (define-key LaTeX-mode-map "\C-clw" 'records-widen-latex))))
 
-; Hook to insert a template when a record is inserted. 
-; See function records-insert-template 
-(add-hook 'records-make-record-hook
-          (function (lambda ()
-                      (records-insert-template current-prefix-arg))))
 ;;;*** OPTIONAL ***;;;
 
 ; If you like abbrev mode 
@@ -265,17 +260,14 @@ often. Bind the function to a simple key.
      (lambda ()
        (abbrev-mode 1))))
 
-; If you like to use auto filling and/or filladapt modes while editing text.
-; If you have these functions in the text-mode-hook, then you don't need 
-; them here. 
+; If you like to use auto filling and/or filladapt modes while 
+; editing text. If you have these functions in the text-mode-hook,
+; then you don't need them here. 
 (add-hook 'records-mode-hooks 
       (function (lambda ()
                   (turn-on-auto-fill)
                   (turn-on-filladapt-mode)
                   )))
-
-; If you want to always start up in outline mode
-(add-hook 'records-mode-hooks 'records-outline-mode)
 
 ; Using imenu: imenu will invoke a popup menu of records subjects
 ; 1. In Xemacs:
@@ -283,7 +275,7 @@ often. Bind the function to a simple key.
 ; 2. In gnu emacs:
 ; (define-key global-map [(shift mouse-3)] 'imenu)
 
-; If you want to be brought to today's record on startup
+; If you want to be brought to today's record on start up
 (records-goto-today)
 
 ;;;; records-mode end}
@@ -583,9 +575,6 @@ Key @kbd{Button3}. When mouse is clicked on a link, popup a link-specific menu.
 When mouse is clicked anywhere else, invoke the default popup menu.
 @kindex Button3
 
-@item records-outline-mode
-
-
 @item records-goto-calendar
 Key @kbd{C-c C-c}. Goto the emacs calendar with the cursor on the date
 in the current record file.
@@ -645,7 +634,7 @@ following jobs:
 
 @enumerate
 @item
-Installs or reinstalls user defaults. This is done with
+Installs or re-installs user defaults. This is done with
 @code{recordsadmin -i}. The @file{~/.emacs-records} file is created or
 updated. 
 
@@ -935,24 +924,28 @@ installation section (@pxref{Installation}).
 @section Editing Records In Outline mode
 
 Records can be edited in Outline mode. The outline minor mode is toggled
-by calling @code{records-ouline-mode}.
+by calling @code{records-outline-mode}.
 
 @ftable @code
-@item records-ouline-mode
+@item records-outline-mode
 Key @kbd{C-c / o}.
 @kindex C-c / o
 @end ftable
 
+@vindex records-start-in-outline-mode
+If the variable @code{records-start-in-outline-mode} is set to true,
+records files will start up in outline minor mode.
+
 @node Conclusion, Variable Index, Advanced Use, Top
 @chapter Conclusions and Acknowledgments
 
-As promised, the @emph{records-mode} for emacs allows creation of an
-online diary with extensive linking and indexing facilities. This diary
-has in fact become my major desktop tool. I write most of my documents,
-small and large, as records distributed over different days and
-records-mode does the tracking for me. If you have noticed, records
-provides an editor and a browser all in one. You can browse your records
-with automatically generated records links, and you can also edit the
+As promised, @emph{records-mode} for emacs allows creation of an online
+diary with extensive linking and indexing facilities. This diary has in
+fact become my major desktop tool. I write most of my documents, small
+and large, as records distributed over different days and records-mode
+does the tracking for me. If you have noticed, records provides an
+editor and a browser all in one. You can browse your records with
+automatically generated records links, and you can also edit the
 contents of your records.
 
 This software was originally inspired by John Heidemann's notes-mode
@@ -999,4 +992,8 @@ this software useful.
 @c  LocalWords:  yy fsck TODO's todo TODOs regexp regexps CTODO PGP mailcrypt
 @c  LocalWords:  xemacs passphrase printindex vr ky texinfo uref yahoo com var
 @c  LocalWords:  inforef num vtable concat Heidemann's isi johnh Kaarthik eecis
-@c  LocalWords:  Sivakumar sivakuma udel
+@c  LocalWords:  Sivakumar sivakuma udel uncomment Makefile CVS autoconf okay
+@c  LocalWords:  emacs goto LaTeX clw filladapt imenu popup traversal fontified
+@c  LocalWords:  traversal's fontification http html href deja alist Tillotson
+@c  LocalWords:  hoc SQL greppable urls th gpg decryption mc pgp decrypt tex
+@c  LocalWords:  prepended LaTeX'ing minibuffer
