@@ -1,0 +1,358 @@
+#!/usr/local/bin/perl -- -*- perl -*-
+
+### makenotes
+###
+### $Id: recordsadmin.in,v 1.1 1996/11/27 04:33:26 asgoel Exp $
+###
+### Copyright (C) 1996 by Ashvin Goel
+###
+### This file is under the Gnu Public License.
+
+# $Log: recordsadmin.in,v $
+# Revision 1.1  1996/11/27 04:33:26  asgoel
+# Initial revision
+#
+#
+use File::Basename;
+
+# global - should be set by makefile
+$notes_init_file="$ENV{HOME}/.emacs-notes";
+
+# external global variables read from .emacs-notes
+# initialized here to sane defaults 
+$notes_directory = "$ENV{HOME}/notes/";
+$notes_directory_structure = 1;
+$notes_index_file = "${notes_directory}index";
+$notes_year_length = 4;
+$notes_day_order = 0;
+$notes_month_order = 1;
+$notes_year_order = 2;
+
+# testing
+$notes_index_file = "${notes_directory}index2";
+
+# internal global variables
+# initialized in notes_initialize()
+$notes_date_length = 0;
+@notes_date_order = ();
+@notes_date = (['year', 0, 0], ['month', 0, 0], ['day', 0, 0]); 
+
+# other global variables
+$notes_day_length = 0;
+$notes_month_length = 0;
+%notes_raw_index = ();
+#
+# Start the bang bang
+#
+
+&notes_initialize();
+@notes_files = &notes_find_notes();
+
+foreach (@notes_files) {
+    &notes_update_file($_);
+}
+&notes_make_index();
+exit(0);
+
+sub notes_external_initialize {
+    local($var);
+
+    if (!open(IN, "< $notes_init_file")) {
+        return;
+    }
+    while(<IN>) {
+	next if /^\s*$/;
+	next if /^\s*;/;
+	if (/\s*\(\s*setq\s+([A-Za-z-]+)\s+([0-9]+)\s*\)/) {
+	    # numeric quantity found
+	    $var = $1;
+	    $val = $2;
+	    $var =~ s/-/_/g; #
+	    ${$var} = $val;
+	    next;
+        }
+	if (/\s*\(\s*setq\s+([A-Za-z-]+)\s+\"(.*)\"\s*\)/) {
+	    # string quantity found
+	    $var = $1;
+	    $val = $2;
+	    $var =~ s/-/_/g; #
+	    ${$var} = $val;
+	    next;
+	}
+    }
+    close(IN);
+}
+
+sub notes_initialize {
+    local($i, $dmy, $dmylen);
+    &notes_external_initialize();
+
+    $notes_day_length = 2;
+    $notes_month_length = 2;
+    $notes_date_length = 0;
+    # initialize notes_date_order
+    $notes_date_order[$notes_day_order] = 'day';
+    $notes_date_order[$notes_month_order] = 'month';
+    $notes_date_order[$notes_year_order] = 'year';
+    # initialize notes_date
+    foreach $dmy (@notes_date_order) {
+	for ($i = 0; $i < 3; $i++) {
+	    if ($notes_date[$i][0] eq $dmy) {
+		$dmylen = eval("\$" . "notes_" . $dmy . "_length");
+		$notes_date[$i][1] = $notes_date_length;
+		$notes_date[$i][2] = $dmylen;
+		$notes_date_length += $dmylen;
+	    }
+	}
+    }
+}
+
+sub notes_find_notes {
+    local(@files);
+    local($i);
+    local($dir_regexp);
+    local($file_regexp);
+    local($regexp);
+
+    chdir $notes_directory ||
+	die "Can't change directory to $notes_directory: $!\n";
+    # directory structure + date length considered
+    if ($notes_directory_structure == 0) {
+	$dir_regexp = '';
+    } elsif ($notes_directory_structure == 1) {
+	for ($i = 0; $i < $notes_year_length; $i++) {
+	    $dir_regexp .= "[0-9]";
+	}
+	$dir_regexp .= "/";	
+    } elsif ($notes_directory_structure == 2) {
+	for ($i = 0; $i < $notes_year_length; $i++) {
+	    $dir_regexp .= "[0-9]";
+	}
+	$dir_regexp .= "/[0-9][0-9]/";	
+    }
+    for ($i = 0; $i < $notes_date_length; $i++) {
+	$file_regexp .= "[0-9]";
+    }
+    $regexp = $dir_regexp . $file_regexp;
+    @files = glob($regexp);
+    return @files;
+}
+
+sub notes_normalize_date {
+    local($date) = @_;
+    local($i);
+    local(@date);
+    
+    for ($i = 0; $i < 3; $i++) {
+	$date[$i] = substr($date, $notes_date[$i][1], $notes_date[$i][2]);
+    }
+    if (length($date[0]) == 2) {
+	# normalize year
+	substr($date[0], 2, 4) = substr($date[0], 0, 2);
+	if ($date[0] > 95) {
+	    substr($date[0], 0, 2) = "19";
+	} else {
+	    substr($date[0], 0, 2) = "20";
+	}
+    }
+    # year month day
+    return $date[0] . $date[1] . $date[2];
+}
+
+sub notes_denormalize_date {
+    local($ndate) = @_;
+    local($date) = sprintf("%${notes_date_length}s", " ");
+    if ($notes_date[0][2] == 2) {
+	# denormalize year
+	substr($date, $notes_date[0][1], $notes_date[0][2]) = 
+	    substr($ndate, 2, 2);
+    } else {
+	substr($date, $notes_date[0][1], $notes_date[0][2]) = 
+	    substr($ndate, 0, 4);
+    }
+    substr($date, $notes_date[1][1], $notes_date[1][2]) = substr($ndate, 4, 2);
+    substr($date, $notes_date[2][1], $notes_date[2][2]) = substr($ndate, 6, 2);
+    return $date;
+}
+
+sub notes_directory_path {
+    local($date, $absolute) = @_;
+    if ($notes_directory_structure == 0) {
+	return $absolute ? $notes_directory : '';
+    } elsif ($notes_directory_structure == 1) {
+	return ($absolute ? $notes_directory : "../") . 
+	    substr($date, $notes_date[0][1], $notes_date[0][2]) . "/"; 
+    } elsif ($notes_directory_structure == 2) {
+	return ($absolute ? $notes_directory : "../../") . 
+	    substr($date, $notes_date[0][1], $notes_date[0][2]) . "/" . 
+		substr($date, $notes_date[1][1], $notes_date[1][2]) . "/"; 
+    } else {
+	die "notes_directory_path: bad value\n";
+    }
+}
+
+sub notes_update_file {
+    local($file) = @_;
+    local($date) = basename($file);
+    local($subject);
+    local(@notes_file);
+
+    ## variables in the finite state machine
+    local($regexp, $a_link_regexp, $link_regexp);
+    local($a_link_found, $link_found);
+    local($subject_found, $full_subject_found);
+    local($tag, $tag_generated);
+    local($state) = 1;
+
+    # TODO
+    # 1. more testing
+    # 2. finite state machine diagram.
+    # 3. rewrite file if $file_modified is set.
+
+    if (!open(IN, "< $file")) {
+        warn("$0: cannot open $file.  Skipped.\n");
+        return;
+    }
+
+    while ($state) {
+	if ($state == 1) {
+	    if (!($_ = <IN>)) {
+		# eof detected
+		$state = 0;
+		next;
+	    }
+	    chop;
+	    if (!$a_link_found) {
+		$state = 2;
+	    } else {
+		$state = 3;
+	    }
+	    next;
+	} elsif ($state == 2) {
+	    # look for subject
+	    if (!$subject_found) {
+		if (/^\* ((\w|-)*)\s*$/) {
+		    # partial subject was found
+		    # get potential subject name
+		    $subject = $1;
+		    $subject_found = 1;
+		}
+		$state = 4;
+		next;
+	    }
+	    if (!$full_subject_found) {
+		$regexp = "^-{" . sprintf("%d", length($subject) + 2) . "}";
+		if (/$regexp/) {
+		    $full_subject_found = 1;
+		} else {
+		    # subject is bogus
+		    $subject_found = 0;
+		}
+		$state = 4;
+		next;
+	    }
+	    # found a notes subject
+	    $state = 3;
+	    next;
+	} elsif ($state == 3) {
+	    # check loose link match
+	    if (!$tag_generated) {
+		$tag = notes_add_note_to_rawindex($subject, $date);
+		$tag_generated = 1;
+	    }
+	    $a_link_regexp = "^(link|prev|next): <.*>";
+	    if (/$a_link_regexp/) {
+		$a_link_found = 1;
+		$link_regexp = "^link: <.*\/" . $date . "#" . $tag . "\\* " . 
+		    $subject . ">";
+		if (/$link_regexp/) {
+		    $link_found = 1;
+		    $state = 4;
+		} else {
+		    $file_modified = 1;
+		    $state = 1;
+		}
+		next;
+	    } else {
+		if (!$link_found) {
+		    $file_modified = 1;
+		    push(@notes_file, "link: <" . &notes_directory_path($date)
+			 . $date . "#" . $tag . "* " . $subject . ">\n");
+		}
+		$a_link_found = 0;
+		$link_found = 0;
+		$subject_found = 0;
+		$full_subject_found = 0;
+		$tag_generated = 0;
+		$state = 2;
+		next;
+	    }
+	} elsif ($state == 4) {
+	    push(@notes_file, $_ . "\n");
+	    $state = 1;
+	    next;
+	}
+    }
+    close (IN);
+    if ($file_modified) {
+	# rewrite the new file
+	if (!rename("$file", "$file~")) {
+	    warn("Could not rename $file: $!\n");
+	    return;
+	}
+	if (!open(OUT, ">$file")) {
+	    warn("Could not open $file for writing: $!\n");
+	    # get back old file
+	    rename("$file~", "$file");
+	    return;
+	}
+	print OUT @notes_file;
+	close (OUT);
+    }
+}
+
+sub notes_add_note_to_rawindex {
+    local($subject, $date) = @_;
+    local($ndate) = &notes_normalize_date($date);
+    local($key) = $subject . " " . $ndate;
+    if (! exists($notes_raw_index{$key})) {
+	$notes_raw_index{$key} = 0;
+	return '';
+    } else {
+	return sprintf("%d", ++$notes_raw_index{$key});
+    }
+}
+    
+sub notes_make_index {
+    local($subject_ndate);
+    local($subject, $old_subject);
+    local($ndate, $date);
+    local($tags, $i);
+ 
+    if ( -T "$notes_index_file" ) {
+	rename("$notes_index_file", "$notes_index_file~") ||
+	    die("Could not rename $notes_index_file: $!\n");
+    }
+    open(INDEX, ">$notes_index_file") || 
+	die("Could not open $notes_index_file for writing: $!\n");
+    # index start up 
+    print INDEX "-*- notes-index -*- ";
+    foreach $subject_ndate (sort keys(%notes_raw_index)) {
+	($subject, $ndate) = split(/ /, $subject_ndate);
+	$date = &notes_denormalize_date($ndate);
+	$tags = $notes_raw_index{$subject_ndate};
+	if ($subject ne $old_subject) {
+	    # new subject. write it out
+	    print INDEX "\n", $subject, ": ";
+	    $old_subject = $subject;
+	}
+	# write out the first tag
+	print INDEX $date . " ";
+	# write out other tags if they exist
+	for ($i = 1; $i <= $tags; $i++) {
+	    print INDEX $date . "#" . sprintf("%d", $i) . " ";
+	}
+    }
+    print INDEX "\n";
+    close(INDEX);
+}
