@@ -1,29 +1,33 @@
 ;;;
 ;;; notes-index.el
 ;;;
-;;; $Id: records-index.el,v 1.1 1996/11/20 02:34:07 asgoel Exp $
+;;; $Id: records-index.el,v 1.2 1996/11/21 03:05:27 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-index.el,v $
-; Revision 1.1  1996/11/20 02:34:07  asgoel
+; Revision 1.2  1996/11/21 03:05:27  asgoel
+; The first working version.
+;
+; Revision 1.1  1996/11/20  02:34:07  asgoel
 ; Initial revision
 ;
 
 (defmacro notes-index-subject-regexp (&optional subject)
-  "Regexp matching an index note subject."
+  "Regexp matching a subject in the notes index file."
   ( `(if (, subject)
 	 (concat "^\\(" (, subject) "\\): ")
        "^\\(.*\\): ")))
 
 (defun notes-index-buffer ()
   "Initialize the notes index buffer from the index file.
-Create the notes directory and index file if needed."
+If needed, create the notes directory and index file."
   (if (and notes-index-buffer
 	   (get-buffer notes-index-buffer))
       ()
+    ;; get the index file
     (if (file-exists-p (expand-file-name notes-index-file))
 	()
       ;; see if notes directory exists
@@ -39,7 +43,7 @@ Create the notes directory and index file if needed."
 
 (defun notes-index-goto-subject (subject &optional no-error)
   "Goto the beginning of subject in the index buffer.
-If no-error is specified and the subject is not found, 
+If no-error is t and the subject is not found, then
 place point at the beginning of the next subject."
   (notes-index-buffer)
   (set-buffer notes-index-buffer)
@@ -55,46 +59,49 @@ place point at the beginning of the next subject."
 	     (next-line 1)
 	     (beginning-of-line)
 	     (setq match (looking-at (notes-index-subject-regexp)))
-	     (and (string-lessp 
+	     (and match 
+		  (string-lessp 
 		  (buffer-substring-no-properties
 		   (match-beginning 1)
-		   (match-end 1)) subject)
-		 match)))))
+		   (match-end 1)) subject))))))
 
 (defun notes-index-goto-date-tag (date tag &optional no-error)
-  "Goto the (date, tag) in the index file and return (date, tag).
-It is assumed that point is at the beginning of the notes index subject.
-If (date, tag) does not exist, raise error unless no-error is true, 
-in which case, leave point in the space between dates and return nil."
-  (let ((date-tag (concat date (if tag (concat "#" tag))))
-	curr-date-tag ndate)
-    ;; first check if (date, tag) exists
-    (if (re-search-forward date-tag (point-eoln) t)
-	;; found
-	(progn
-	  (goto-char (match-beginning 0))
-	  (list date tag))
-      ;; (date, tag) not found
-      (if (null no-error)
-	  (error "notes-index-goto-date-tag: " date " " tag " not found."))
-      ;; search linearly and place point between dates
-      ;; TODO: figure out which date to place point on exactly
-      (setq ndate (notes-normalize-date date))
-      (setq curr-date-tag (notes-index-goto-next-date-tag))
+  "Goto the (date, tag) in the index file.
+Function assumes that point is at the beginning of the notes index subject.
+If no-error is nil, raise error if (date, tag) doesn't exist.
+if no-error is t, return nil if (date, tag) doesn't exist and 
+place point before the smallest (date, tag) pair greater than (date, tag)."
+  ;; first check if (date, tag) exists
+  (if (re-search-forward (concat date (if (> (length tag) 0) (concat "#" tag)))
+			 (point-eoln) t)
+      ;; found
+      (progn
+	(goto-char (match-beginning 0))
+	t)
+    ;; (date, tag) not found
+    (if (null no-error)
+	(error "notes-index-goto-date-tag: " date " " tag " not found."))
+    ;; search linearly and place point between dates
+    (let* ((curr-date-tag (notes-index-goto-next-date-tag))
+	   (curr-ndate (if curr-date-tag 
+			   (notes-normalize-date (nth 0 curr-date-tag))))
+	   (ndate (notes-normalize-date date)))
       (while (and curr-date-tag
-		  (notes-ndate-lessp 
-		   (notes-normalize-date (nth 0 curr-date-tag)) ndate))
-	(setq curr-date-tag (notes-index-next-date-tag)))
-      (if curr-date-tag
-	  (backward-char 1))
-      nil)))
+		  (or (notes-ndate-lessp curr-ndate ndate)
+		      (and (notes-ndate-equalp curr-ndate ndate)
+			   (string-lessp (nth 1 curr-date-tag) tag))))
+	(setq curr-date-tag (notes-index-goto-next-date-tag))
+	(if curr-date-tag 
+	    (setq curr-ndate (notes-normalize-date (nth 0 curr-date-tag)))))
+      (backward-char 1))
+    nil))
 
-(defun notes-index-goto-prev-date-tag (&optional date tag no-error)
-  "Goto the (date, tag) previous to the argument (date, tag) 
-in the index buffer. Return the previous (date, tag),
+(defun notes-index-goto-prev-date-tag (&optional date tag)
+  "Goto the previous (date, tag) in the index buffer. 
+Return the previous (date, tag) 
 or nil if the previous (date, tag) don't exist."
   (if date
-      (notes-index-goto-date-tag date tag no-error))
+      (notes-index-goto-date-tag date tag t))
   (if (re-search-backward notes-date-tag-regexp (point-boln) t)
       (progn
 	(list 
@@ -104,20 +111,22 @@ or nil if the previous (date, tag) don't exist."
 	     ;; tag
 	     (buffer-substring-no-properties (match-beginning 3) 
 					     (match-end 3))
-	   ;; null tag
-	   nil))
+	   ;; empty tag
+	   ""))
 	)))
 
-(defun notes-index-goto-next-date-tag (&optional date tag no-error)
+(defun notes-index-goto-next-date-tag (&optional date tag)
   "Goto the (date, tag) next to the argument (date, tag)
 in the index buffer. Return the next (date, tag),
 or nil if the next (date, tag) don't exist."
   (if date
-      (notes-index-goto-date-tag date tag no-error))
+      (notes-index-goto-date-tag date tag t))
   (if (looking-at (notes-index-subject-regexp))
-      (goto-char (1- (match-end 0))))
-  (if (looking-at notes-date-tag-regexp)
-      (goto-char (match-end 0)))
+      ;; go to the front of the subject 
+      (goto-char (match-end 0))
+    ;; or else go to the next date
+    (if (looking-at notes-date-tag-regexp)
+	(goto-char (match-end 0))))
   (if (re-search-forward notes-date-tag-regexp (point-eoln) t)
       (progn 
 	(goto-char (match-beginning 0))
@@ -128,8 +137,8 @@ or nil if the next (date, tag) don't exist."
 	     ;; tag
 	     (buffer-substring-no-properties (match-beginning 3) 
 					     (match-end 3))
-	   ;; null tag
-	   nil)))))
+	   ;; empty tag
+	   "")))))
 
 (defun notes-index-insert-subject (subject)
   "Insert a note subject into the notes index."
@@ -143,14 +152,15 @@ or nil if the next (date, tag) don't exist."
 
 (defun notes-index-delete-subject (subject)
   (beginning-of-line)
-  (if (notes-index-next-date-tag)
+  (if (notes-index-goto-next-date-tag)
       ;; other guys exist. don't do anything
       ()
     ;; make sure that we are removing the correct subject
+    (beginning-of-line)
     (if (not (looking-at (notes-index-subject-regexp subject)))
 	(error "notes-index-delete-subject: bad subject")
       ;; ask for confirmation
-      (if (y-or-n-p (concat "Delete subject: " subject))
+      (if (y-or-n-p (concat "Delete subject: " subject " "))
 	  ;; the 1+ is for the newline
 	  (progn
 	    (delete-region (point) (1+ (point-eoln)))
@@ -166,7 +176,7 @@ or nil if the next (date, tag) don't exist."
 		       " already exists."))
       ;; now insert
       (forward-char 1)
-      (insert (concat date (if tag (concat "#" tag)) " ")))))
+      (insert (concat date (if (> (length tag) 0) (concat "#" tag)) " ")))))
 
 (defun notes-index-delete-note (subject date tag)
   "Delete a note from the notes index."

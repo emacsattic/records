@@ -1,67 +1,28 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.1 1996/11/20 02:34:01 asgoel Exp $
+;;; $Id: records.el,v 1.2 1996/11/21 03:05:47 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.1  1996/11/20 02:34:01  asgoel
+; Revision 1.2  1996/11/21 03:05:47  asgoel
+; The first working version.
+;
+; Revision 1.1  1996/11/20  02:34:01  asgoel
 ; Initial revision
 ;
 
 (require 'notes-misc)
 (require 'notes-index)
 
-(defvar notes-subject-table (make-vector 127 0)
-  "List of subjects for notes subject completion.
-Reloaded by loading the notes-index file.")
-
 (defun notes-read-subject (&optional subject)
   "Read the notes subject to be inserted from the minibuffer.
 Completion is possible."
   (interactive (list (completing-read "Notes subject: " notes-subject-table)))
   subject)
-
-(defun notes-make-tag (prev-date-exists next-date-exists prev-tag next-tag)
-  "Returns a new tag that depends on the previous and next tags
-when a note is being inserted.
-The tag is a null value or an integer value (negative or positive) 
-converted to a string."
-  (let ((prev-int-tag (if (null prev-tag) 0 (string-to-int prev-tag)))
-	(next-int-tag (if (null next-tag) 0 (string-to-int next-tag))))
-    (cond ((and (null prev-date-exists)
-		(null next-date-exists)) nil)
-	  ((null next-date-exists)
-	   (int-to-string 
-	    (notes-mirror-bits 
-	     (/ (+ (notes-mirror-bits prev-int-tag)
-		   (notes-mirror-bits 1)) 2))))
-	  ((null prev-date-exists)
-	   (int-to-string 
-	    (notes-mirror-bits 
-	     (/ (+ (notes-mirror-bits next-int-tag)
-		   (notes-mirror-bits -1)) 2))))
-	  (t (int-to-string 
-	      (notes-mirror-bits 
-	       (/ (+ (notes-mirror-bits prev-int-tag)
-		     (notes-mirror-bits next-int-tag)) 2)))))))
-
-(defun notes-date-equalp (date-a date-b)
-  "Are two dates equal?"
-  (equal date-a date-b))
-
-(defun notes-ndate-equalp (ndate-a ndate-b)
-  "Are two normalized dates equal?"
-  (equal ndate-a ndate-b))
-
-(defun notes-ndate-lessp (ndate-a ndate-b)
-  "Returns T if ndate-a is less than ndate-b."
-  (or (< (nth 2 ndate-a) (nth 2 ndate-b))
-      (< (nth 1 ndate-a) (nth 1 ndate-b))
-      (< (nth 0 ndate-a) (nth 0 ndate-b))))
 
 (defmacro notes-subject-regexp (&optional subject)
   "Regexp matching the beginning of a note."
@@ -73,8 +34,7 @@ converted to a string."
   "Make a notes link."
   (concat "link: <"
 	  (notes-directory-path date)
-	  date "#" (if tag (concat tag) "")
-	  "* " subject ">"))
+	  date "#" tag "* " subject ">"))
 
 (defun notes-goto-note (subject date tag &optional no-error)
   "Goto the note with subject and tag on date."
@@ -85,12 +45,9 @@ converted to a string."
 	 (concat "link: <.*" date "#" tag "\\* " subject ">") (point-max) t)
 	;; found
 	(notes-goto-subject)
-      ;; goto subject if possible
-      (if (notes-goto-down-note subject)
-	  (if (null no-error)
-	      (error (concat "tag: " tag " not found.")))
-	(if (null no-error)
-	    (error (concat "subject tag: " subject " " tag " not found.")))))))
+      (if no-error
+	  nil
+	(error (concat "subject tag: " subject " " tag " not found."))))))
 
 (defun notes-goto-subject ()
   "Goto the subject on the current note and return the subject."
@@ -110,10 +67,17 @@ converted to a string."
       (if (re-search-forward notes-tag-regexp (point-eoln) t)
 	  (setq tag (buffer-substring-no-properties 
 		     (match-beginning 1) (match-end 1))))
-      ;; TODO: should not be required
-      (if (equal tag "")
-	  (setq tag nil))
       (list subject tag))))
+
+(defun notes-mark-note ()
+  "Put mark at end of this node and point at beginning.
+The note marked is the one that contains point or follows point."
+  (interactive)
+  (notes-goto-down-note)
+  (push-mark)
+  (notes-goto-up-note) 
+  ;; return value
+  (point))
 
 (defun notes-mark-subject ()
   "Put mark at the end of subject in this note and point at beginning.
@@ -128,6 +92,7 @@ The note marked is the one that contains point or follows point."
 	  (next-line 1)
 	  (beginning-of-line)))
     (push-mark)
+    ;; also return value
     (goto-char pt)))
 
 (defun notes-make-note (subject date tag &optional note-body)
@@ -142,28 +107,8 @@ The note marked is the one that contains point or follows point."
   "Remove the current note. 
 With arg., keep the body and remove the subject only."
   (save-excursion
-    (let* ((pt-mark (if keep-body (notes-mark-subject) (notes-mark-note) ))
-	   (pt (nth 0 pt-mark))
-	   (mark (nth 1 pt-mark)))
-      (kill-region pt mark))))
-
-(defun notes-find-prev-note (subject date tag &optional point no-error)
-  "Find the previous note on subject starting from date and tag.
-If point is specified, the tag is not used."
-  (save-excursion (notes-goto-prev-note subject date tag point no-error)))
-
-(defun notes-find-next-note (subject date tag &optional point no-error)
-  "Find the next note on subject starting from date and tag.
-If point is specified, the tag is not used."
-  (save-excursion (notes-goto-next-note subject date tag point no-error)))
-
-(defun notes-mark-note ()
-  "Put mark at end of this node and point at beginning.
-The note marked is the one that contains point or follows point."
-  (interactive)
-  (notes-goto-down-note)
-  (push-mark)
-  (notes-goto-up-note))
+    (if keep-body (notes-mark-subject) (notes-mark-note))
+    (kill-region (point) (mark))))
 
 (defun notes-goto-up-note (&optional subject)
   "Go to the beginning of the current note.
@@ -184,77 +129,70 @@ If subject is specified, go down to the beginning of a note with subject."
 	(goto-char (match-beginning  0)))
     ))
 
-(defun notes-goto-prev-note (&optional subject date tag point no-error)
-  "Find the previous note on subject starting from date and tag.
-If point is specified, goto the previous note on subject 
-starting from the current point (tag is ignored)."
+(defun notes-goto-prev-note (&optional subject date tag no-error)
+  "Find the previous note on subject starting from date and tag."
   (interactive)
-  (if (and point (notes-goto-up-note subject))
-      ;; return the date and tag of current subject
-      (list date (nth 1 (notes-subject-tag)))
-    ;; goto the default
-    (if (and subject date)
-	()
-      ;; initialize subject date and tag
-      (let ((subject-tag (notes-subject-tag)))
-	(setq subject (nth 0 subject-tag))
-	(setq tag (nth 1 subject-tag))
-	(setq date (notes-file-to-date))))
-    (if (notes-index-goto-subject subject no-error)
-	(let ((prev-date-tag 
-	       (notes-index-goto-prev-date-tag date tag no-error)))
-	  (if (null prev-date-tag)
-	      nil
-	    (notes-goto-note subject (nth 0 prev-date-tag)
-			     (nth 1 prev-date-tag))
-	    prev-date-tag))
-      nil)))
+  (if (and subject date)
+      ()
+    ;; initialize subject date and tag
+    (let ((subject-tag (notes-subject-tag)))
+      (setq subject (nth 0 subject-tag))
+      (setq tag (nth 1 subject-tag))
+      (setq date (notes-file-to-date))))
+  (let (prev-date-tag) 
+    (save-excursion
+      (if (notes-index-goto-subject subject no-error)
+	  (setq prev-date-tag (notes-index-goto-prev-date-tag date tag))))
+    (if prev-date-tag
+	;; goto the note
+	(notes-goto-note subject (nth 0 prev-date-tag) (nth 1 prev-date-tag))
+      (if (null no-error)
+	  (error 
+	   (concat "notes-goto-prev-note: " subject " " date " not found"))))
+    ;; return value
+    prev-date-tag))
 
-(defun notes-goto-next-note (&optional subject date tag point no-error)
-  "Find the next note on subject starting from date and tag.
-If point is specified, goto the next note on subject 
-starting from the current point (tag is ignored)."
+(defun notes-goto-next-note (&optional subject date tag no-error)
+  "Find the next note on subject starting from date and tag."
   (interactive)
-  (if (and point (notes-goto-down-note subject))
-      ;; return the date and tag of current subject
-      (list date (nth 1 (notes-subject-tag)))
-    ;; goto the default
-    (if (and subject date)
-	()
-      ;; initialize subject date and tag
-      (let ((subject-tag (notes-subject-tag)))
-	(setq subject (nth 0 subject-tag))
-	(setq tag (nth 1 subject-tag))
-	(setq date (notes-file-to-date))))
-    (if (notes-index-goto-subject subject no-error)
-	(let ((next-date-tag
-	       (notes-index-goto-next-date-tag date tag no-error)))
-	  (if (null next-date-tag)
-	      nil
-	    (notes-goto-note subject (nth 0 next-date-tag)
-			     (nth 1 next-date-tag))
-	    next-date-tag))
-      nil)))
+  (if (and subject date)
+      ()
+    ;; initialize subject date and tag
+    (let ((subject-tag (notes-subject-tag)))
+      (setq subject (nth 0 subject-tag))
+      (setq tag (nth 1 subject-tag))
+      (setq date (notes-file-to-date))))
+  (let (next-date-tag) 
+    (save-excursion
+      (if (notes-index-goto-subject subject no-error)
+	  (setq next-date-tag (notes-index-goto-next-date-tag date tag))))
+    (if next-date-tag
+	;; goto the note
+	(notes-goto-note subject (nth 0 next-date-tag) (nth 1 next-date-tag))
+      (if (null no-error)
+	  (error 
+	   (concat "notes-goto-next-note: " subject " " date " not found"))))
+    ;; return value
+    next-date-tag))
 
 (defun notes-insert-note(&optional note-body)
   "Insert a new note for the current date. Asks for the subject."
   (interactive)
   (let* ((subject (call-interactively 'notes-read-subject))
 	 (date (notes-file-to-date))
-	 (tag nil)
-	 ;; find previous date and tag
-	 (prev-date-tag (notes-find-prev-note subject date tag (point) t))
-	 ;; find next date and tag
-	 (next-date-tag (notes-find-next-note subject date tag (point) t))
-	 (prev-date (nth 0 prev-date-tag))
-	 (prev-tag (nth 1 prev-date-tag)) 
-	 (next-date (nth 0 next-date-tag))
-	 (next-tag (nth 1 next-date-tag)))
-
-    ;; make the current tag
-    (setq tag (notes-make-tag (notes-date-equalp prev-date date)
-			      (notes-date-equalp next-date date)
-			      prev-tag next-tag))
+	 (tag ""))
+    ;; we don't currently allow a note insertion 
+    ;; if another note with the same subject exists below this note.
+    (save-excursion
+      (if (notes-goto-down-note subject)
+	  (error "notes-insert-note: can't insert out-of-order note")))
+    ;; check if another note with same subject exists above 
+    ;; to get a new tag value
+    (save-excursion
+      (if (notes-goto-up-note subject)
+	  ;; get tag
+	  (setq tag (int-to-string (1+ (string-to-int 
+					(nth 1 (notes-subject-tag))))))))
 
     ;; add a notes index entry 
     (notes-index-insert-note subject date tag)
@@ -283,4 +221,38 @@ With arg, removes the subject only."
   (interactive "P")
   (notes-delete-note 'keep-body)
   (notes-insert-note))
+
+;(defun notes-make-tag (prev-date-exists next-date-exists prev-tag next-tag)
+;  "Returns a new tag that depends on the previous and next tags
+;when a note is being inserted.
+;The tag is a null value or an integer value (negative or positive) 
+;converted to a string."
+;  (let ((prev-int-tag (if (null prev-tag) 0 (string-to-int prev-tag)))
+;	(next-int-tag (if (null next-tag) 0 (string-to-int next-tag))))
+;    (cond ((and (null prev-date-exists)
+;		(null next-date-exists)) nil)
+;	  ((null next-date-exists)
+;	   (int-to-string 
+;	    (notes-mirror-bits 
+;	     (/ (+ (notes-mirror-bits prev-int-tag)
+;		   (notes-mirror-bits 1)) 2))))
+;	  ((null prev-date-exists)
+;	   (int-to-string 
+;	    (notes-mirror-bits 
+;	     (/ (+ (notes-mirror-bits next-int-tag)
+;		   (notes-mirror-bits -1)) 2))))
+;	  (t (int-to-string 
+;	      (notes-mirror-bits 
+;	       (/ (+ (notes-mirror-bits prev-int-tag)
+;		     (notes-mirror-bits next-int-tag)) 2)))))))
+
+;(defun notes-find-prev-note (subject date tag &optional point no-error)
+;  "Find the previous note on subject starting from date and tag.
+;If point is specified, the tag is not used."
+;  (save-excursion (notes-goto-prev-note subject date tag point no-error)))
+
+;(defun notes-find-next-note (subject date tag &optional point no-error)
+;  "Find the next note on subject starting from date and tag.
+;If point is specified, the tag is not used."
+;  (save-excursion (notes-goto-next-note subject date tag point no-error)))
 
