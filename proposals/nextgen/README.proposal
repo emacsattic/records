@@ -1,6 +1,6 @@
 ********************************************************************************
-*** Last-Modified: $Date: 2001/05/13 02:16:06 $ 
-*** Version: $Id: README.proposal,v 1.1 2001/05/13 02:16:06 burtonator Exp $
+*** Last-Modified: $Date: 2001/05/13 02:22:52 $ 
+*** Version: $Id: README.proposal,v 1.2 2001/05/13 02:22:52 burtonator Exp $
 *** Author: Kevin A. Burton ( burton@apache.org | burton@openprivacy.org )
 ********************************************************************************
 
@@ -20,6 +20,35 @@ It also relies on GNU Emacs font-lock-add-keywords and should use
 font-lock-defaults like XEmacs uses.  I don't have a clean solution to this
 right now as getting font-lock to work across XEmacs and GNU Emacs is very
 ugly.
+
+** Status:
+
+Most of the proposed features here have been added:
+
+- records-format.el:          80% completed
+
+- records-query.el:           40% completed
+
+  - mostly function but not elegant.
+
+- records-status.el:          90% completed
+
+- records-rss.el:             20% completed
+
+  - We have a lot of work still left to do here.  We have a skeleton for RSS
+    export but we just need to follow up with everything.
+
+- hierarchical subjects:      0% completed
+
+- creation time:              100% completed
+
+- record:// links             0%.
+
+  - this is a complicated feature and will break a LOT of code in records mode.
+    We should put this off until all other features have an implementation
+    because so much code relies on the current <link> format.
+
+- comments:                   100%
 
 ** Features:
 
@@ -114,6 +143,9 @@ ugly.
   I have noticed that some records contain large sections of text that are not
   really part of the original record.  If would be nice if I could use this to
   mark large sections of non-relevant text.
+
+- We should migrate records links to use a URI such as record://date/tag/subject
+  so that this is somewhat modern implementation of linking. 
 
 ** Future:
 
