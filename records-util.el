@@ -1,14 +1,17 @@
 ;;;
 ;;; notes-util.el
 ;;;
-;;; $Id: records-util.el,v 1.1 1996/12/17 22:37:29 asgoel Exp $
+;;; $Id: records-util.el,v 1.2 1997/01/23 00:02:35 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-util.el,v $
-; Revision 1.1  1996/12/17 22:37:29  asgoel
+; Revision 1.2  1997/01/23 00:02:35  ashvin
+; The first release
+;
+; Revision 1.1  1996/12/17  22:37:29  asgoel
 ; Initial revision
 ;
 
@@ -20,7 +23,7 @@ See the notes-todo-.*day variables on when it is automatically invoked."
       (setq date (notes-file-to-date)))
   (save-excursion
     (let* ((date-buf (current-buffer))
-	   (prev-date (notes-goto-prev-note-file 1 t))
+	   (prev-date (notes-goto-prev-note-file 1 t t))
 	   (cur-buf (current-buffer)))
       (if (null prev-date)
 	  () ;; nothing to do
@@ -69,6 +72,7 @@ See the notes-todo-.*day variables on when it is automatically invoked."
 
 (defun notes-user-name ()
   "The user name of the notes user."
+  (eval-when-compile (load "mc-pgp"))
   (cond ((boundp 'mc-ripem-user-id)
 	 mc-ripem-user-id)
 	((boundp 'mc-pgp-user-id)
@@ -174,7 +178,8 @@ for number of days. An empty string will output the notes of the current file."
   (interactive
    (list
     (if current-prefix-arg (int-to-string current-prefix-arg)
-      (read-from-minibuffer "Concat notes in last N days (default 1): "))))
+      (read-from-minibuffer "Concat notes files in last N days (default 1): "
+			    ))))
   (let* ((date (notes-file-to-date))
 	 (arg (string-to-int num))
 	 (first-ndate (notes-add-date (notes-normalize-date date)
@@ -235,5 +240,43 @@ for number of days. An empty string will output the notes of the current file."
     (if notes-select-buffer-on-concat
 	(pop-to-buffer (get-buffer notes-output-buffer))
       (display-buffer (get-buffer notes-output-buffer)))))
+
+(defun notes-goto-calendar ()
+  "Goto the calendar date in the current note file."
+  (interactive)
+  (let* ((date (notes-file-to-date))
+	 (ndate (notes-normalize-date date))
+	 ;; convert normalized date to calendar date
+	 ;; the day and month are interchanged
+	 (cdate (list (nth 1 ndate) (nth 0 ndate) (nth 2 ndate))))
+    (eval-when-compile (require 'calendar))
+    (calendar)
+    (calendar-goto-date cdate)))
+
+;;;###autoload
+(defun notes-calendar-to-note ()
+  "Goto the note file corresponding to the calendar date."
+  (interactive)
+  (let* ((cdate (calendar-cursor-to-date))
+	 (ndate (list (nth 1 cdate) (nth 0 cdate) (nth 2 cdate)))
+	 (date (notes-denormalize-date ndate)))
+    (notes-goto-note nil date nil nil 'other)))
+
+;;;###autoload
+(defun notes-insert-note-region (beg end)
+  "Insert the region in the current buffer into today's note.
+Prompts for subject."
+  (interactive "r")
+  (let ((note-body (buffer-substring beg end)))
+    (notes-goto-today)
+    (goto-char (point-max))
+    (notes-insert-note nil note-body)))
+
+;;;###autoload
+(defun notes-insert-note-buffer ()
+  "Insert the current buffer into today's note.
+Prompts for subject."
+  (interactive)
+  (notes-insert-note-region (point-min) (point-max)))
 
 (provide 'notes-util)

@@ -11,4 +11,8 @@ lispdir='${datadir}/emacs/site-lisp'
 
 AC_SUBST(lispdir)
 
-AC_OUTPUT(Makefile notesadmin)
+srcdirpath=`pwd`
+
+AC_SUBST(srcdirpath)
+
+AC_OUTPUT(Makefile notesadmin, chmod +x notesadmin)

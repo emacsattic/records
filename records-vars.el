@@ -1,18 +1,19 @@
 ;;;
 ;;; notes-vars.el
 ;;;
-;;; $Id: records-vars.el,v 1.1 1996/12/17 22:37:19 asgoel Exp $
+;;; $Id: records-vars.el,v 1.2 1997/01/23 00:02:35 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-vars.el,v $
-; Revision 1.1  1996/12/17 22:37:19  asgoel
+; Revision 1.2  1997/01/23 00:02:35  ashvin
+; The first release
+;
+; Revision 1.1  1996/12/17  22:37:19  asgoel
 ; Initial revision
 ;
-
-
 ;;;
 ;;; The next set of variables are accessed by notesadmin.
 ;;; Do not set them explicitly since they are set in your
@@ -136,3 +137,7 @@ every time \\[notes-concatenate-notes\] is invoked.
 If nil, the output is appended.")
 
 (provide 'notes-vars)
+
+;;; Local Variables:
+;;; generated-autoload-file:"notes-load.el"
+;;; End:

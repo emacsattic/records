@@ -1,14 +1,17 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.13 1996/12/18 16:38:23 asgoel Exp $
+;;; $Id: records.el,v 1.14 1997/01/23 00:02:35 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.13  1996/12/18 16:38:23  asgoel
+; Revision 1.14  1997/01/23 00:02:35  ashvin
+; The first release
+;
+; Revision 1.13  1996/12/18  16:38:23  asgoel
 ; 1. Added autoload functions.
 ; 2. Removed user customizable variables to separate file.
 ; 3. Removed notes-todo and notes-concatenate-notes etc. to a separate file.
@@ -95,6 +98,7 @@
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
 ;;;
+(defconst notes-version "1.1")
 
 (defvar notes-mode-menu-map nil
   "Notes Menu Map. Internal variable.")
@@ -138,6 +142,10 @@ Internal variable.")
 (defvar notes-history nil
   "List of notes a user has visited. Elements of the list consist of args
 to notes-goto-note. Internal variable.")
+
+(defvar notes-initialize nil
+  "Has function notes-initialize been invoked atleast once.
+Internal variable.")
 
 ;;;###autoload
 (defun notes-initialize ()
@@ -192,8 +200,9 @@ like notes-date, notes-date-length, etc."
       (kill-buffer notes-index-buffer))
   )
 
-;; initialize on load
-(notes-initialize)
+;; load when interactive
+(if (null noninteractive)
+    (notes-initialize))
 
 (defmacro notes-date-count-regexp (&optional date)
   "Regexp matching a date in the notes date-index file."
@@ -487,7 +496,9 @@ TODO: non interactive calls should pop-mark also."
     (insert "* " subject "\n")
     (insert-char ?- (+ (length subject) 2))
     (insert (concat "\n" (notes-make-link subject date tag) "\n"))
-    (notes-compose-region opoint (point))))
+    (notes-compose-region opoint (point))
+    (if note-body
+	(insert note-body))))
 
 (defun notes-free-note (&optional keep-body)
   "Remove the current note. 
@@ -518,29 +529,36 @@ With arg., keep the body and remove the subject only."
       (insert-char ?- (- eol bospaces)))))
 
 (defun notes-goto-link ()
-  "Goto the link around point in the notes file."
+  "Goto the link around point in the notes file.
+A link can be any of the following enclosed in <>.
+1. a (relative or absolute) pathname 
+2. a pathname followed by \"#* Subject\"
+3. a pathname followed by \"#tag* Subject\"
+4. a file:// or file://localhost prepended to a pathname."
   (interactive)
   (if (not (or (looking-at "<")
 	       (re-search-backward "<" (point-boln) t)))
       ;; not a link I know about
       (error "notes-goto-link: invalid link under point.")
     ;; try to figure out a link
-    (if (looking-at (concat "<\\(.*\\)/\\([0-9]+\\)" 
-			    notes-tag-regexp "\\* \\(.*\\)>"))
+    (if (looking-at (concat "<\\(.*\\)/\\([0-9]+\\)\\(" 
+			    notes-tag-regexp "\\* \\(.*\\)\\|\\)>"))
 	;; found a link
-	(let ((subject (buffer-substring-no-properties (match-beginning 4)
-						       (match-end 4)))
+	(let ((dir (buffer-substring-no-properties (match-beginning 1)
+						   (match-end 1)))
 	      (date (buffer-substring-no-properties (match-beginning 2)
 						       (match-end 2)))
-	      (tag (buffer-substring-no-properties (match-beginning 3)
-						       (match-end 3)))
-	      (dir (buffer-substring-no-properties (match-beginning 1)
-						   (match-end 1))))
+	      (tag (if (match-beginning 4)
+		       (buffer-substring-no-properties (match-beginning 4)
+						       (match-end 4))))
+	      (subject (if (match-beginning 5)
+			   (buffer-substring-no-properties (match-beginning 5)
+						       (match-end 5)))))
 	  ;; if "file://" or "file://localhost" is present 
 	  ;; at the beginning of dir, strip it ... guess why?
 	  (if (string-match "^file://\\(localhost\\|\\)" dir)
 	      (setq dir (substring dir (match-end 0))))
-	  (notes-goto-note subject date tag t nil nil nil dir))
+	  (notes-goto-note subject date tag nil nil nil nil dir))
       (error "notes-goto-link: invalid link under point."))))
 
 (defun notes-goto-mouse-link (e)
@@ -556,6 +574,7 @@ If subject is nil, goto date only.
 If no-hist is t, then don't add this link to the notes-history list.
 If no-switch is t, then do not switch to the new notes buffer.
 Instead, the buffer is made ready for editing (via set-buffer).
+If no-switch is 'other, then switch to the new notes buffer in another window.
 If todo is t, then invoke notes-todo when a note-less file is being visited.
 If todo is not nil and not t, ask user whether notes-todo should be called.
 If no-error is t, do not signal error, if the note is not found.
@@ -570,9 +589,9 @@ If dir is specified, then the file is assumed to be \"dir/date\"."
 	  (make-directory (expand-file-name dir) t)
 	(if no-error nil
 	  (error (concat "note: " file " not found.")))))
-    (if (null no-switch)
-	(find-file file)
-      (set-buffer (find-file-noselect file)))
+    (cond ((null no-switch) (find-file file))
+	  ((eq no-switch 'other) (find-file-other-window file))
+	  (t (set-buffer (find-file-noselect file))))
     ;; handler for new notes files
     (if (and todo (null (save-excursion (notes-dindex-goto-date date t))))
 	(if (or (eq todo t) 
@@ -682,7 +701,7 @@ See also notes-goto-next-note-file."
     (setq date (notes-denormalize-date ndate))
     (notes-goto-note nil date "" nil nil notes-todo-today)))
 
-(defun notes-goto-relative-note-file(&optional arg no-switch)
+(defun notes-goto-relative-note-file(&optional arg no-switch no-error)
   "With positive arg, go arg files ahead of current notes file. 
 With negative arg, go arg files behind of current notes file.
 Returns the new date."
@@ -692,23 +711,25 @@ Returns the new date."
 	   (nth 0
 		(notes-dindex-goto-relative-date arg (notes-file-to-date))))))
     (if (null new-date)
-	(error
-	 (concat "notes-goto-relative-note-file: " 
-		 (if (> arg 0) "next" "previous") " note file not found."))
+	(if (null no-error)
+	    (error
+	     (concat "notes-goto-relative-note-file: " 
+		     (if (> arg 0) "next" "previous") 
+		     " note file not found.")))
       (notes-goto-note nil new-date "" nil no-switch))
     new-date))
 
-(defun notes-goto-prev-note-file(&optional arg no-switch)
+(defun notes-goto-prev-note-file(&optional arg no-switch no-error)
   "Go to the previous notes file. With arg. go that many notes files back.
 Returns the new date. See also notes-goto-prev-day."
   (interactive "P")
-  (notes-goto-relative-note-file (if arg (- arg) -1) no-switch))
+  (notes-goto-relative-note-file (if arg (- arg) -1) no-switch no-error))
 
-(defun notes-goto-next-note-file(&optional arg no-switch)
+(defun notes-goto-next-note-file(&optional arg no-switch no-error)
   "Go to the next notes file. With arg. go that many notes files forward.
 Returns the new date. See also notes-goto-next-day."
   (interactive "P")
-  (notes-goto-relative-note-file (if arg arg 1) no-switch))
+  (notes-goto-relative-note-file (if arg arg 1) no-switch no-error))
 
 (defun notes-goto-relative-note (&optional arg subject date tag no-switch 
 					   no-error)
@@ -847,8 +868,15 @@ The key-bindings of this mode are:
   (define-key notes-mode-map "\C-c\C-g" 'notes-goto-link)
   (define-key notes-mode-map [M-S-mouse-1] 'notes-goto-mouse-link)
 
+  ;; utility functions have C-c/ prefix keys
   (define-key notes-mode-map "\C-c/e" 'notes-encrypt-note)
   (define-key notes-mode-map "\C-c/d" 'notes-decrypt-note)
+
+  (define-key notes-mode-map "\C-c/t" 'notes-todo)
+  (define-key notes-mode-map "\C-c/c" 'notes-concatenate-notes)
+  (define-key notes-mode-map "\C-c/f" 'notes-concatenate-note-files)
+  (define-key notes-mode-map "\C-c/n" 'notes-goto-calendar)
+
 
   (define-key notes-mode-map "\C-c\C-k" 'notes-link-as-kill)
   (define-key notes-mode-map [?\C-c ?\C--] 'notes-underline-line)
@@ -867,8 +895,6 @@ The key-bindings of this mode are:
 
     (define-key notes-mode-menu-map [separator-0] '("--"))
 
-    (define-key notes-mode-menu-map [notes-todo] 
-      '("Get TODO's" . notes-todo))
     (define-key notes-mode-menu-map [notes-underline-line] 
       '("Underline Line" . notes-underline-line))
     (define-key notes-mode-menu-map [notes-link-as-kill] 
@@ -878,6 +904,10 @@ The key-bindings of this mode are:
 
     (define-key notes-mode-menu-map [separator-3] '("--"))
 
+    (define-key notes-mode-menu-map [notes-goto-calendar] 
+      '("Goto Calendar" . notes-goto-calendar))
+    (define-key notes-mode-menu-map [notes-todo] 
+      '("Get TODO's" . notes-todo))
     (define-key notes-mode-menu-map [notes-concatenate-note-files] 
       '("Concat Note Files" . notes-concatenate-note-files))
     (define-key notes-mode-menu-map [notes-concatenate-notes] 
@@ -943,15 +973,20 @@ The key-bindings of this mode are:
     )
 
   ;; imenu stuff 
+  (eval-when-compile (require 'imenu))
   (make-variable-buffer-local 'imenu-prev-index-position-function)
   (make-variable-buffer-local 'imenu-extract-index-name-function)
   (setq imenu-prev-index-position-function 'notes-goto-up-note)
   (setq imenu-extract-index-name-function 'notes-subject-tag)
 
   (notes-parse-buffer)
+  (if notes-initialize
+      ()
+    (message "HI")
+    (notes-initialize)
+    (setq notes-initialize t))
   (run-hooks 'notes-mode-hooks)
   )
 
 (run-hooks 'notes-load-hooks)
 (provide 'notes)
-

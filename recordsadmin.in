@@ -2,14 +2,17 @@
 
 ### notesadmin.in
 ###
-### $Id: recordsadmin.in,v 1.6 1996/12/21 00:08:22 asgoel Exp $
+### $Id: recordsadmin.in,v 1.7 1997/01/23 00:02:35 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: recordsadmin.in,v $
-# Revision 1.6  1996/12/21 00:08:22  asgoel
+# Revision 1.7  1997/01/23 00:02:35  ashvin
+# The first release
+#
+# Revision 1.6  1996/12/21  00:08:22  asgoel
 # Added require 5.000
 #
 # Revision 1.5  1996/12/11  01:53:55  asgoel
@@ -46,14 +49,18 @@ use File::Basename;
 # global - should be set by makefile
 $notes_init_file="$ENV{HOME}/.emacs-notes";
 
+$notes_emacs_init_file="$ENV{HOME}/.emacs";
+
 # external global variables read from .emacs-notes
 # with their documentation
 # initialized here to sane defaults 
 
 @notes_external_vars = (
     "notes_directory", 1, 'Directory under which all notes are stored.',
-    "notes_index_file", 1, 'File name in which notes subject index is stored.',
-    "notes_dindex_file", 1, 'File name in which notes date index is stored.',
+    "notes_index_file", 1, 'File name in which notes subject index is stored.
+Make sure that the file is within the notes directory.',
+    "notes_dindex_file", 1, 'File name in which notes date index is stored.
+Make sure that the file is within the notes directory.',
     "notes_directory_structure", 0, 'The directory structure for notes files.
 Its values can be 
 0 => all notes are stored in notes_directory. 
@@ -105,11 +112,26 @@ $alternate = 1; # alternate set of variables
 
 $notes_init_mesg = ";;; AUTOMATICALLY GENERATED: DO NOT ALTER OR DELETE FROM THIS LINE ONWARDS";
 
-$notes_more_init_mesg = "
+$notes_more_init_mesg = <<MORE_MESG
+
 ;;; This part of the file is also read by perl.
 ;;; Add any emacs customization before this comment.
 
-";
+(let ((f (expand-file-name "@srcdirpath@")))
+  (if (not (member f load-path))
+      (setq load-path (cons f load-path))))
+
+(autoload 'notes-mode "notes" "notes mode" t)
+(autoload 'notes-goto-today "notes" "Go to today's notes" t)
+(autoload 'notes-underline-line "notes" "underine a title" t)
+(autoload 'notes-index-mode "notes-index" "notes index mode" t)
+
+(setq auto-mode-alist
+      (cons (cons "[0-9][0-9][0-9][0-9][0-9][0-9].?.?\$" 'notes-mode)
+	    auto-mode-alist))
+
+MORE_MESG
+;
 
 #
 # Start the bang bang
@@ -740,6 +762,13 @@ If you want the default value, press return.\n\n";
     &notes_query_vars();
     # write out the init file
     &notes_write_init_file($init);
+    # Add stuff to emacs init file
+    open(EIT, ">>$notes_emacs_init_file") ||
+	die "Could not open $notes_emacs_init_file for writing: $!\n";
+    print EIT "(load \"$notes_init_file\")\n";
+    close EIT;
+    &mkdirhier($notes_directory, 0700) unless ( -d $notes_directory);
+
 }
 
 sub notes_convert_format {

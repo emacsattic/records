@@ -3,11 +3,20 @@ Make sure that you read the README file first.
 Run
 
 1. ./configure
-
 This program is provided in the source (do not run your own configure).
+If you want to specify the directory in which notesadmin should be installed,
+you could say something like
+
+./configure --prefix $HOME
+
+or 
+
+./configure --bindir $HOME/bin
 
 2. make install (or just make)
+After the lisp files have been compiled, this procedure is interactive and asks
+for user defaults.
 
-install just puts notesadmin in your bin path.
+The installation just puts notesadmin in your bin path (see README).
 
 

@@ -1,14 +1,17 @@
 ;;;
 ;;; notes-index.el
 ;;;
-;;; $Id: records-index.el,v 1.9 1996/12/18 16:36:25 asgoel Exp $
+;;; $Id: records-index.el,v 1.10 1997/01/23 00:02:35 ashvin Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-index.el,v $
-; Revision 1.9  1996/12/18 16:36:25  asgoel
+; Revision 1.10  1997/01/23 00:02:35  ashvin
+; The first release
+;
+; Revision 1.9  1996/12/18  16:36:25  asgoel
 ; Added autoloads.
 ; Removed date index functions to separate file.
 ;
@@ -83,9 +86,9 @@ Key bindings are:
   (use-local-map notes-index-mode-map)
   (if notes-index-use-font-lock
       (progn
-	(require 'font-lock)
-	(make-local-variable 'font-lock-no-comments)
-	(setq font-lock-no-comments t)
+	(eval-when-compile (require 'font-lock))
+	;; (make-local-variable 'font-lock-no-comments)
+	;; (setq font-lock-no-comments t)
 	(make-local-variable 'font-lock-keywords)
 	(setq font-lock-keywords notes-index-font-lock-keywords)
 	(font-lock-mode 1)))
@@ -345,4 +348,3 @@ Returns the new (date, tag)."
 (provide 'notes-index)
 (if (not (featurep 'notes))
     (require 'notes))
-

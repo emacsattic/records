@@ -1,14 +1,17 @@
 ###
 ### Makefile.in
 ###
-### $Id: Makefile.in,v 1.1 1996/12/24 23:56:07 asgoel Exp $
+### $Id: Makefile.in,v 1.2 1997/01/23 00:02:35 ashvin Exp $
 ###
 ### Copyright (C) 1996 by Ashvin Goel
 ###
 ### This file is under the Gnu Public License.
 
 # $Log: Makefile.in,v $
-# Revision 1.1  1996/12/24 23:56:07  asgoel
+# Revision 1.2  1997/01/23 00:02:35  ashvin
+# The first release
+#
+# Revision 1.1  1996/12/24  23:56:07  asgoel
 # Initial revision
 #
 
@@ -26,7 +29,7 @@ exec_prefix=@exec_prefix@
 # The directory for installing read-only architecture-independent data.
 datadir=@datadir@
 
-# Where to put the .el and .elc files
+# Currently not used.
 # This will be wrong if you use private lispdir areas.
 # In that case, set it explicitly during make.
 lispdir=@lispdir@
@@ -57,10 +60,13 @@ OBJECTS = notes-vars.elc notes-dindex.elc notes-index.elc notes-util.elc notes.e
 PRELOADS = -l notes-load.el -l notes-vars.el -l notes.el
 EFLAGS =-batch -q -no-site-file $(PRELOADS)
 
-DISTFILES = $(SOURCES) ANNOUNCE ChangeLog INSTALL LCD-entry Makefile.in \
-	NEWS ONEWS README configure configure.in install-sh \
-	notes.info notes.dvi notes.texi mkinstalldirs \
-	texi2html.ext
+DISTFILES = $(SOURCES) INSTALL Makefile.in \
+	README configure configure.in install-sh \
+	mkinstalldirs notesadmin.in notes-load.el \
+	encrypt/mailcrypt.el encrypt/mc-pgp.el \
+	encrypt/mc-remail.el encrypt/mc-toplev.el
+
+# notes.info notes.dvi notes.texi 
 
 .SUFFIXES:
 .SUFFIXES: .elc .el
@@ -69,19 +75,23 @@ DISTFILES = $(SOURCES) ANNOUNCE ChangeLog INSTALL LCD-entry Makefile.in \
 	$(EMACS) $(EFLAGS) -f batch-byte-compile $<
 
 all: $(OBJECTS)
+	notesadmin -i
 
-install: all installdirs $(infodir)/notes
-	for f in $(SOURCES); do \
-	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
-	done;
-	for f in $(OBJECTS); do \
-	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
-	done;
+# install: all installdirs $(infodir)/notes
+install: all
+	$(INSTALL) notesadmin $(bindir)
+
+#	for f in $(SOURCES); do \
+#	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
+#	done;
+#	for f in $(OBJECTS); do \
+#	  $(INSTALL_DATA) $(srcdir)/$$f $(lispdir); \
+#	done;
 
 # Make sure all installation directories actually exist
 # by making them if necessary.
 installdirs: mkinstalldirs
-	$(srcdir)/mkinstalldirs $(lispdir) $(infodir)
+	$(srcdir)/mkinstalldirs $(infodir)
 
 # There may be a newer info file in . than in srcdir.
 $(infodir)/notes: notes.info
@@ -91,10 +101,6 @@ $(infodir)/notes: notes.info
 	if $(SHELL) -c 'install-info --version'	>/dev/null 2>&1; then \
 	  install-info --infodir=$(infodir) $$d/notes.info; \
 	else true; fi
-
-uninstall:
-	cd $(lispdir) && rm -f $(SOURCES) $(OBJECTS)
-	rm -f $(infodir)/notes
 
 info: notes.info
 
@@ -111,19 +117,11 @@ ps: notes.ps
 notes.ps: notes.dvi
 	$(DVIPS) $(srcdir)/notes.dvi
 
-html: notes_toc.html
-
-notes_toc.html: notes.texi
-	$(TEXI2HTML) -split_chapter $(srcdir)/notes.texi
-
 TAGS: $(SOURCES)
 	cd $(srcdir) && etags $(SOURCES)
 
 clean:
-	rm -f $(OBJECTS)
-	-rm -f *.aux *.cp *.cps *.fn *.ky *.log *.pg *.toc *.tp *.vr
-	-rm -f *.html
-	rm -f TAGS
+	rm -f $(OBJECTS) notes.info
 
 distclean: clean
 	-rm -f *~ *.tar.gz
@@ -132,18 +130,19 @@ distclean: clean
 ${srcdir}/configure: configure.in
 	cd ${srcdir} && autoconf
 
-Makefile: Makefile.in config.status
+Makefile: Makefile.in notesadmin.in config.status
 	./config.status
 
 config.status: ${srcdir}/configure
 	./config.status --recheck
 
 dist: $(DISTFILES)
-	version=`perl -ne 'print $$1 if /defconst mc-version \"(.*)\"/' \
+	version=`perl -ne 'print $$1 if /defconst notes-version \"(.*)\"/' \
 		 notes.el`; \
 	distname=notes-$$version; \
 	rm -rf $$distname; \
 	mkdir $$distname; \
+	mkdir $$distname/encrypt; \
 	for file in $(DISTFILES); do \
 	  ln $$file $$distname/$$file; \
 	done; \
