@@ -1,14 +1,18 @@
 ;;;
 ;;; notes-index.el
 ;;;
-;;; $Id: records-index.el,v 1.6 1996/12/10 01:35:30 asgoel Exp $
+;;; $Id: records-index.el,v 1.7 1996/12/13 19:58:17 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records-index.el,v $
-; Revision 1.6  1996/12/10 01:35:30  asgoel
+; Revision 1.7  1996/12/13 19:58:17  asgoel
+; Fixed error messages.
+; Added support for notes-goto-last-note.
+;
+; Revision 1.6  1996/12/10  01:35:30  asgoel
 ; Fix in notes-index-parse-buffer.
 ;
 ; Revision 1.5  1996/12/05  21:23:02  asgoel
@@ -161,7 +165,7 @@ place point at the beginning of the next subject."
       (goto-char (match-beginning 0))
     (if (null no-error)
 	(error 
-	 (concat "notes-index-goto-subject: subject " subject " not found")))
+	 (concat "notes-index-goto-subject: subject " subject " not found.")))
     ;; search linearly until we get the next subject
     (while (let (match) ;; a do-while loop
 	     (forward-line 1)
@@ -262,7 +266,7 @@ depending on whether arg is negative or positive."
     (let (subject date tag)
     (if (not (looking-at notes-date-tag-regexp))
 	;; didn't find a date, tag
-	(error "notes-index-goto-link: not on a valid date")
+	(error "notes-index-goto-link: invalid link.")
       ;; found date and tag. get subject
       (setq date (buffer-substring-no-properties (match-beginning 1)
 						 (match-end 1)))
@@ -273,10 +277,10 @@ depending on whether arg is negative or positive."
 	      ""))
       (beginning-of-line)
       (if (not (looking-at (notes-index-subject-regexp)))
-	  (error "notes-index-goto-link: bad subject"))
+	  (error "notes-index-goto-link: subject not found."))
       (setq subject (buffer-substring-no-properties (match-beginning 1)
 						    (match-end 1)))
-      (notes-goto-note subject date tag)
+      (notes-goto-note subject date tag t)
       ))))
 
 (defun notes-index-goto-mouse-link(e)
@@ -300,7 +304,7 @@ depending on whether arg is negative or positive."
     ;; make sure that we are removing the correct subject
     (beginning-of-line)
     (if (not (looking-at (notes-index-subject-regexp subject)))
-	(error "notes-index-delete-subject: bad subject")
+	(error "notes-index-delete-subject: invalide subject.")
       ;; ask for confirmation
       (if (y-or-n-p (concat "Delete subject: " subject " "))
 	  ;; the 1+ is for the newline
@@ -315,8 +319,8 @@ depending on whether arg is negative or positive."
     (setq buffer-read-only nil)
     (notes-index-insert-subject subject)
     (if (notes-index-goto-date-tag date tag t)
-	(error (concat "notes-index-insert-note: " date " " tag
-		       " already exists."))
+	(error (concat "notes-index-insert-note: Note " date " " tag 
+		       " exists already."))
       ;; now insert
       (insert (concat date (if (> (length tag) 0) (concat "#" tag)) " "))
       (notes-index-save-buffer)
@@ -383,7 +387,7 @@ place point on the smallest date greater than the argument date."
 	)
     ;; date not found
     (if (null no-error)
-	(error "notes-dindex-goto-date: " date " not found."))
+	(error "notes-dindex-goto-date: date " date " not found."))
     ;; search linearly and place point on next date
     ;; search is done from end because we assume that
     ;; the last dates are most frequently used. 

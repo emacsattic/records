@@ -1,14 +1,18 @@
 ;;;
 ;;; notes.el
 ;;;
-;;; $Id: records.el,v 1.8 1996/12/11 21:17:52 asgoel Exp $
+;;; $Id: records.el,v 1.9 1996/12/13 19:58:26 asgoel Exp $
 ;;;
 ;;; Copyright (C) 1996 by Ashvin Goel
 ;;;
 ;;; This file is under the Gnu Public License.
 
 ; $Log: records.el,v $
-; Revision 1.8  1996/12/11 21:17:52  asgoel
+; Revision 1.9  1996/12/13 19:58:26  asgoel
+; Fixed error messages.
+; Added support for notes-goto-last-note.
+;
+; Revision 1.8  1996/12/11  21:17:52  asgoel
 ; Added notes menu.
 ;
 ; Revision 1.7  1996/12/11  01:55:27  asgoel
@@ -93,6 +97,12 @@ Valid values are 0, 1 or 2 only.")
 (defvar notes-fontify t
   "* Enable notes fontification.")
 
+(defvar notes-subject-read-only t
+  "* If t, notes subjects are made read-only.
+This disables any accidental updates to a notes subject.
+The down side is that if any part of the subject is copied to a note body,
+it is read-only and does not allow editing of that part.")
+
 (defvar notes-bold-face 'bold
   "* Face to use for notes-index-mode and notes-mode subjects.
 The default face is copied from 'bold.")
@@ -124,6 +134,8 @@ If not nil and not t, user is asked whether notes-todo should be invoked.")
 If nil, don't delete note.
 If not nil and not t, ask user about deleting the note.")
 
+(defvar notes-history-length 10
+  "* The number of notes that are stored in notes-history.")
 
 ;;; Internal variables - users shouldn't change
 ;;; The defvar is for internal documentation.
@@ -168,6 +180,11 @@ Internal variable.")
   "All the regions that have to be removed from the preivous notes file.
 Internal variable.")
 
+(defvar notes-history nil
+  "List of notes a user has visited.
+Elements of the list consist of args to notes-goto-note.
+Internal variable.")
+
 (defun notes-initialize ()
   "Reads the notes init file and sets the notes internal variables
 like notes-date, notes-date-length, etc."
@@ -210,10 +227,12 @@ like notes-date, notes-date-length, etc."
 	(concat "\\(" notes-todo-begin-copy-regexp "\\)\\|\\("
 		notes-todo-begin-move-regexp "\\)"))
   ;; do some cleaning up
-  (if (and notes-dindex-buffer
+  (if (and (boundp 'notes-dindex-buffer) 
+	   notes-dindex-buffer
 	   (get-buffer notes-dindex-buffer))
       (kill-buffer notes-dindex-buffer))
-  (if (and notes-index-buffer
+  (if (and (boundp 'notes-index-buffer) 
+	   notes-index-buffer
 	   (get-buffer notes-index-buffer))
       (kill-buffer notes-index-buffer))
   )
@@ -274,7 +293,7 @@ If file-name is not specified, the current buffers file-name is used."
     ;; check that length of file name is meaningful
     (if (= (length file-name) notes-date-length)
 	file-name
-      (error (concat "notes-file-to-date: bad file-name " file-name))))
+      (error (concat "notes-file-to-date: bad file-name: " file-name))))
 
 (defun notes-denormalize-date (ndate)
   "Get the file name associated with  date.
@@ -337,30 +356,37 @@ With absolute set, get the absolute path."
 		 (substring date (nth 1 (nth 1 notes-date))
 			    (+ (nth 2 (nth 1 notes-date))
 			       (nth 1 (nth 1 notes-date))))))
-	(t (error "notes-directory-path: bad value"))))
+	(t 
+	 (error "notes-directory-path: bad notes-directory-structure value"))))
 
 (defun notes-read-subject (&optional subject)
   "Read the notes subject to be inserted from the minibuffer.
 Completion is possible."
   (interactive
-   (progn (notes-index-buffer) ; see if the notes-subject-table has been init.
+   (progn (notes-index-buffer) ; initializes notes-subject-table if required
 	  (list (completing-read "Notes subject: " notes-subject-table))))
   subject)
 
 (defun notes-compose-region (beg end)
   "Fontify a notes region, make read-only etc.
-Although the region is read-only, it is possible to edit before the region
-when the region starts at (point-min). This can mess up a notes subject.
-If this were disallowed, then users would not be able to add text
-before a subject that appears on the first line of the file."
+Look at variables notes-fontify and notes-subject-read-only.
+This function is currently only invoked for a notes subject.
+Although the region is read-only, it is possible to edit at the beginning
+of the region. This can mess up a notes subject. If this were disallowed,
+then users would not be able to add text before a subject.
+Any better solution?"
   (if notes-fontify
       (progn
 	(add-text-properties (1- end) end '(rear-nonsticky t))
-	;; I think this is an emacs bug
-	(if (> beg (point-min))
-	    (add-text-properties beg (1+ beg) 
-				 '(front-sticky (face read-only))))
-	(add-text-properties beg end '(face bold read-only notes-subject)))))
+	;; partial fix to a probable emacs bug
+	;; (if notes-subject-read-only
+	;;	  if (> beg (point-min)) 
+	;;     (add-text-properties beg (1+ beg) 
+	;;	    '(front-sticky (read-only)))
+	;;	      ))
+	(add-text-properties beg end '(face bold))
+	(if notes-subject-read-only
+	    (add-text-properties beg end '(read-only notes-subject))))))
 
 (defun notes-parse-buffer ()
   "Parses the notes buffer and fontifies note subjects etc."
@@ -395,7 +421,7 @@ before a subject that appears on the first line of the file."
       ()
     (if (notes-goto-up-note) 
 	()
-      (error "notes-goto-subject: no subject")))
+      (error "notes-goto-subject: no subject found.")))
   (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
 (defun notes-subject-tag (&optional no-str)
@@ -429,7 +455,7 @@ TODO: doc body."
   "Put mark at the end of subject in this note and point at beginning.
 The note marked is the one that contains point or follows point."
   (if (null (notes-goto-subject))
-      (error "notes-mark-subject: no subject"))
+      (error "notes-mark-subject: no subject found."))
   (let ((pt (point)))
     (next-line 2)
     (beginning-of-line)
@@ -452,7 +478,7 @@ The note marked is the one that contains point or follows point."
   "Returns the notes link of the note around the current point."
   (save-excursion
     (if (null (notes-goto-subject))
-	(error "notes-link: no subject"))
+	(error "notes-link: no subject found."))
     (next-line 2)
     (beginning-of-line)
     (if (looking-at "link: \\(<.*>\\)")
@@ -506,7 +532,7 @@ With arg., keep the body and remove the subject only."
   (if (not (or (looking-at "<")
 	       (re-search-backward "<" (point-boln) t)))
       ;; not a link I know about
-      (error "notes-goto-link: not on a link")
+      (error "notes-goto-link: invalid link under point.")
     ;; try to figure out a link
     (if (looking-at (concat "<\\(.*\\)/\\([0-9]+\\)" 
 			    notes-tag-regexp "\\* \\(.*\\)>"))
@@ -521,8 +547,8 @@ With arg., keep the body and remove the subject only."
 						   (match-end 1))))
 	  ;; TODO: if "file://" or "file://localhost" is present 
 	  ;; at the beginning of dir, strip it
-	  (notes-goto-note subject date tag nil nil dir))
-      (error "notes-goto-link: not on a link"))))
+	  (notes-goto-note subject date tag t nil nil nil dir))
+      (error "notes-goto-link: invalid link under point."))))
 
 (defun notes-goto-mouse-link (e)
   "Goto the link where mouse is clicked."
@@ -530,7 +556,8 @@ With arg., keep the body and remove the subject only."
   (mouse-set-point e)
   (notes-goto-link))
 
-(defun notes-goto-note (subject date tag &optional no-switch no-error dir todo)
+(defun notes-goto-note (subject date tag 
+				&optional no-hist no-switch todo no-error dir)
   "Goto the note on date with subject and tag.
 If dir is specified, then the file is assumed to be \"dir/date\".
 If subject is nil, goto date only.
@@ -538,7 +565,8 @@ If todo is t, then invoke notes-todo when a note-less file is being visited.
 If todo is not nil and not t, ask user whether notes-todo should be called. "
   (if (null dir)
       (setq dir (notes-directory-path date t)))
-  (let ((file (concat dir "/" date)))
+  (let ((file (concat dir "/" date))
+	found)
     (if (not (file-directory-p dir))
 	;; ask the user if they want to create the directory
       (if (y-or-n-p (concat "Make directory: " dir " "))
@@ -553,9 +581,10 @@ If todo is not nil and not t, ask user whether notes-todo should be called. "
 	(if (or (eq todo t) 
 		(y-or-n-p "Invoke notes-todo: "))
 	    (notes-todo date)))
+
     (if (null subject)
 	;; this is for going to a specific day and not a note
-	nil
+	(setq found t)
       (goto-char (point-min))
       ;; TODO: this search forward will fail to get to the right spot
       ;; if this link has been added to a previous subject in the file.
@@ -563,11 +592,23 @@ If todo is not nil and not t, ask user whether notes-todo should be called. "
 	   (concat "^link: <.*" date "#" tag "\\* " subject ">") 
 	   (point-max) t)
 	  ;; found
-	  ;; TODO: add support for notes-goto-last-note
-	  (notes-goto-subject)
+	  (progn (setq found t) (notes-goto-subject))
 	(if no-error
 	    nil
-	  (error (concat "subject tag: " subject " " tag " not found.")))))))
+	  (error 
+	   (concat "Notes subject: " subject 
+		   (if (> (length tag) 0) (concat ", tag: " tag))
+		   " not found.")))))
+    
+    ;; support for goto last note
+    (if (and found (null no-hist))
+	(let (hist-last)
+	  (setq notes-history (cons (list subject date tag t nil nil nil dir)
+				    notes-history))
+	  (setq hist-last 
+		(nthcdr (- notes-history-length 1) notes-history))
+	  (if hist-last
+	      (setcdr hist-last nil))))))
 
 (defun notes-goto-up-note (&optional subject)
   "Go to the beginning of the current note.
@@ -617,7 +658,7 @@ With negative arg, go arg days behind current note's date. TODO: doc"
     (setcdr (nthcdr 2 new-ndate) nil)
     ;; denormalize the date to get the file name
     (setq new-date (notes-denormalize-date new-ndate))
-    (notes-goto-note nil new-date "" no-switch nil nil todo)
+    (notes-goto-note nil new-date "" nil no-switch todo)
   ))
 
 (defun notes-goto-prev-day(&optional arg no-switch)
@@ -642,7 +683,7 @@ See also notes-goto-next-date."
     (setcdr (nthcdr 2 ndate) nil)
     ;; denormalize the date to get the file name
     (setq date (notes-denormalize-date ndate))
-    (notes-goto-note nil date "" nil nil nil notes-todo-today)))
+    (notes-goto-note nil date "" nil nil notes-todo-today)))
 
 (defun notes-goto-relative-date(&optional arg no-switch)
   "With positive arg, go arg files ahead of current notes file. 
@@ -654,8 +695,9 @@ Returns the new date."
 	   (nth 0
 		(notes-dindex-goto-relative-date arg (notes-file-to-date))))))
     (if (null new-date)
-	(error (concat "notes-goto-relative-date: bad date"))
-      (notes-goto-note nil new-date "" no-switch))
+	(error (concat "notes-goto-relative-date: " 
+		       (if (> arg 0) "next" "previous") " date not found."))
+      (notes-goto-note nil new-date "" nil no-switch))
     new-date))
 
 (defun notes-goto-prev-date(&optional arg no-switch)
@@ -688,11 +730,12 @@ With negative arg, goto the note arg-times previous to date and tag."
 	   (notes-goto-index arg subject date tag no-error))))
     (if date-tag
 	;; goto the note
-	(notes-goto-note subject (nth 0 date-tag) (nth 1 date-tag) nil 
+	(notes-goto-note subject (nth 0 date-tag) (nth 1 date-tag) nil nil nil
 			 no-error)
       (if (null no-error)
-	  (error (concat "notes-goto-relative-note: "
-			 subject " " date " not found"))))
+	  (error (concat "notes-goto-relative-note: " 
+			 (if (> arg 0) "next" "previous") 
+			 " note not found."))))
     ;; return value
     date-tag))
 
@@ -705,6 +748,15 @@ With negative arg, goto the note arg-times previous to date and tag."
   "Find the next note on subject starting from date and tag."
   (interactive "P")
   (notes-goto-relative-note (if arg arg 1) subject date tag no-error))
+
+(defun notes-goto-last-note ()
+  "Go back to the last note visited."
+  (interactive)
+  (let ((link (car (cdr notes-history))))
+    (or link
+	(error "This is the first note in the history."))
+    (setq notes-history (cdr notes-history))
+    (apply 'notes-goto-note link)))
 
 ;; TODO: should break function up
 (defun notes-todo (&optional date)
@@ -769,11 +821,13 @@ See the notes-todo-.*day variables on when it is automatically invoked."
 	    ;; for todo-moves - remove regions from old file
 	    (let ((modified (buffer-modified-p)))
 	      (while notes-todo-move-regions
-		;; TODO: should do the notes-todo-delete-empty-note
 		(goto-char (car (car notes-todo-move-regions)))
 		(apply 'delete-region (car notes-todo-move-regions))
+
+		;; do the notes-todo-delete-empty-note
 		(if (and notes-todo-delete-empty-note (notes-body-empty-p))
-		    (notes-delete-note))
+		    (notes-delete-note nil t))
+
 		(setq notes-todo-move-regions
 		      (cdr notes-todo-move-regions)))
 	      (and (not modified) (buffer-modified-p)
@@ -791,7 +845,9 @@ See the notes-todo-.*day variables on when it is automatically invoked."
     ;; if another note with the same subject exists below this note.
     (save-excursion
       (if (notes-goto-down-note subject)
-	  (error "notes-insert-note: can't insert out-of-order note")))
+	  (error 
+	   (concat "notes-insert-note: can't insert out-of-order note: "
+		   subject))))
     ;; check if another note with same subject exists above 
     ;; to get a new tag value
     (save-excursion
@@ -809,7 +865,7 @@ See the notes-todo-.*day variables on when it is automatically invoked."
     ;; now make the note body
     (notes-make-note subject date tag note-body)))
 
-(defun notes-delete-note (&optional keep-body)
+(defun notes-delete-note (&optional keep-body no-prompt)
   "Delete the current note for the current date.
 With arg, removes the subject only."
   (interactive "P")
@@ -818,14 +874,15 @@ With arg, removes the subject only."
 	 (subject (nth 0 subject-tag))
 	 (tag (nth 1 subject-tag)))
     
-    ;; remove the note subject and optionally the body
-    (notes-free-note keep-body)
-
-    ;; remove the date from the date-index
-    (notes-dindex-delete-note date)
-
-    ;; remove the notes index entry
-    (notes-index-delete-note subject date tag)
+    (if (if no-prompt     ;; prompt?
+	    t (y-or-n-p (concat "Delete note: " subject " ")))
+	(progn
+	  ;; remove the note subject and optionally the body
+	  (notes-free-note keep-body)
+	  ;; remove the date from the date-index
+	  (notes-dindex-delete-note date)
+	  ;; remove the notes index entry
+	  (notes-index-delete-note subject date tag)))
     ))
 	
 (defun notes-rename-note ()
