@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.21 2002/04/10 23:56:29 burtonator Exp $
+;; $Id: records-rss.el,v 1.22 2002/05/27 19:12:26 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -180,7 +180,7 @@ containing all records for this date."
         ;;search for RSS metainfo tags
         (while (re-search-forward "^type: rss$" nil t)
 
-          (let(record-link subject title url description created buffer)
+          (let(record-link subject title url description created buffer uuid)
 
             (save-excursion
               (setq subject (records-goto-subject)))
@@ -199,6 +199,8 @@ containing all records for this date."
               (records-rss-init-buffer buffer)
             
               (setq count (1+ count))
+
+              (setq uuid (concat (format-time-string "%s") "-" (number-to-string count)))
               
               (records-rss-export-record record-link
                                          subject
@@ -206,7 +208,8 @@ containing all records for this date."
                                          url
                                          created
                                          description
-                                         buffer))))
+                                         buffer
+                                         uuid))))
 
         (records-rss-save)
 
@@ -301,16 +304,14 @@ the .bak. "
 
   (let(record-begin)
 
-    (save-excursion
-
-      (when (search-forward record-link nil t)
-
-        (setq record-begin (point-at-bol))
-
-        (when (re-search-forward "</rss:item>" nil t)
-
-          (delete-region record-begin (match-end 0))
-          (goto-char record-begin))))))
+    (when (search-forward record-link nil t)
+      
+      (setq record-begin (point-at-bol))
+      
+      (when (re-search-forward "</rss:item>" nil t)
+        
+        (delete-region record-begin (match-end 0))
+        (goto-char record-begin)))))
 
 (defun records-rss-save()
   "Save any buffers that RSS export might have modified."
@@ -331,7 +332,8 @@ the .bak. "
                                  url
                                  created
                                  description
-                                 buffer)
+                                 buffer
+                                 uuid)
   "Export the current record and output the XML to the buffer.  "
 
   (set-buffer buffer)
@@ -344,7 +346,7 @@ the .bak. "
   (insert "<!-- record-link: " record-link " -->")
   (insert "\n")
 
-  (insert "<rss:item>\n")
+  (insert (concat "<rss:item uuid=\"" uuid "\">\n"))
 
   ;;title
   (records-rss-insert-element "rss:title" title 1)
@@ -538,10 +540,13 @@ the value.  "
       
       (insert content)
       
+      (records-rss-xhtmlify--entities)
       (records-rss-xhtmlify--quote)
       (records-rss-xhtmlify--bold)
+      (records-rss-xhtmlify--items)
       (records-rss-xhtmlify--cite)
       (records-rss-xhtmlify--para)
+      (records-rss-xhtmlify--images)
 
       (buffer-substring (point-min) (point-max)))))
 
@@ -659,6 +664,53 @@ the value.  "
             (records-util-delete-whitespace-forward)
             (insert "\n<p>\n"))
         (insert "</p>\n")))))
+
+(defun records-rss-xhtmlify--entities()
+  "Turn all text entities < > etc, into XHTML &lt; &gt; chars. "
+
+  (save-excursion
+    (beginning-of-buffer)
+
+    (save-excursion
+      (while (search-forward "<" nil t)
+        (replace-match "&lt;")))
+
+    (save-excursion
+      (while (search-forward ">" nil t)
+        (replace-match "&gt;")))))
+
+(defun records-rss-xhtmlify--items()
+  "Turn all text entities < > etc, into XHTML &lt; &gt; chars. "
+
+  (save-excursion
+    (beginning-of-buffer)
+
+    (save-excursion
+      (while (search-forward "^[ ]-" nil t)
+        (replace-match "")
+        (goto-char (match-beginning 0))
+
+        (insert "<li>")
+        (records-rss--next-para)
+        (insert "</li>")))))
+
+(defun records-rss-xhtmlify--images()
+  "Turn all text entities < > etc, into XHTML &lt; &gt; chars. "
+  (interactive)
+  
+  (save-excursion
+    (beginning-of-buffer)
+
+    (save-excursion
+
+      (while (re-search-forward "http://.*\\(jpg\\|gif\\|png\\)" nil t)
+        (let(url)
+
+          (message "FIXME (debug): found!")
+          
+          (setq url (match-string 0))
+
+          (replace-match (concat "<img src=\"" url "\"/>")))))))
 
 (defun records-rss--next-para()
   "Go to the next paragraph.  Return nil if there are no more paragraphs."

@@ -1,6 +1,6 @@
 ;;; records-diary.el --- 
 
-;; $Id: records-diary.el,v 1.1 2002/04/05 19:37:53 burtonator Exp $
+;; $Id: records-diary.el,v 1.2 2002/05/27 19:12:26 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -41,59 +41,59 @@
 (defvar records-diary-index-file (concat records-rss-export-directory "/diary.rss")
   "File used for RSS index output.")
 
-(defun records-diary-export-curent-buffer()
+(defun records-diary-export-current-buffer()
   "Export all diary entries within the current buffer"
   (interactive)
   
   (let((records-rss-index-file records-diary-index-file))
 
     ;;find the current diary record.
-    (assert (equal major-mode 'records-mode)
-            nil "Not within records-mode")
+    (when (equal major-mode 'records-mode)
 
-    ;;
-    (save-excursion
-      (beginning-of-buffer)
-      (while (re-search-forward "^\\* \\(.*\\)$" nil t)
+      ;;
+      (save-excursion
+        (beginning-of-buffer)
+        (while (re-search-forward "^\\* \\(.*\\)$" nil t)
 
-        (let((subject nil)
-             (buffer nil))
+          (let((subject nil)
+               (buffer nil))
 
-          (setq subject (match-string 1))
+            (setq subject (match-string 1))
 
-          ;;export this diary entry...
+            ;;export this diary entry...
 
-          (when (string-equal subject "Diary")
+            (when (string-equal subject "Diary")
 
-            (let(record-link subject title url description created buffer)
+              (let(record-link subject title url description created buffer)
 
-              (setq created (records-metainfo-get "created"))
+                (setq created (records-metainfo-get "created"))
 
-              (setq title (format "Diary entry for %s" created))
+                (setq title (format "Diary entry for %s" created))
 
-              (setq url "http://relativity.yi.org/rss/diary.shtml")
+                (setq url "http://relativity.yi.org/rss/diary.shtml")
 
-              (setq record-link (records-metainfo-get "link"))
+                (setq record-link (records-metainfo-get "link"))
               
-              (setq description (records-format-get-body))
+                (setq description (records-format-get-body))
 
-              (setq subject "Diary")
+                (setq subject "Diary")
 
-              (setq buffer (find-file-noselect records-rss-index-file))
+                (setq buffer (find-file-noselect records-rss-index-file))
               
-              (records-rss-init-buffer buffer)
+                (records-rss-init-buffer buffer)
 
-              (when (not (records-rss-link-exists record-link))
                 (records-rss-export-record record-link
                                            subject
                                            title
                                            url
                                            created
                                            description
-                                           buffer))
+                                           buffer)
 
-              (records-rss-save))))))))
+                (records-rss-save)))))))))
 
+(add-hook 'after-save-hook (lambda()
+                            (records-diary-export-current-buffer)))
 (provide 'records-diary)
 
 ;;; records-diary.el ends here
