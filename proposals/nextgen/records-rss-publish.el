@@ -1,6 +1,4 @@
-;;; FILE.el --- ADD BASIC DESCRIPTION
-
-;; $Id: records-rss-publish.el,v 1.1 2001/05/17 02:15:27 burtonator Exp $
+;; $Id: records-rss-publish.el,v 1.2 2001/05/18 15:37:40 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -35,8 +33,13 @@
 
 ;;; TODO:
 
-;; write a records-rss-publish-snarf-message which uses the subject of the message
-;; as the title.
+;; --write a records-rss-publish-snarf-message which uses the subject of the message
+;;   as the title.
+
+;; - need to be smart enought to remove PGP info.
+
+(defvar records-rss-publish-introduction-minlength 200
+  "Minimum number of characters that must appear in an introduction.")
 
 (defun records-rss-publish(subject title description)
   "Publish the description via RSS."
@@ -67,20 +70,28 @@
 
 (defun records-rss-publish-get-introduction(description)
   "Given a description, get a valid introduction string."
-
-  ;;FIXME: if the introduction it too small try to build a bigger paragraph
   
-  (if (string-match "^[ ]*$" description)
-      (let(start end)
+  ;;if the introduction it too small try to build a bigger paragraph
+  (let((introduction ""))
 
+    (if(< (length description) records-rss-publish-introduction-minlength)
+        (progn
+          ;;if the description is less than out minimum length, just default to
+          ;;that.
+          (setq introduction description))
+
+      ;;slse, we need to compute an introduction based on the description
+      (assert (string-match "^[ ]*$" description records-rss-publish-introduction-minlength)
+              nil "Could not find paragraph beginning")
+      
+      (let(start end)
         (setq start 0)
         
         (setq end (match-beginning 0))
         
-        (setq introduction (substring description start end)))
-        
-    ;;if we can't find a paragraph break in this region just use the default
-    (setq introduction description)))
+        (setq introduction (concat introduction (substring description start end)))))
+
+    introduction))
   
 (defun records-rss-publish-region(start end subject title)
   "Publish the given region to RSS via records."
@@ -98,21 +109,20 @@
     (records-rss-publish subject title description)))
 
 (defun records-rss-publish-snarf-message(subject)
-  "Snarf the messages in this buffer and use the 'Subject: ' line as the
-title."
+  "Snarf the messages in this buffer and use the 'Subject: ' line as the title."
   (interactive
    (list
     (records-util-completing-read-subject)))
   
   (save-excursion
-    (let(title description start end)
+    (let(title address description start end)
       (beginning-of-buffer)
 
       ;;get the title based on the subject.
-      (if (re-search-forward "\\(Subject: \\)\\(.*$\\)" nil t)
-          (setq title (match-string 2))
-        (setq title (read-string "Title: ")))
+      (setq title (records-rss-publish-snarf-message-get-title))
 
+      (setq address (records-rss-publish-snarf-message-get-address))
+      
       ;;just search for the start...
       (assert (re-search-forward "^[ ]*$" nil t)
               nil "Could not find beginning of message")
@@ -122,10 +132,49 @@ title."
 
       (setq start (match-end 0))
 
-      (setq end (point-max))
-
+      ;;don't include the signatuyre.  We need to regexp for "-- "
+      (if (re-search-forward "^-- $" nil t)
+          (setq end (match-beginning 0))
+        (setq end (point-max)))
+      
       (setq description (buffer-substring-no-properties start end))
 
-      (records-rss-publish subject title description))))
+      ;;now add the e-mail to this description so we know where it was sent to...
+      (setq description (concat "\n"
+                                (format "-- This is an e-mail message sent to %s --" address)
+                                "\n\n"
+                                description))
+      
+      (records-rss-publish subject title description)))
+
+  (message "Snarfed message and exported it as RSS."))
+
+(defun records-rss-publish-snarf-message-get-title()
+  "Get the title based on it's Subject."
+  
+  (records-rss-publish-snarf-message-get-header "Subject" "Title: "))
+
+(defun records-rss-publish-snarf-message-get-address()
+  "Get the e-mail address based on its To field."
+  
+  (records-rss-publish-snarf-message-get-header "To" "Address: "))
+
+
+(defun records-rss-publish-snarf-message-get-header(name prompt)
+  "Get the value of the given header using `prompt' if it isn't available."
+
+  (save-excursion
+    (let(value regexp)
+      (beginning-of-buffer)
+
+      (setq regexp (concat "\\(" name ": \\)\\(.*$\\)"))
+      
+      ;;get the title based on the subject.
+      (if (re-search-forward regexp nil t)
+          (setq value (match-string 2))
+        (setq value (read-string prompt)))
+
+      value)))
+  
 
 (provide 'records-rss-publish)

@@ -1,4 +1,4 @@
-;; $Id: publish.el,v 1.1 2001/05/17 02:15:27 burtonator Exp $
+;; $Id: publish.el,v 1.2 2001/05/18 15:37:40 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -99,6 +99,11 @@ your HTTP server uses based on `publish-remote-directory' Example: '/publish'."
   :type 'string
   :group 'publish)
 
+(defcustom publish-template-html-extension "html"
+  "String to use for HTML file extensions.  If you want to enable something like
+shtml then you should make the change here."
+  :type 'string
+  :group 'publish)
 
 (defun publish-require-config()
   "Require that this has been setup correctly.  Throw an error if it hasn't."
@@ -122,7 +127,7 @@ your HTTP server uses based on `publish-remote-directory' Example: '/publish'."
 
       ;;get the basename which should be the filename sans directory info
 
-      (setq basename (concat (publish-timestamp) ".html"))
+      (setq basename (concat (publish-timestamp) "." publish-template-html-extension))
       
       (setq filename (concat  publish-local-directory "/" basename))
 
@@ -133,14 +138,25 @@ your HTTP server uses based on `publish-remote-directory' Example: '/publish'."
       (erase-buffer) ;;just in case
       
       (insert publish-template-html-head)
-
-      (insert "<p><b>")
-      (insert title)
-      (insert "</b></p>")
+      (insert "\n")
       
+      (insert "<p><b>")
+      (insert "\n")
+
+      (insert title)
+
+      (insert "</b></p>")
+      (insert "\n")      
+
+      (insert "\n")
       (insert "<p><pre>")
+      (insert "\n")
+
       (insert description)
+
+      (insert "\n")
       (insert "</pre></p>")
+      (insert "\n")
       
       (insert publish-template-html-tail)
       

@@ -1,6 +1,6 @@
 ;;; records-rss.el --- RSS support for Records
 
-;; $Id: records-rss.el,v 1.9 2001/05/15 14:01:39 burtonator Exp $
+;; $Id: records-rss.el,v 1.10 2001/05/18 15:37:40 burtonator Exp $
 
 ;; Copyright (C) 2000-2003 Free Software Foundation, Inc.
 ;; Copyright (C) 2000-2003 Kevin A. Burton (burton@openprivacy.org)
@@ -86,6 +86,7 @@
 ;; channel info (title, description, etc)
 ;;
 
+(require 'records-rss-publish)
 
 (defcustom records-rss-export-directory (concat records-directory "/rss")
   "Main directory for RSS export."
@@ -263,7 +264,14 @@ export your activity."
     (records-rss-insert-element "im:image" image))
   
   ;;description
-  (records-rss-insert-element "description" description)
+
+  (insert "<description>")
+  (insert "\n\n")
+
+  (insert description)
+
+  (insert "\n\n")
+  (insert "</description>")
   
   (insert "</item>\n"))
 
@@ -296,9 +304,7 @@ nested, default is 0"
 
   ;;make sure the directory exists.
   (if (not (file-directory-p records-rss-export-directory))
-      (make-directory records-rss-export-directory))
-
-  )
+      (make-directory records-rss-export-directory)))
 
 (defun records-rss-init-buffer(buffer)
   "Make sure the given buffer has all the necessary RSS/XML information."
@@ -320,8 +326,6 @@ nested, default is 0"
           ;;doesn't have XML information... insert it.
           (insert "<?xml version=\"1.0\"?>\n")
 
-          ;;FIXME: need output channel information
-
           (insert "<rdf:RDF ")
           (insert "xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ")
           (insert "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" ")
@@ -330,7 +334,7 @@ nested, default is 0"
           (insert ">")
           (insert "\n\n")
 
-          ;;FIXME: insert <channel> information
+          ;;insert <channel> information
 
           (insert "<channel>")
           (insert "\n")
@@ -360,9 +364,6 @@ nested, default is 0"
           (insert "</rdf:RDF>"))))
 
   (re-search-forward records-rss-tag-begin-items)
-  (forward-line 1)
-  
-  )
-  
+  (forward-line 1))
 
 (provide 'records-rss)
