@@ -1,11 +1,23 @@
+;; records-extra.el
 ;;
-;;; records-extra.el
-;;; 
-;;; $Id: records-search.el,v 1.2 2000/04/17 21:09:30 ashvin Exp $
-;;;
-;;; Copyright (C) 1999 by Kaarthik Sivakumar
-;;;
-;;; This file is under the GNU Public License
+;; $Id: records-search.el,v 1.2 2000/04/17 21:09:30 ashvin Exp $
+;;
+;; Copyright (C) 1999 by Kaarthik Sivakumar
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public
+;; License along with this program; if not, write to the Free
+;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+;; MA 02111-1307 USA
 
 
 ;; The search function currently does the following:
@@ -22,11 +34,11 @@
 ;; 1. Typing the search string in the minibuffer should not be needed. C-s
 ;;    doesn't seem to require that. It does incremental search as you keep
 ;;    typing.
-;; 
+;;
 ;; 2. Redoing a search requires simply typing C-s
-;; 
+;;
 ;; 3. Search wrap should be possible
-;; 
+;;
 ;; 4. Reverse search should leave point at the beginning of the search string
 ;;    and forward search should leave point at the end of the search.
 
@@ -96,7 +108,7 @@ If 'reverse' is nil, then get the next forward, else get the prev record."
 
 (provide 'records-search)
 
-;; Trying to use isearch functionality, 
+;; Trying to use isearch functionality,
 ;; but unfortunately, it is not easy to reuse isearch
 ;; Here is a start, but I am not sure if this is the best way to try to do it
 ;; Probably copying the relevant code from isearch is going to be easier
@@ -137,4 +149,3 @@ If 'reverse' is nil, then get the next forward, else get the prev record."
 ;  (setq records-search-in-progress t)
 ;  (isearch-mode nil (not (null regexp)) nil (not (interactive-p)))
 ;  )
-

@@ -1,18 +1,30 @@
-;;;;
-;;; records-tex.el: functions for working with latex mode on records-mode 
-;;;                 records
-;;; $Id: records-tex.el,v 1.2 2001/04/11 18:14:12 ashvin Exp $
-;;;
-;;; Copyright (C) 2000 by Johan W. Klüwer
-;;; Copyright (C) 2000 by Ashvin Goel
-;;;
-;;; This file is under the Gnu Public License.
+;; records-tex.el: functions for working with latex mode on records-mode
+;;                 records
+;; $Id: records-tex.el,v 1.2 2001/04/11 18:14:12 ashvin Exp $
+;;
+;; Copyright (C) 2000 by Johan W. Klüwer
+;; Copyright (C) 2000 by Ashvin Goel
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public
+;; License along with this program; if not, write to the Free
+;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+;; MA 02111-1307 USA
 
 (require 'records)
 (require 'records-util)
 
 (defun records-href-quote-string (str)
-  "Quote a string so that the hyperref latex package doesn't barf on it. 
+  "Quote a string so that the hyperref latex package doesn't barf on it.
 Right now only the character # is quoted."
   (let ((len (length str)) (i 0) (new-str ""))
     (while (< i len)
@@ -23,15 +35,15 @@ Right now only the character # is quoted."
     new-str))
 
 (defun records-link-to-href ()
-  "Replace <..link..> with \href{...link...}{...link...} 
+  "Replace <..link..> with \href{...link...}{...link...}
 in the entire buffer. Used by hyperref.sty latex style file."
   (save-excursion
     (goto-char (point-min))
     (while (re-search-forward "\\(link: \\|\\)<\\([^\n]+\\)>" nil t)
       ;; ignore link in the subject of the record
-      (if (equal "" (buffer-substring-no-properties 
+      (if (equal "" (buffer-substring-no-properties
                      (match-beginning 1) (match-end 1)))
-          (let* ((match (buffer-substring-no-properties 
+          (let* ((match (buffer-substring-no-properties
                          (match-beginning 2) (match-end 2)))
                  (new-match (records-href-quote-string match)))
             (replace-match (concat "\\\\href{\\2}{" new-match "}")))
@@ -48,7 +60,7 @@ in the entire buffer. Used by hyperref.sty latex style file."
   "Replace the records todo start and end markers with latex todo environment."
   (save-excursion
     (goto-char (point-min))
-    (while (re-search-forward 
+    (while (re-search-forward
 	    (concat records-todo-begin-move-regexp "\\(.*\\)") nil t)
       (replace-match "\\\\begin{todo}{\\1}" t nil))
     (goto-char (point-min))
@@ -65,7 +77,7 @@ in the entire buffer. Used by hyperref.sty latex style file."
       (replace-match (concat records-todo-begin-move-regexp "\\1") t nil))
     (while (re-search-forward "\\\\end{todo}" nil t)
       ;; t 2nd for optional preserve case
-      (replace-match records-todo-end-regexp t nil)) 
+      (replace-match records-todo-end-regexp t nil))
     ))
 
 ;;;###autoload
@@ -104,7 +116,7 @@ in the entire buffer. Used by hyperref.sty latex style file."
 (defun records-concatenate-records-latex (num)
   "Concatenate the current record with the records on the same subject written
 in the last NUM days and output in latex format. Then run latex on the output.
-Output these records in the records latex output buffer (see 
+Output these records in the records latex output buffer (see
 records-latex-output-buffer). Without prefix arg, prompts for number of days.
 An empty string will output the current record only. A negative number
 will output all the past records on the subject!"

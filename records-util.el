@@ -1,11 +1,22 @@
-;;;
-;;; records-util.el
-;;;
-;;; $Id: records-util.el,v 1.17 2003/05/20 05:05:08 dmasterson Exp $
-;;;
-;;; Copyright (C) 1996 by Ashvin Goel
-;;;
-;;; This file is under the Gnu Public License.
+;; records-util.el
+;; $Id: records-util.el,v 1.17 2003/05/20 05:05:08 dmasterson Exp $
+
+;; Copyright (C) 1996 by Ashvin Goel
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public
+;; License along with this program; if not, write to the Free
+;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+;; MA 02111-1307 USA
 
 ;;;###autoload
 (defun records-create-todo ()
@@ -16,7 +27,7 @@
   (if (not (bolp))
       (insert "\n"))
   (let (cur-point)
-    (insert records-todo-begin-move-regexp "// created on " 
+    (insert records-todo-begin-move-regexp "// created on "
             (records-todays-date) "\n")
     (setq cur-point (point))
     (insert "\n" records-todo-end-regexp)
@@ -51,13 +62,13 @@ See the records-todo-.*day variables on when it is automatically invoked."
 	      (setq bt-point (match-beginning 0))
 	      (setq move (match-beginning 2))
 	      ;; goto end of todo
-	      (if (re-search-forward 
-                   (concat "^" records-todo-end-regexp ".*\n") 
+	      (if (re-search-forward
+                   (concat "^" records-todo-end-regexp ".*\n")
                                      eon-point 'end)
 		  (setq et-point (match-end 0))
 		(setq et-point (point)))
 	      ;; for move, save the regions in the old file
-	      (if move (setq records-todo-move-regions 
+	      (if move (setq records-todo-move-regions
 			     (cons (list bt-point et-point)
 				   records-todo-move-regions)))
 	      ;; now copy the region to the new file
@@ -65,12 +76,12 @@ See the records-todo-.*day variables on when it is automatically invoked."
 		(set-buffer new-buf)
 		(goto-char (point-max))
 		(if (not subject-inserted)
-		    (progn (records-insert-record subject) 
+		    (progn (records-insert-record subject)
 			   (setq subject-inserted t)))
 		(insert-buffer-substring cur-buf bt-point et-point)
 		;; insert an extra newline - this is useful for empty records
 		(insert "\n")))))
-	;; end of record processing. 
+	;; end of record processing.
         ;; for todo-move, remove regions from old file
 	(let ((prev-modified (buffer-modified-p)))
 	  (while records-todo-move-regions
@@ -116,12 +127,12 @@ Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
       (setq end (second point-pair))
       (goto-char start)
       ;; sanity check
-      (if (or (looking-at 
+      (if (or (looking-at
                (cdr (assoc 'msg-begin-line (funcall mc-default-scheme))))
-	      (looking-at 
+	      (looking-at
                (cdr (assoc 'signed-begin-line (funcall mc-default-scheme)))))
 	  (error "records-encrypt-record: record is already encrypted."))
-      (mc-encrypt-generic (records-user-name) nil 
+      (mc-encrypt-generic (records-user-name) nil
                           start end (records-user-name) nil)
       )))
 
@@ -136,10 +147,10 @@ Records decryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
     (let ((point-pair (records-record-region t)))
       (goto-char (first point-pair))
       (if (not (re-search-forward
-                (concat "\\(" 
+                (concat "\\("
                         (cdr (assoc 'msg-begin-line
                                     (funcall mc-default-scheme)))
-                        "\\|" 
+                        "\\|"
                         (cdr (assoc 'signed-begin-line
                                     (funcall mc-default-scheme)))
                         "\\)") (mark) t))
@@ -150,7 +161,7 @@ Records decryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
 ;;;###autoload
 (defun records-concatenate-records (num)
   "Concatenate the current record with the records on the same subject written
-in the last NUM days. Output these records in the records output buffer (see 
+in the last NUM days. Output these records in the records output buffer (see
 records-output-buffer). Without prefix arg, prompts for number of days.
 An empty string will output the current record only. A negative number
 will output all the past records on the subject! Normally, the records are
@@ -159,18 +170,18 @@ should be reversed."
   (interactive "P")
   (let ((reverse (y-or-n-p "Sort records in most-recent first order ")))
     (records-concatenate-records-1 nil records-output-buffer num reverse)))
-  
+
 (defun records-concatenate-records-1 (format output-buffer num reverse)
   "Concatenate the current record with the records on the same subject written
-in the last NUM days. FORMAT is the formating of the buffer. 
-Currently, plain and latex are supported. Output these records in BUFFER. 
-An empty string will output the current record only. A negative number will 
+in the last NUM days. FORMAT is the formating of the buffer.
+Currently, plain and latex are supported. Output these records in BUFFER.
+An empty string will output the current record only. A negative number will
 output all the past records on the subject! Normally, the records are output in
-most-recent first order. When the REVERSE argument is true, the order is 
+most-recent first order. When the REVERSE argument is true, the order is
 reversed."
   (if (null num)
       (setq num (string-to-int
-                 (read-from-minibuffer 
+                 (read-from-minibuffer
                   "Concat records in last N days (default 1): "))))
   (let* ((date (records-file-to-date))
 	 (subject-tag (records-subject-tag t))
@@ -179,7 +190,7 @@ reversed."
 	 (first-ndate (records-add-date (records-normalize-date date)
 				      (if (= num 0) -1 (- num))))
 	 cur-buf point-pair bon-point eon-point prev-date-tag start-point)
-         
+
     (if (< num 0)
 	(setq first-ndate '(0 0 0)))
     ;; erase output buffer if needed
@@ -196,7 +207,7 @@ reversed."
       (setq start-point (point)))
     ;; start with current record
     (save-excursion
-      (while ;; do-while loop 
+      (while ;; do-while loop
 	  (progn
 	    ;; get the current records's buffer, beg-point and end-point.
 	    (setq point-pair (records-record-region t))
@@ -210,7 +221,7 @@ reversed."
 	      (goto-char (if reverse start-point (point-max)))
               ;; insert record header
               (cond ((eq format nil)
-                     (insert (records-date-on-concat 
+                     (insert (records-date-on-concat
                               (concat date (records-tag tag)))))
                     ((eq format 'latex)
                      (insert "\n\\begin{record}{" date "}{" subject "}\n")))
@@ -226,14 +237,14 @@ reversed."
 	    (setq date (nth 0 prev-date-tag))
 	    (setq tag (nth 1 prev-date-tag))
 	    ;; check if this record should be copied
-	    (and prev-date-tag 
-		 (records-ndate-lessp first-ndate 
+	    (and prev-date-tag
+		 (records-ndate-lessp first-ndate
 				    (records-normalize-date date))))))
     ;; display/select
     (if records-select-buffer-on-concat
 	(pop-to-buffer (get-buffer output-buffer))
       (display-buffer (get-buffer output-buffer)))))
-    
+
 ;;;###autoload
 (defun records-concatenate-record-files (num)
   "Concatenate all the records in the records files of the last NUM days. All
@@ -259,11 +270,11 @@ file."
 	(goto-char (point-max))))
     (save-excursion
       (while ;; loop thru. all files
-	  (progn ;; do-while loop 
+	  (progn ;; do-while loop
 	    ;; goto the beginning of the file
 	    (goto-char (point-min))
 	    ;; loop thru. all records in a file
-	    (while (records-goto-down-record nil t) 
+	    (while (records-goto-down-record nil t)
 	      (let* ((subject (nth 0 (records-subject-tag t)))
 		     (tag  (nth 1 (records-subject-tag t)))
                      (point-pair (records-record-region t))
@@ -279,7 +290,7 @@ file."
 		    ;; make a new marker
 		    (setq omark (point-max-marker))
 		    (goto-char omark)
-		    ;; insert subject header 
+		    ;; insert subject header
 		    (insert-before-markers (records-subject-on-concat subject))
 		    (goto-char omark)
 		    (insert "\n")) ;; this does a lot of the trick for markers
@@ -291,13 +302,13 @@ file."
 		(save-excursion
 		  (set-buffer (get-buffer records-output-buffer))
 		  (goto-char (nth 1 subject-mark))
-		  (insert-before-markers 
+		  (insert-before-markers
 		   (records-date-on-concat (concat date (records-tag tag))))
 		  (insert-before-markers record))
 		(goto-char eon-point)))
 	    (setq date (records-goto-prev-record-file 1 t))
 	    ;; check if this record should be copied
-	    (and date (records-ndate-lessp first-ndate 
+	    (and date (records-ndate-lessp first-ndate
 					 (records-normalize-date date))))))
     ;; clean up records-subject-list
     (while records-subject-list
@@ -349,22 +360,22 @@ Prompts for subject."
 
 ;; bind the following to some simple key
 ;;      From Jody Klymak (jklymak@apl.washington.edu)
-;; 01/10/2000 Support for url and gnus message id 
-;;      From Rob Mihram 
+;; 01/10/2000 Support for url and gnus message id
+;;      From Rob Mihram
 ;;;###autoload
 (defun records-insert-link (&optional comment-string)
   "Writes the current buffer file name, url or message id
 at the end of today's record and inserts a comment."
   (interactive "scomment: ")
-  ;; should ideally do (eval-when-compile (require 'url)) but this 
+  ;; should ideally do (eval-when-compile (require 'url)) but this
   ;; package doesn't come with gnuemacs by default
   (require 'url)
   (save-excursion
-    (let ((flink 
-           (cond ((not (null buffer-file-name));; 1. normal file 
+    (let ((flink
+           (cond ((not (null buffer-file-name));; 1. normal file
                   buffer-file-name)
                  ((not (null url-current-object));; 2. url page
-                  (concat (aref url-current-object 0) "://" 
+                  (concat (aref url-current-object 0) "://"
                           (aref url-current-object 3)
                           (aref url-current-object 5)))
                  ((eq major-mode 'gnus-summary-mode);; 3. gnus page
@@ -373,12 +384,12 @@ at the end of today's record and inserts a comment."
                     (eval-when-compile (require 'mail-utils))
                     (eval-when-compile (require 'gnus))
                     (defvar gnus-current-headers)
-                    (mail-strip-quoted-names 
+                    (mail-strip-quoted-names
                      (mail-header-message-id gnus-current-headers))))
                  (t (error "Couldn't create link.")))))
       (message "%s" flink)
        ;;; now we need to visit the buffer records-goto-today
-      (if (one-window-p t) 
+      (if (one-window-p t)
 	  (split-window))
       (other-window 1)
       (records-goto-today)
@@ -394,7 +405,7 @@ calling from records-make-record-hook. Inserts template at end of record.
 With non-null argument, inserts at beginning of record body.
 
 Example hook:
- (add-hook 'records-make-record-hook 
+ (add-hook 'records-make-record-hook
           (function (lambda ()
                       (records-insert-template current-prefix-arg))))
 "
@@ -427,7 +438,7 @@ See the command `outline-mode' for more information on this mode."
   (if (eq outline-minor-mode t)
       ;; outline-minor-mode was turned on
       (if records-subject-read-only
-          (progn 
+          (progn
             ;; make records-subject-read-only nil and remove the read-only
             ;; property so that subjects can be hidden
             (setq records-saved-subject-read-only t)

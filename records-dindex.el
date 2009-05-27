@@ -1,11 +1,23 @@
-;;;
-;;; records-dindex.el
-;;;
-;;; $Id: records-dindex.el,v 1.4 2000/04/17 21:09:30 ashvin Exp $
-;;;
-;;; Copyright (C) 1996 by Ashvin Goel
-;;;
-;;; This file is under the Gnu Public License.
+;; records-dindex.el
+;;
+;; $Id: records-dindex.el,v 1.4 2000/04/17 21:09:30 ashvin Exp $
+;;
+;; Copyright (C) 1996 by Ashvin Goel
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation; either version 2 of
+;; the License, or (at your option) any later version.
+
+;; This program is distributed in the hope that it will be
+;; useful, but WITHOUT ANY WARRANTY; without even the implied
+;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+;; PURPOSE.  See the GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public
+;; License along with this program; if not, write to the Free
+;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+;; MA 02111-1307 USA
 
 (defvar records-dindex-buffer nil
   "The name of the date-index buffer.
@@ -18,16 +30,16 @@ If modified is t, check the file modification time since being visited."
   (if (and records-dindex-buffer
 	   (get-buffer records-dindex-buffer))
       (if (and modified
-	       (not (verify-visited-file-modtime 
+	       (not (verify-visited-file-modtime
 		     (get-buffer records-dindex-buffer))))
 	  ;; revert buffer since it has been modified under you.
 	  (save-excursion
 	    (set-buffer records-dindex-buffer)
 	    (revert-buffer)))
     ;; get the dindex file
-    (setq records-dindex-buffer (buffer-name 
+    (setq records-dindex-buffer (buffer-name
                                  (find-file-noselect records-dindex-file)))
-    (save-excursion 
+    (save-excursion
       (set-buffer records-dindex-buffer)
       ;; add a newline at the end if needed
       (goto-char (point-max))
@@ -42,19 +54,19 @@ If modified is t, check the file modification time since being visited."
 (defun records-dindex-goto-date (date &optional no-error modified)
   "Goto the date in the date-index file.
 If no-error is nil, raise error if date doesn't exist.
-if no-error is t, return nil if (date, tag) doesn't exist and 
+if no-error is t, return nil if (date, tag) doesn't exist and
 place point on the smallest date greater than the argument date."
   (records-dindex-buffer modified)
   (set-buffer records-dindex-buffer)
   (goto-char (1- (point-max)))
   ;; first check if date exists
   ;; start from end since we assume that
-  ;; the last dates are most frequently used. 
+  ;; the last dates are most frequently used.
   (if (re-search-backward (records-date-count-regexp date) (point-min) t)
       ;; found
       (progn
 	(goto-char (match-beginning 0))
-	(list 
+	(list
 	 ;; date
 	 (buffer-substring-no-properties (match-beginning 1) (match-end 1))
 	 ;; count
@@ -65,12 +77,12 @@ place point on the smallest date greater than the argument date."
 	(error "records-dindex-goto-date: date " date " not found."))
     ;; search linearly and place point on next date
     ;; search is done from end because we assume that
-    ;; the last dates are most frequently used. 
+    ;; the last dates are most frequently used.
     (let ((ndate (records-normalize-date date))
           curr-date-count curr-ndate)
       (while ;; a do-while loop
 	  (progn (setq curr-date-count (records-dindex-goto-prev-date))
-		 (setq curr-ndate 
+		 (setq curr-ndate
                        (if curr-date-count
                            (records-normalize-date (nth 0 curr-date-count))))
                  (and curr-date-count
@@ -80,27 +92,27 @@ place point on the smallest date greater than the argument date."
       nil)))
 
 (defun records-dindex-goto-prev-date (&optional arg)
-  "Goto the arg^th previous date in the date-index buffer. 
+  "Goto the arg^th previous date in the date-index buffer.
 Return the previous date or nil if the previous date doesn't exist."
   (if (re-search-backward (records-date-count-regexp) (point-min) t arg)
       ;; found
       (progn
-	(list 
+	(list
 	 ;; date
 	 (buffer-substring-no-properties (match-beginning 1) (match-end 1))
 	 ;; count
 	 (buffer-substring-no-properties (match-beginning 2) (match-end 2))))))
 
 (defun records-dindex-goto-next-date (&optional arg)
-  "Goto the arg^th next date in the date-index buffer. 
+  "Goto the arg^th next date in the date-index buffer.
 Return the next date or nil if the next date doesn't exist."
     ;; or else go to the next date
   (if (looking-at (records-date-count-regexp))
       (goto-char (match-end 0)))
   (if (re-search-forward (records-date-count-regexp) (point-max) t arg)
-      (progn 
+      (progn
 	(goto-char (match-beginning 0))
-	(list 
+	(list
 	 ;; date
 	 (buffer-substring-no-properties (match-beginning 1) (match-end 1))
 	 ;; count
