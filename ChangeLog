@@ -1,3 +1,11 @@
+2009-05-28  Xavier Maillard  <xma@gnu.org>
+
+	* records-autoloads.el, records-dindex.el, records-index.el,
+	records-load.el, records-search.el, records-tex.el,
+	records-util.el, records.el.in: update header (licensing).
+
+	* new maintainer (Xavier Maillard)
+
 2003-05-20  David Masterson  <dsm@rawbw.com>
 
 	* Makefile.am (MAILCRYPT): added mailcrypt to distribution (again)
