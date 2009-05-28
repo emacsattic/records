@@ -1,3 +1,8 @@
+2009-05-29  Xavier Maillard  <xma@gnu.org>
+
+	* Makefile.am: add $(MAILCRYPT) to lisp_LISP to make elisp-comp
+	happy. Fixes bug #381120.
+
 2009-05-28  Xavier Maillard  <xma@gnu.org>
 
 	* records-autoloads.el, records-dindex.el, records-index.el,
