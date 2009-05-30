@@ -1,0 +1,6 @@
+;; @configure_input@
+
+(defconst records-version "@PACKAGE_VERSION@"
+  "Records package version.")
+
+(provide 'records-version)
