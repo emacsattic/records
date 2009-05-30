@@ -1,3 +1,3 @@
-AUTOMAKE_OPTIONS = 1.9
 
+MAINTAINERCLEANFILES = Makefile.in
 info_TEXINFOS = records.texi
