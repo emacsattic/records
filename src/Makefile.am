@@ -8,10 +8,11 @@ records.el
 
 dist_lisp_LISP = $(my_lisp_sources) records-autoloads.el records-version.el
 EXTRA_DIST = records-pkg.el.in
-MAINTAINERCLEANFILES = records-autoloads.el Makefile.in
 
 # list of Lisp files that will not be installed
 noinst_LISP = records-load.el
 
 CLEANFILES = records-pkg.el
 
+MAINTAINERCLEANFILES = Makefile.in
+# MAINTAINERCLEANFILES = records-autoloads.el Makefile.in
