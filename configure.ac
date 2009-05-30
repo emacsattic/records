@@ -18,7 +18,7 @@ dnl
 dnl Apparently, if you run a shell window in Emacs, it sets
 dnl the EMACS environment variable to 't'. Lets undo that.
 dnl
-if test="${EMACS}" = "t"; then
+if test "${EMACS}" = "t"; then
    EMACS=""
 fi
 
@@ -33,13 +33,13 @@ AC_ARG_WITH(emacs,
 		[ if test "$withval" != "no"; then EMACS=emacs; else EMACS=${withval}; fi ])
 
 AC_CHECK_PROGS([EMACS], [xemacs emacs], [no])
-if test "${EMACS}" = no; then
+if test "${EMACS}" = "no"; then
    AC_MSG_ERROR([no emacs command found])
 fi
 
 dnl 
 AC_CHECK_PROGS([MAKE], [gmake make], [no])
-if test "${MAKE}" = no; then
+if test "${MAKE}" = "no"; then
    AC_MSG_ERROR([no make command found])
 fi
 
@@ -47,7 +47,7 @@ AC_PROG_MAKE_SET
 
 dnl 
 AC_CHECK_PROGS([MAKEINFO], [makeinfo], [makeinfo], [no])
-if test "${MAKEINFO}" = no; then
+if test "${MAKEINFO}" = "no"; then
    AC_MSG_ERROR([no makeinfo command found])
 fi
 
@@ -59,11 +59,6 @@ AC_PATH_PROGS(PERL, perl perl5)
 AC_CHECK_PROGS(EGREP, egrep grep)
 
 
-AC_ARG_ENABLE(xemacs,
-		AC_HELP_STRING([--enable-xemacs],
-				[Use xemacs for compilation]),
-		[ test "$enableval" != "no" && EMACS=xemacs ])
-
 AM_PATH_LISPDIR
 
 dnl AS_IF([test "$EMACS" = no], [AC_MSG_ERROR([cannot find Emacs])])
@@ -74,7 +69,7 @@ AC_CHECK_MAILCRYPT
 dnl AC_CHECK_ELISP(mailcrypt)
 dnl AC_CONFIG_FILES(Makefile records.el records-vars.el)
 dnl AC_CONFIG_FILES(recordsadmin, [chmod +x recordsadmin])
-AC_SUBST(pkgdatadir)
+dnl AC_SUBST(pkgdatadir)
 AC_SUBST(MAKEINFO)
 AC_SUBST(EMACS)
 AC_CONFIG_FILES(Makefile src/Makefile doc/Makefile src/records.el src/records-version.el src/records-vars.el)
