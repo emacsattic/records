@@ -1,28 +1,15 @@
-;; records-autoloads.el
-;;
-;; $Id: records-autoloads.el,v 1.3 2003/05/20 05:05:08 dmasterson Exp $
-;;
-;; Copyright (C) 1996-2000 by Ashvin Goel
-;;
-
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2 of
-;; the License, or (at your option) any later version.
-
-;; This program is distributed in the hope that it will be
-;; useful, but WITHOUT ANY WARRANTY; without even the implied
-;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-;; PURPOSE.  See the GNU General Public License for more details.
-
-;; You should have received a copy of the GNU General Public
-;; License along with this program; if not, write to the Free
-;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-;; MA 02111-1307 USA
+;;;
+;;; records-autoloads.el
+;;;
+;;; $Id: records-autoloads.el,v 1.3 2003/05/20 05:05:08 dmasterson Exp $
+;;;
+;;; Copyright (C) 1996-2000 by Ashvin Goel
+;;;
+;;; This file is under the Gnu Public License.
 
 ;;; For maintainers:
 ;;; Run the function update-autoloads-from-directory to update this file.
-;;; This function will update the file only when the *.el files are
+;;; This function will update the file only when the *.el files are 
 ;;; newer than this file.
 
 ;;; Local Variables:
@@ -59,7 +46,7 @@ Widen records-file buffer and switch from latex to records-mode." t nil)
 (autoload 'records-concatenate-records-latex "records-tex" "\
 Concatenate the current record with the records on the same subject written
 in the last NUM days and output in latex format. Then run latex on the output.
-Output these records in the records latex output buffer (see
+Output these records in the records latex output buffer (see 
 records-latex-output-buffer). Without prefix arg, prompts for number of days.
 An empty string will output the current record only. A negative number
 will output all the past records on the subject!" t nil)
@@ -88,7 +75,7 @@ Records decryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages." t n
 
 (autoload 'records-concatenate-records "records-util" "\
 Concatenate the current record with the records on the same subject written
-in the last NUM days. Output these records in the records output buffer (see
+in the last NUM days. Output these records in the records output buffer (see 
 records-output-buffer). Without prefix arg, prompts for number of days.
 An empty string will output the current record only. A negative number
 will output all the past records on the subject! Normally, the records are
