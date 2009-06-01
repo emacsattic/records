@@ -60,5 +60,8 @@
                     records-date-suffix-on-concat)))
      (concat d "\n" (make-string (length d) ?-) "\n")))
 
+(defmacro records-tag (tag)
+  `(if (> (length ,tag) 0) (concat "#" ,tag) ""))
+
 (provide 'records-macro)
 ;;; records-macro.el ends here

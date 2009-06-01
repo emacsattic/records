@@ -373,9 +373,6 @@ Called when killing a region in records mode."
       (error "records-goto-subject: no subject found.")))
   (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
-(defmacro records-tag (tag)
-  `(if (> (length ,tag) 0) (concat "#" ,tag) ""))
-
 (defun records-subject-tag (&optional no-str)
   "Returns subject#tag of the record where point is located.
 If no-str is t, return (subject, tag)."
