@@ -18,7 +18,7 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
-
+(require 'records-vars)
 (defvar records-dindex-buffer nil
   "The name of the date-index buffer.
 Initialized when the records date index file is loaded.")
@@ -74,7 +74,7 @@ place point on the smallest date greater than the argument date."
 	)
     ;; date not found
     (if (null no-error)
-	(error "records-dindex-goto-date: date " date " not found."))
+	(error (concat "records-dindex-goto-date: date " date " not found.")))
     ;; search linearly and place point on next date
     ;; search is done from end because we assume that
     ;; the last dates are most frequently used.
@@ -139,7 +139,7 @@ depending on whether arg is negative or positive."
 	  (progn
 	    (goto-char (match-beginning 2))
 	    (delete-region (match-beginning 2) (match-end 2))
-	    (insert (int-to-string (1+ (string-to-int (nth 1 date-count))))))
+	    (insert (int-to-string (1+ (string-to-number (nth 1 date-count))))))
 	;; insert date + zero count
 	(insert (concat date "#1 ")))
       (records-dindex-save-buffer)
@@ -149,7 +149,7 @@ depending on whether arg is negative or positive."
   "Delete a date from the records date-index."
   (save-excursion
     (let* ((date-count (records-dindex-goto-date date nil t))
-	   (count (string-to-int (nth 1 date-count))))
+	   (count (string-to-number (nth 1 date-count))))
       (setq buffer-read-only nil)
       (if (> count 1)
 	  ;; decrement count

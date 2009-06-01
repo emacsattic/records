@@ -18,6 +18,8 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
+(require 'records)
+(require 'records-vars)
 
 (defvar records-index-use-font-lock t
   "* Enable records index fontification.")
@@ -65,9 +67,9 @@ Key bindings are:
 
 (defmacro records-index-subject-regexp (&optional subject)
   "Regexp matching a subject in the records index file."
-  ( `(if (, subject)
-	 (concat "^\\(" (, subject) "\\): ")
-       "^\\(.*\\): ")))
+  `(if (, subject)
+       (concat "^\\(" (, subject) "\\): ")
+     "^\\(.*\\): "))
 
 (defun records-index-parse-buffer ()
   "Parses the index buffer for records subject completion."
@@ -314,5 +316,5 @@ Returns the new (date, tag)."
 (put 'records-index 'mode-class 'special)
 
 (provide 'records-index)
-(if (not (featurep 'records))
-    (require 'records))
+;; (if (not (featurep 'records))
+;;     (require 'records))

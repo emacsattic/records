@@ -98,7 +98,7 @@ If 'reverse' is nil, then get the next forward, else get the prev record."
   (records-mark-record) ; mark record so that ...
   (narrow-to-region (mark) (point)) ; .. it can be narrowed down to.
   ;; go to beginning of buffer (which is beginning of the narrowed region).
-  (beginning-of-buffer)
+  (goto-char (point-min))
   (let (position)
     (if (re-search-forward string nil t) ; search forward for the regexp.
         ;; set 'position' to match-beginning

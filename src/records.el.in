@@ -101,7 +101,7 @@ like records-date, records-date-length, etc."
 
   ;; set records-date
   (let ((i 0))
-    (mapcar
+    (mapc
      '(lambda (x)
 	(let ((len (symbol-value
 		    (intern (concat "records-" (symbol-name x) "-length")))))
@@ -142,31 +142,31 @@ like records-date, records-date-length, etc."
 
 (defmacro records-date-count-regexp (&optional date)
   "Regexp matching a date in the records date-index file."
-  ( `(if (, date)
-	 (concat "\\(" (, date) "\\)#\\([0-9]+\\) ")
-       (concat records-date-regexp "#\\([0-9]+\\) "))))
+  `(if (, date)
+       (concat "\\(" (, date) "\\)#\\([0-9]+\\) ")
+     (concat records-date-regexp "#\\([0-9]+\\) ")))
 
 (defmacro records-subject-regexp (&optional subject)
   "Regexp matching the beginning of a record."
   ;; TODO: the underline should be of length(subject) + 2
   ;; not easy to do when subject is nil
-  (` (if (, subject)
-	 (concat "^\\* \\(" (, subject) "\\)\n\\-\\-\\-+$")
-       ;; "^\\* \\(.*\\)\n\\-+$"
-       "^\\* \\(.*\\)\n\\-\\-\\-+$"
-       )))
+  `(if (, subject)
+       (concat "^\\* \\(" (, subject) "\\)\n\\-\\-\\-+$")
+     ;; "^\\* \\(.*\\)\n\\-+$"
+     "^\\* \\(.*\\)\n\\-\\-\\-+$"
+     ))
 
 (defmacro records-subject-on-concat (subject)
   "Make subject for records concatenation."
-  (` (let ((sub (concat records-subject-prefix-on-concat (, subject)
-			records-subject-suffix-on-concat)))
-       (concat sub "\n" (make-string (length sub) ?-) "\n"))))
+  `(let ((sub (concat records-subject-prefix-on-concat (, subject)
+                      records-subject-suffix-on-concat)))
+     (concat sub "\n" (make-string (length sub) ?-) "\n")))
 
 (defmacro records-date-on-concat (date)
   "Make date for records concatenation."
-  (` (let ((d (concat records-date-prefix-on-concat (, date)
-			records-date-suffix-on-concat)))
-       (concat d "\n" (make-string (length d) ?-) "\n"))))
+  `(let ((d (concat records-date-prefix-on-concat (, date)
+                    records-date-suffix-on-concat)))
+     (concat d "\n" (make-string (length d) ?-) "\n")))
 
 (defun point-boln ()
   "Return the boln as a position."
@@ -251,7 +251,7 @@ The ndate is normalized and in (day month year) format."
 	  (setcar (nthcdr 2 cdate) (- (nth 2 cdate) 2000))))
     ;; now denormalize
     (let ((i 0))
-      (mapcar
+      (mapc
        '(lambda (x)
 	  ;; this is kinda gross
 	  (let ((start (nth 1 x))
@@ -270,9 +270,9 @@ The ndate is normalized and in (day month year) format."
   (records-sane-date date)
   (let ((ndate '(0 0 0))
 	(i 0))
-    (mapcar
+    (mapc
      '(lambda (x)
-	(setcar (nthcdr i ndate) (string-to-int
+	(setcar (nthcdr i ndate) (string-to-number
 				  (substring date (nth 1 x)
 					     (+ (nth 2 x) (nth 1 x)))))
 	(setq i (1+ i)))
@@ -389,7 +389,7 @@ Called when killing a region in records mode."
   (beginning-of-line)
   (if (looking-at "^\\s-*-+\\s-*$")
       (progn
-	(previous-line 1)
+	(forward-line -1)
 	(beginning-of-line)))
   (if (looking-at (records-subject-regexp))
       ()
@@ -399,7 +399,7 @@ Called when killing a region in records mode."
   (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
 (defmacro records-tag (tag)
-  (` (if (> (length (, tag)) 0) (concat "#" (, tag)) "")))
+  `(if (> (length (, tag)) 0) (concat "#" (, tag)) ""))
 
 (defun records-subject-tag (&optional no-str)
   "Returns subject#tag of the record where point is located.
@@ -864,7 +864,7 @@ Identical record files are not put in the history consecutively."
     (save-excursion
       (if (records-goto-up-record subject)
 	  ;; get tag
-	  (setq tag (int-to-string (1+ (string-to-int
+	  (setq tag (int-to-string (1+ (string-to-number
 					(nth 1 (records-subject-tag t))))))))
 
     ;; add a records index entry

@@ -180,7 +180,7 @@ output all the past records on the subject! Normally, the records are output in
 most-recent first order. When the REVERSE argument is true, the order is
 reversed."
   (if (null num)
-      (setq num (string-to-int
+      (setq num (string-to-number
                  (read-from-minibuffer
                   "Concat records in last N days (default 1): "))))
   (let* ((date (records-file-to-date))
@@ -258,7 +258,7 @@ file."
       (read-from-minibuffer "Concat records files in last N days (default 1): "
 			    ))))
   (let* ((date (records-file-to-date))
-	 (arg (string-to-int num))
+	 (arg (string-to-number num))
 	 (first-ndate (records-add-date (records-normalize-date date)
 				      (if (= arg 0) -1 (- arg))))
 	 records-subject-list)
