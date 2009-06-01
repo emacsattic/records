@@ -142,29 +142,29 @@ like records-date, records-date-length, etc."
 
 (defmacro records-date-count-regexp (&optional date)
   "Regexp matching a date in the records date-index file."
-  `(if (, date)
-       (concat "\\(" (, date) "\\)#\\([0-9]+\\) ")
+  `(if ,date
+       (concat "\\(" ,date "\\)#\\([0-9]+\\) ")
      (concat records-date-regexp "#\\([0-9]+\\) ")))
 
 (defmacro records-subject-regexp (&optional subject)
   "Regexp matching the beginning of a record."
   ;; TODO: the underline should be of length(subject) + 2
   ;; not easy to do when subject is nil
-  `(if (, subject)
-       (concat "^\\* \\(" (, subject) "\\)\n\\-\\-\\-+$")
+  `(if ,subject
+       (concat "^\\* \\(" ,subject "\\)\n\\-\\-\\-+$")
      ;; "^\\* \\(.*\\)\n\\-+$"
      "^\\* \\(.*\\)\n\\-\\-\\-+$"
      ))
 
 (defmacro records-subject-on-concat (subject)
   "Make subject for records concatenation."
-  `(let ((sub (concat records-subject-prefix-on-concat (, subject)
+  `(let ((sub (concat records-subject-prefix-on-concat ,subject
                       records-subject-suffix-on-concat)))
      (concat sub "\n" (make-string (length sub) ?-) "\n")))
 
 (defmacro records-date-on-concat (date)
   "Make date for records concatenation."
-  `(let ((d (concat records-date-prefix-on-concat (, date)
+  `(let ((d (concat records-date-prefix-on-concat ,date
                     records-date-suffix-on-concat)))
      (concat d "\n" (make-string (length d) ?-) "\n")))
 
@@ -399,7 +399,7 @@ Called when killing a region in records mode."
   (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
 
 (defmacro records-tag (tag)
-  `(if (> (length (, tag)) 0) (concat "#" (, tag)) ""))
+  `(if (> (length ,tag) 0) (concat "#" ,tag) ""))
 
 (defun records-subject-tag (&optional no-str)
   "Returns subject#tag of the record where point is located.
