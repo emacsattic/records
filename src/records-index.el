@@ -19,6 +19,10 @@
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
 
+;;
+(eval-when-compile
+  (require 'records-macro))
+
 (defvar records-index-use-font-lock t
   "* Enable records index fontification.")
 
@@ -62,12 +66,6 @@ Key bindings are:
 	(font-lock-mode 1)))
   (run-hooks 'records-index-mode-hooks)
   )
-
-(defmacro records-index-subject-regexp (&optional subject)
-  "Regexp matching a subject in the records index file."
-  `(if ,subject
-       (concat "^\\(" ,subject "\\): ")
-     "^\\(.*\\): "))
 
 (defun records-index-parse-buffer ()
   "Parses the index buffer for records subject completion."

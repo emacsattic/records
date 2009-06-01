@@ -1,6 +1,6 @@
 
 bin_SCRIPTS = recordsadmin
-my_lisp_sources = records-autoloads.el			\
+my_lisp_sources = records-macro.el records-autoloads.el			\
 records-dindex.el records-index.el records-search.el		\
 records-tex.el records-util.el records-vars.el			\
 records.el

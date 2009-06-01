@@ -19,6 +19,9 @@
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
 
+(eval-when-compile
+  (require 'records-macro))
+
 (require 'records-vars)
 (require 'records-index)
 (require 'records-dindex)
@@ -139,34 +142,6 @@ like records-date, records-date-length, etc."
 ;; load when interactive
 (if (null noninteractive)
     (records-initialize))
-
-(defmacro records-date-count-regexp (&optional date)
-  "Regexp matching a date in the records date-index file."
-  `(if ,date
-       (concat "\\(" ,date "\\)#\\([0-9]+\\) ")
-     (concat records-date-regexp "#\\([0-9]+\\) ")))
-
-(defmacro records-subject-regexp (&optional subject)
-  "Regexp matching the beginning of a record."
-  ;; TODO: the underline should be of length(subject) + 2
-  ;; not easy to do when subject is nil
-  `(if ,subject
-       (concat "^\\* \\(" ,subject "\\)\n\\-\\-\\-+$")
-     ;; "^\\* \\(.*\\)\n\\-+$"
-     "^\\* \\(.*\\)\n\\-\\-\\-+$"
-     ))
-
-(defmacro records-subject-on-concat (subject)
-  "Make subject for records concatenation."
-  `(let ((sub (concat records-subject-prefix-on-concat ,subject
-                      records-subject-suffix-on-concat)))
-     (concat sub "\n" (make-string (length sub) ?-) "\n")))
-
-(defmacro records-date-on-concat (date)
-  "Make date for records concatenation."
-  `(let ((d (concat records-date-prefix-on-concat ,date
-                    records-date-suffix-on-concat)))
-     (concat d "\n" (make-string (length d) ?-) "\n")))
 
 (defun point-boln ()
   "Return the boln as a position."
