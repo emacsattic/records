@@ -27,3 +27,17 @@
 ./aclocal.m4
 ./Makefile.in
 ./Makefile
+./src/records.elc
+./src/records.el
+./src/records-version.elc
+./src/records-version.el
+./src/records-vars.elc
+./src/records-vars.el
+./src/records-util.elc
+./src/records-tex.elc
+./src/records-search.elc
+./src/records-index.elc
+./src/records-dindex.elc
+./src/records-autoloads.elc
+./src/elc-stamp
+./autom4te.cache
