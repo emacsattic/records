@@ -72,7 +72,7 @@ dnl AC_CONFIG_FILES(recordsadmin, [chmod +x recordsadmin])
 dnl AC_SUBST(pkgdatadir)
 AC_SUBST(MAKEINFO)
 AC_SUBST(EMACS)
-AC_CONFIG_FILES(Makefile src/Makefile doc/Makefile src/records.el src/records-version.el src/records-vars.el)
+AC_CONFIG_FILES(Makefile src/Makefile doc/Makefile src/records-version.el src/records-vars.el)
 AC_CONFIG_FILES([src/recordsadmin], [chmod +x src/recordsadmin])
 AC_CONFIG_FILES(elisp-comp)
 AC_OUTPUT
