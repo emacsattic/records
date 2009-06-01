@@ -22,17 +22,12 @@
 (require 'records-vars)
 (require 'records-index)
 (require 'records-dindex)
+(require 'records-version)
 (require 'records-autoloads)
 ;; (require 'records-util)
 ;; (require 'records-search)
 ;; (require 'records-tex)
 ;; (require 'records-w3)
-
-;;;
-;;; Internal variables - users shouldn't change
-;;; The defvar is for internal documentation.
-;;;
-(defvar records-version "@VERSION@" "Records version")
 
 (defvar records-mode-menu-map nil
   "Records Menu Map. Internal variable.")
