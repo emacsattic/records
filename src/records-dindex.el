@@ -18,10 +18,18 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
+(require 'records-vars)
 (eval-when-compile
   (require 'records-macro))
 
-(require 'records-vars)
+;; (eval-when-compile
+;;   (progn
+;;     (require 'records-vars)
+;;     (require 'records)
+;;     (require 'records-macro)
+;;     (require 'records-index)
+;;     (defvar records-date-regexp)))
+
 (defvar records-dindex-buffer nil
   "The name of the date-index buffer.
 Initialized when the records date index file is loaded.")

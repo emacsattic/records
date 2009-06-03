@@ -17,6 +17,8 @@
 ;; License along with this program; if not, write to the Free
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
+(eval-when-compile
+  (require 'mailcrypt))
 
 ;;;###autoload
 (defun records-create-todo ()
@@ -97,16 +99,16 @@ See the records-todo-.*day variables on when it is automatically invoked."
             (save-buffer)
             (records-delete-empty-record-file)
             ))))))
-
-(autoload 'mc-encrypt-generic "mc-toplev" nil t)
-(autoload 'mc-scheme-pgp   "mc-pgp"  nil t)
-(autoload 'mc-scheme-pgp50 "mc-pgp5" nil t)
-(autoload 'mc-scheme-gpg   "mc-gpg"  nil t)
+(eval-when-compile
+  ;; Quiet warnings
+  (require 'mailcrypt)
+  (autoload 'mc-encrypt-generic "mc-toplev" nil t)
+  (autoload 'mc-scheme-pgp   "mc-pgp"  nil t)
+  (autoload 'mc-scheme-pgp50 "mc-pgp5" nil t)
+  (autoload 'mc-scheme-gpg   "mc-gpg"  nil t))
 
 (defun records-user-name ()
   "The user name of the records user."
-  (if (not (boundp 'mc-default-scheme))
-      (eval-when-compile (require 'mailcrypt)))
   (let ((user (cdr (assoc 'user-id (funcall mc-default-scheme)))))
     (cond ((not (null user)) user)
           (t (user-full-name)))))
@@ -117,8 +119,6 @@ See the records-todo-.*day variables on when it is automatically invoked."
 With prefix arg, start the encryption from point to the end of record.
 Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   (interactive "P")
-  (if (not (boundp 'mc-default-scheme))
-      (eval-when-compile (require 'mailcrypt)))
   (save-excursion
     (let ((point-pair (records-record-region t))
           start end)
@@ -141,8 +141,6 @@ Records encryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   "Decrypt the current record.
 Records decryption requires the mailcrypt and mc-pgp (or mc-pgp5) packages."
   (interactive)
-  (if (not (boundp 'mc-default-scheme))
-      (eval-when-compile (require 'mailcrypt)))
   (save-excursion
     (let ((point-pair (records-record-region t)))
       (goto-char (first point-pair))
@@ -362,6 +360,7 @@ Prompts for subject."
 ;;      From Jody Klymak (jklymak@apl.washington.edu)
 ;; 01/10/2000 Support for url and gnus message id
 ;;      From Rob Mihram
+(defvar url-current-object)
 ;;;###autoload
 (defun records-insert-link (&optional comment-string)
   "Writes the current buffer file name, url or message id
@@ -428,6 +427,7 @@ Example hook:
 
 (defvar records-saved-subject-read-only nil)
 
+(defvar outline-minor-mode)
 (defun records-outline-mode (&optional arg)
   "Toggle outline minor mode for a records file.
 With arg, turn outline minor mode on if arg is positive, off otherwise.

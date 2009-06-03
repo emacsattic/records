@@ -1,8 +1,15 @@
-;; records.el
+;; records.el --- records bootstrap
 ;;
 ;; $Id: records.el.in,v 1.1 2003/05/20 05:05:56 dmasterson Exp $
 ;;
-;; Copyright (C) 1996-2000 by Ashvin Goel
+;; Copyright (C) 1996-2003 by Ashvin Goel
+;; Copyright (C) 2009 by Xavier Maillard <xma@gnu.org>
+;;
+;; Author: Ashvin Goel
+;;
+;; Keywords:
+;;
+;; This file is part of records
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -19,14 +26,22 @@
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
 
+;;; Commentary:
+;;
+
+;;; Code:
+;;
+(require 'records-version)
+(require 'records-vars)
+
 (eval-when-compile
   (require 'records-macro))
 
-(require 'records-vars)
+(require 'records-autoloads)
+
+(require 'records-autoloads)
 (require 'records-index)
 (require 'records-dindex)
-(require 'records-version)
-(require 'records-autoloads)
 ;; (require 'records-util)
 ;; (require 'records-search)
 ;; (require 'records-tex)
@@ -75,9 +90,14 @@ Internal variable.")
   "List of records a user has visited. Elements of the list consist of args
 to records-goto-record. Internal variable.")
 
-(defvar records-initialize nil
+(defvar records-initialized nil
   "Has function records-initialize been invoked atleast once.
 Internal variable.")
+;;;###autoload
+(defun records-initialized-p ()
+  ""
+  (if (boundp 'records-initialized)
+      records-initialized))
 
 (if running-xemacs
     (progn
@@ -379,7 +399,7 @@ If no-str is t, return (subject, tag)."
   (save-excursion
     (let ((subject (records-goto-subject))
 	  tag)
-      (next-line 2)
+      (forward-line 2)
       (if (re-search-forward records-tag-regexp (point-eoln) t)
 	  (setq tag (buffer-substring-no-properties
 		     (match-beginning 1) (match-end 1))))
@@ -420,11 +440,11 @@ point. Note, that the point and the mark in the buffer are not affected."
     (if (null (records-goto-subject))
         (error "records-subject-region: no subject found."))
     (let ((pt (point)))
-      (next-line 2)
+      (forward-line 2)
       (beginning-of-line)
       (if (looking-at "link: <.*>")
           (progn
-            (next-line 1)
+            (forward-line 1)
             (beginning-of-line)))
       ;; return beginning and end of subject
       (list pt (point)))))
@@ -442,7 +462,7 @@ point. Note, that the point and the mark in the buffer are not affected."
   (save-excursion
     (if (null (records-goto-subject))
 	(error "records-subject-link: no subject found."))
-    (next-line 2)
+    (forward-line 2)
     (beginning-of-line)
     (if (looking-at "link: \\(<.*>\\)")
 	(buffer-substring-no-properties (match-beginning 1) (match-end 1)))))
@@ -909,6 +929,8 @@ With arg, removes the subject only."
       (records-insert-record subject record-body)))
   (records-delete-record nil t))
 
+(defvar records-link-menu-map nil)
+
 (defun records-popup-mode-menu (e)
   "When mouse is clicked on a link, popup a link-specific menu.
 When mouse is clicked anywhere else, invoke the default popup menu."
@@ -925,7 +947,7 @@ When mouse is clicked anywhere else, invoke the default popup menu."
                      (call-interactively
                       (lookup-key menu-map
                                   (apply 'vector menu-item)))))))))
-
+(defvar font-lock-auto-fontify)
 (define-derived-mode records-mode text-mode "Records"
   "Enable records-mode for a buffer. Currently, the documentation of this
 mode exists in three places: the INSTALL and README files and the menubar!
@@ -1062,19 +1084,15 @@ The key-bindings of this mode are:
   (if (locate-library "imenu")
       (progn
 	(eval-when-compile (require 'imenu))
-	(make-variable-buffer-local 'imenu-prev-index-position-function)
-	(make-variable-buffer-local 'imenu-extract-index-name-function)
 	(setq imenu-prev-index-position-function 'records-goto-up-record)
 	(setq imenu-extract-index-name-function 'records-subject-tag)))
 
   (records-parse-buffer)
   (make-local-variable 'records-subject-read-only)
-  (make-local-hook 'kill-hooks)
   (add-hook 'kill-hooks 'records-remove-text-properties nil t)
-  (if records-initialize
-      ()
+  (when (not (records-initialized-p))
     (records-initialize)
-    (setq records-initialize t))
+    (setq records-initialized t))
   ;; fontification code by Robert Mihram
   (if records-use-font-lock
       (require 'font-lock))
@@ -1092,4 +1110,4 @@ The key-bindings of this mode are:
 (put 'records-mode 'font-lock-defaults '(records-mode-font-lock-keywords))
 
 (run-hooks 'records-load-hooks)
-(provide 'records)
+(provide 'records)       ;; circular dependency

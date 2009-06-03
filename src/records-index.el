@@ -20,6 +20,7 @@
 ;; MA 02111-1307 USA
 
 ;;
+(require 'records-vars)
 (eval-when-compile
   (require 'records-macro))
 
@@ -161,7 +162,7 @@ place point on the smallest (date, tag) pair greater than (date, tag)."
 	(list date tag))
     ;; (date, tag) not found
     (if (null no-error)
-	(error "records-index-goto-date-tag: " date " " tag " not found."))
+	(error (concat "records-index-goto-date-tag: " date " " tag " not found.")))
     ;; search linearly and place point on next date
     (let ((ndate (records-normalize-date date)))
       (while ;; a do-while loop
@@ -227,6 +228,7 @@ Returns the new (date, tag)."
 	  ((> arg 0)
 	   (records-index-goto-next-date-tag arg)))))
 
+;;;###autoload
 (defun records-index-goto-link()
   "Go to the link under point in the records index file."
   (interactive)
@@ -252,6 +254,7 @@ Returns the new (date, tag)."
       (records-goto-record subject date tag t)
       ))))
 
+;;;###autoload
 (defun records-index-goto-mouse-link(e)
   (interactive "e")
   (mouse-set-point e)

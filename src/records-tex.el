@@ -134,7 +134,7 @@ will output all the past records on the subject!"
             "%%% End: \n")
     (goto-char (point-min))
     (if (file-exists-p records-tex-template-plain)
-        (insert-file records-tex-template-plain)
+        (insert-file-contents records-tex-template-plain)
       (error (concat "Template file does not exist. "
                      "Look at variable records-tex-template-plain.")))
     (let ((old-buf (get-file-buffer records-tex-temp-output-file)))
