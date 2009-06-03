@@ -1,3 +1,8 @@
+2009-06-04  Xavier Maillard  <xma@gnu.org>
+
+	* src/records.el (records-goto-record): switch buffer to
+	`records-mode' (bug#383389)
+
 2009-06-03  Xavier Maillard  <xma@gnu.org>
 
 	* src/records.el: remove circular require error. Add right

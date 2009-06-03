@@ -639,6 +639,8 @@ not found. If dir is specified, then the file is assumed to be \"dir/date\"."
     (cond ((null no-switch) (find-file file))
 	  ((eq no-switch 'other) (find-file-other-window file))
 	  (t (set-buffer (find-file-noselect file))))
+    ;; Switch buffer to records-mode
+    (records-mode)
     ;; handler for new records files
     (if (and todo (null (save-excursion (records-dindex-goto-date date t))))
 	(if (or (eq todo t)
