@@ -40,3 +40,9 @@
 ./src/records-autoloads.elc
 ./src/elc-stamp
 ./autom4te.cache
+./src/records-macro.elc
+./src/compile.out
+./src/TAGS
+./diffie
+./compile.out
+./TAGS

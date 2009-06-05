@@ -1,3 +1,23 @@
+2009-06-06  Xavier Maillard  <xma@gnu.org>
+
+	Verion 1.5.1 released.
+
+	* src/records-util.el (records-goto-calendar): require library
+	cal-move if `calendar-goto-date' is not bound.
+	(records-calendar-to-record): Ditto but require calendar if
+	`calendar-cursor-to-date' is not bound.
+	(require): quiet byte-compiler.
+
+	* src/records-dindex.el: silent byte-compiler; add missing
+	require.
+
+	* src/Makefile.am (my_lisp_sources): Remove records-autoload.el
+	which is already in dist_lisp_LISP.
+
+	* NEWS: update with latest informations.
+
+	* README: Ditto.
+	
 2009-06-04  Xavier Maillard  <xma@gnu.org>
 
 	* src/records.el (records-goto-record): switch buffer to
