@@ -21,7 +21,8 @@
 (require 'records-vars)
 (eval-when-compile
   (require 'records-macro))
-
+(require 'records-index)
+(defvar records-date-regexp)
 ;; (eval-when-compile
 ;;   (progn
 ;;     (require 'records-vars)

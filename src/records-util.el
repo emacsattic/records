@@ -18,7 +18,8 @@
 ;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 ;; MA 02111-1307 USA
 (eval-when-compile
-  (require 'mailcrypt))
+  (require 'mailcrypt)
+  (require 'cal-move)) ;; calendar-goto-date, calendar-cursor-to-date
 
 ;;;###autoload
 (defun records-create-todo ()
@@ -326,7 +327,8 @@ file."
 	 ;; convert normalized date to calendar date
 	 ;; the day and month are interchanged
 	 (cdate (list (nth 1 ndate) (nth 0 ndate) (nth 2 ndate))))
-    (eval-when-compile (require 'calendar))
+    (if (not (fboundp 'calendar-goto-date))
+        (require 'cal-move))
     (calendar)
     (calendar-goto-date cdate)))
 
@@ -334,6 +336,8 @@ file."
 (defun records-calendar-to-record ()
   "Goto the record file corresponding to the calendar date."
   (interactive)
+  (if (not (fboundp 'calendar-cursor-to-date))
+      (require 'calendar))
   (let* ((cdate (calendar-cursor-to-date))
 	 (ndate (list (nth 1 cdate) (nth 0 cdate) (nth 2 cdate)))
 	 (date (records-denormalize-date ndate)))
