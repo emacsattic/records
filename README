@@ -1,4 +1,3 @@
-
 Copyright (C) ?-2003 Ashvin Goel ashvin@users.sourceforge.net>
 Copyright (C) 2009 Xavier Maillard <xma@gnu.org>.
 See the end of the file for license conditions.
@@ -6,8 +5,7 @@ See the end of the file for license conditions.
 This directory tree holds version 1.5.1 of records, an online diary
 creator for GNU Emacs.
 
-DESCRIPTION
-===========
+* Description
 
 This is records 1.5.1, an Emacs mode which allows creation of an
 online diary (see the file NEWS for information on new features and
@@ -27,26 +25,24 @@ Wiki page:    http://www.emacswiki.org/cgi-bin/wiki/RecordsMode
 Mailing list: None
 MUC room:     None
 
-GNU Emacs
-=========
+* Dependencies
+** GNU Emacs
 
 records.el is supposed to work on various Emacs flavors starting at
 20.x release. It has been tested also with latest developement version
 (23.x).
 
-XEmacs
-======
+** XEmacs
 
-Not tested.
+records.el is known to work with Xemacs 21.x or newer. For older
+versions, please tell us how it goes.
 
-Mailcrypt
-=========
+** Mailcrypt
 
 records will use the MAILCRYPT library to crypt sensible records
 (either full records files or part of it).
 
-Installation
-============
+* Installation
 
 The file INSTALL in this directory says how to build and install
 records on various systems, once you have unpacked or checked out the
@@ -58,8 +54,7 @@ For a quickstart, these commands may be enough:
     make
     make install
 
-Special notes for GNU Bazaar version
-====================================
+* Special notes for GNU Bazaar version
 
 If you are running records from GNU Bazaar, you may need to
 (re)generate the `configure' file and all its accompanying files.
@@ -70,8 +65,7 @@ Doing so is no more than using our bootstrap script:
 For this to work, you must have the GNU autotools installed (autoconf
 and automake)
 
-Quickstart
-==========
+* Quickstart
 
 Make sure records is installed (or at least in your `load-path') and
 type key "Ctrl-c n" (for records-goto-today). This will get you
@@ -108,8 +102,7 @@ entire Emacs file tree.
 
 More informations are available in the records info manual.
 
-Bugs
-====
+* Bugs
 
 You may encounter bugs in this release. If you do, report them (see
 manual on how to report a bug).
@@ -129,3 +122,10 @@ for more details.
 
 You should have received a copy of the GNU General Public License
 along with records. If not, see <http://www.gnu.org/licenses/>.
+
+Local variables:
+mode: text
+mode: outline
+paragraph-separate: "[  ^L]*$"
+fill-column: 72
+end:
