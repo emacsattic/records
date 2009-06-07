@@ -13,9 +13,15 @@ test: testdir testroot
 Makefile: Makefile.in configure
 	./configure --prefix=/usr
 
+info: doc/Makefile.in
+	-$(MAKE) info
+
+ps: doc/Makefile.in
+	-$(MAKE) ps
+
 config: testdir Makefile
 
-build: testdir config
+build: testdir config info ps
 
 clean: test
 	-$(MAKE) clean
@@ -29,29 +35,33 @@ install-records-common: test build
 		$(INST)/records-common/usr/share/info \
 		$(INST)/records-common/usr/share/doc/records-common/examples \
 		$(INST)/records-common/usr/share/man/man1
-	install -m0644 records.info \
+	install -m0644 doc/records.info \
 		$(INST)/records-common/usr/share/info/records.info
-	install -m0755 recordsadmin $(INST)/records-common/usr/bin
+	install -m0755 src/recordsadmin $(INST)/records-common/usr/bin
 	install -m0644 \
 		FAQ INSTALL README debian/README.Debian \
-		debian/copyright records.ps \
+		debian/copyright \
 		$(INST)/records-common/usr/share/doc/records-common
 	install -m0644 \
 		debian/changelog \
 		$(INST)/records-common/usr/share/doc/records-common/changelog.Debian
 	install -m0644 \
 		NEWS \
-		$(INST)/records-common/usr/share/doc/records-common/changelog
+		ChangeLog \
+		doc/records.ps \
+		$(INST)/records-common/usr/share/doc/records-common
 	install -m0644 \
-		records-templ.tex \
+		src/records-templ.tex \
 		$(INST)/records-common/usr/share/doc/records-common/examples
 	find $(INST)/records-common/usr/share/doc/records-common \
 		-type f -a \! -name '*.gz' -a \! -name 'copyright' -print0 \
 		| xargs -0 --no-run-if-empty gzip -9f --
-	install -m0644 records-index.el records-dindex.el \
-		records-util.el records-vars.el records.el \
-		records-search.el records-autoloads.el \
-		records-tex.el \
+	install -m0644 src/records-autoloads.el src/records-dindex.el	\
+		src/records.el src/records.el src/records-index.el      \
+		src/records-load.el src/records-pkg.el 			\
+		src/records-search.el src/records-tex.el 		\
+		src/records-util.el src/records-vars.el			\
+		src/records-version.el
 		$(INST)/records-common/usr/share/emacs/site-lisp/records
 
 install-records-gnuemacs: test build
@@ -126,7 +136,7 @@ binary-arch:
 
 binary: binary-indep binary-arch
 
-.PHONY: testdir testroot test config build clean \
+.PHONY: testdir testroot test config info ps build clean \
 	install-records-common install-records-gnuemacs \
 	install-records-xemacs install binary-indep-records-common \
 	binary-indep-records-gnuemacs binary-indep-records-xemacs \
