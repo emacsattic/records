@@ -57,11 +57,10 @@ install-records-common: test build
 		-type f -a \! -name '*.gz' -a \! -name 'copyright' -print0 \
 		| xargs -0 --no-run-if-empty gzip -9f --
 	install -m0644 src/records-autoloads.el src/records-dindex.el	\
-		src/records.el src/records.el src/records-index.el      \
-		src/records-load.el src/records-pkg.el 			\
+		src/records.el src/records-index.el			\
 		src/records-search.el src/records-tex.el 		\
-		src/records-util.el src/records-vars.el			\
-		src/records-version.el
+		src/records-util.el src/records-vars.el 		\
+		src/records-version.el					\
 		$(INST)/records-common/usr/share/emacs/site-lisp/records
 
 install-records-gnuemacs: test build
