@@ -1,3 +1,23 @@
+2009-06-10  Xavier Maillard  <xma@gnu.org>
+
+	* debian/copyright: make lintian happy with upstream authors
+	declaration.
+
+	* debian/rules: use debhelper
+
+	* debian/control (Build-Depends): add it.
+	(Build-Depends-Indep): ditto.
+	(Standards-Version): upgrade to a more recent standard version.
+	(Depends): all packages we should depend on.
+	(Replaces): old debian records packages should be replaced by the
+	unique records-el package now.
+
+	* debian/compat: New file. Make dpkg-buildpackage happy.
+
+	* debian/emacsen-startup.in, debian/emacsen-remove.in,
+	debian/emacsen-install.in: Ditto. Have something working with
+	emacsen-common. Remove old emacsen-* files.
+
 2009-06-07  Xavier Maillard  <xma@gnu.org>
 
 	Version 1.5.2 released.
