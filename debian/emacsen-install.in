@@ -1,0 +1,49 @@
+#! /bin/sh -e
+# /usr/lib/emacsen-common/packages/install/@PACKAGE@
+
+# Written by Jim Van Zandt <jrv@vanzandt.mv.com>, borrowing heavily
+# from the install scripts for gettext by Santiago Vila
+# <sanvila@ctv.es> and octave by Dirk Eddelbuettel <edd@debian.org>.
+
+FLAVOR=$1
+PACKAGE=@PACKAGE@
+FLAGS="--no-site-file -q -batch -l path.el -f batch-byte-compile"
+ELDIR="/usr/share/emacs/site-lisp/${PACKAGE}"
+ELCDIR="/usr/share/${FLAVOR}/site-lisp/${PACKAGE}"
+ELCSTAMP=$ELCDIR/compile-stamp
+if [ -f "$ELCSTAMP" ]; then
+    echo "install/$PACKAGE: already byte-compiled for $FLAVOR, skipped"
+    exit 0
+fi
+
+# if test "${FLAVOR}" = 'emacs' -o "$(echo ${FLAVOR} | cut -c-6)" = 'xemacs'; then
+#     exit 0
+# fi
+
+echo "install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}"
+install -m 755 -d "${ELCDIR}"
+
+LOG=`mktemp -t elc.XXXXXXXXXXXX`
+chmod 644 "$LOG"
+echo "install/$PACKAGE: byte-compiling for $FLAVOR, logged in $LOG"
+
+cd "${ELDIR}"
+FILES=`echo *.el`
+cd ${ELCDIR}
+for i in ${FILES}; do
+    ln -fs "/usr/share/emacs/site-lisp/${PACKAGE}/${i}"
+done
+
+cat << EOF > path.el
+(setq load-path (cons "/usr/share/${FAVOR}/site-lisp/mailcrypt" load-path))
+(add-to-list 'load-path ".")
+EOF
+"${FLAVOR}" ${FLAGS} ${FILES}
+rm -f path.el
+
+echo "install/$PACKAGE: deleting $LOG"
+rm -f "$LOG"
+
+touch "$ELCSTAMP"
+
+exit 0
