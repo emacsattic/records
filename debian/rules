@@ -1,142 +1,68 @@
 #!/usr/bin/make -f
 
-INST=debian/inst
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
 
-testdir:
-	test -e debian/control
+PACKAGE = records-el
+PKGDIR  = debian/$(PACKAGE)
+DOCDIR  = /usr/share/doc/${PACKAGE}
+LISPDIR = /usr/share/emacs/site-lisp/${PACKAGE}
 
-testroot:
-	test root = "`whoami`" || (echo need root priviledges; exit 1)
-
-test: testdir testroot
-
-Makefile: Makefile.in configure
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	[ -f configure ] || touch configure
+	autoconf
 	./configure --prefix=/usr
+	# grep '^Package: ' debian/control | head -1 | sed -e "s/^Package: //g" > debian/PACKAGE
+	# sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/README.Debian.in > debian/README.Debian
+	# sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/dirs.in > debian/dirs
+	sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/emacsen-install.in > debian/emacsen-install
+	sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/emacsen-remove.in > debian/emacsen-remove
+	sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/emacsen-startup.in > debian/emacsen-startup
+	touch configure-stamp
 
-info: doc/Makefile.in
-	-$(MAKE) info
+build: configure-stamp build-stamp
+build-stamp:
+	dh_testdir
+	$(MAKE) html
+	touch build-stamp
 
-ps: doc/Makefile.in
-	-$(MAKE) ps
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	-$(MAKE) distclean
+	dh_clean
 
-config: testdir Makefile
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
 
-build: testdir config info ps
+	install -d $(PKGDIR)$(LISPDIR)
+	install -d ${PKGDIR}${DOCDIR}
+	install -m 0644 src/*.el $(PKGDIR)$(LISPDIR)
+	install -m 0644 ChangeLog ${PKGDIR}${DOCDIR}/changelog
 
-clean: test
-	-$(MAKE) clean
-	rm -f recordsadmin config.log config.cache config.status Makefile
-	rm -rf debian/files debian/substvars $(INST)
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_installdocs
+#	dh_installinfo doc/records.info
+	dh_installemacsen --priority=61
+	dh_installchangelogs
+	dh_link
+	dh_strip
+	dh_compress -X.el
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
 
-install-records-common: test build
-	install -d -m0755 \
-		$(INST)/records-common/usr/bin \
-		$(INST)/records-common/usr/share/emacs/site-lisp/records \
-		$(INST)/records-common/usr/share/info \
-		$(INST)/records-common/usr/share/doc/records-common/examples \
-		$(INST)/records-common/usr/share/man/man1
-	install -m0644 doc/records.info \
-		$(INST)/records-common/usr/share/info/records.info
-	install -m0755 src/recordsadmin $(INST)/records-common/usr/bin
-	install -m0644 \
-		FAQ INSTALL README debian/README.Debian \
-		debian/copyright \
-		$(INST)/records-common/usr/share/doc/records-common
-	install -m0644 \
-		debian/changelog \
-		$(INST)/records-common/usr/share/doc/records-common/changelog.Debian
-	install -m0644 \
-		NEWS \
-		ChangeLog \
-		doc/records.ps \
-		$(INST)/records-common/usr/share/doc/records-common
-	install -m0644 \
-		src/records-templ.tex \
-		$(INST)/records-common/usr/share/doc/records-common/examples
-	find $(INST)/records-common/usr/share/doc/records-common \
-		-type f -a \! -name '*.gz' -a \! -name 'copyright' -print0 \
-		| xargs -0 --no-run-if-empty gzip -9f --
-	install -m0644 src/records-autoloads.el src/records-dindex.el	\
-		src/records.el src/records-index.el			\
-		src/records-search.el src/records-tex.el 		\
-		src/records-util.el src/records-vars.el 		\
-		src/records-version.el					\
-		$(INST)/records-common/usr/share/emacs/site-lisp/records
-
-install-records-gnuemacs: test build
-	install -d -m0755 $(INST)/records-gnuemacs/usr/share/doc
-	ln -sf records-common $(INST)/records-gnuemacs/usr/share/doc/records-gnuemacs
-
-install-records-xemacs: test build
-	install -d -m0755 $(INST)/records-xemacs/usr/share/doc
-	ln -sf records-common $(INST)/records-xemacs/usr/share/doc/records-xemacs
-
-install: \
-	install-records-common \
-	install-records-gnuemacs \
-	install-records-xemacs
-
-make-maintscripts-%:
-	@[ ! -e "debian/prerm.$*" ] || $(call SED_INSTALL,$*,debian/prerm.$*,$(INST)/$*/DEBIAN/prerm,0755)
-	@[ ! -e "debian/postinst.$*" ] || $(call SED_INSTALL,$*,debian/postinst.$*,$(INST)/$*/DEBIAN/postinst,0755)
-
-make-debian-%:
-	install -d -m0755 $(INST)/$*/DEBIAN
-
-make-package-%:
-	set -e; if [ -d $(INST)/$*/etc ]; then \
-		cd $(INST)/$* && find ./etc -type f \
-		| sed 's/^\.//g' >DEBIAN/conffiles.tmp ;\
-		chmod 0644 DEBIAN/conffiles.tmp ;\
-		mv DEBIAN/conffiles.tmp DEBIAN/conffiles ;\
-	fi
-	dpkg-gencontrol -isp -p$* -P$(INST)/$*
-	dpkg --build $(INST)/$* ..
-
-# $(call SED_INSTALL,package,from,to,mode)
-SED_INSTALL = \
-	echo "sed_install PACKAGE=$(1) $(2) $(3)" ;\
-	set -e ;\
-	sed 's/^PACKAGE=.*/PACKAGE=$(1)/' <$(2) >$(3).tmp ;\
-	chmod $(4) $(3).tmp ;\
-	mv $(3).tmp $(3)
-
-make-emacsen-%:
-	install -d \
-		$(INST)/records-$*/usr/lib/emacsen-common/packages/install \
-		$(INST)/records-$*/usr/lib/emacsen-common/packages/remove \
-		$(INST)/records-$*/etc/emacs/site-start.d
-
-	@$(call SED_INSTALL,records-$*,debian/emacsen-install,$(INST)/records-$*/usr/lib/emacsen-common/packages/install/records-$*,0755)
-	@$(call SED_INSTALL,records-$*,debian/emacsen-remove,$(INST)/records-$*/usr/lib/emacsen-common/packages/remove/records-$*,0755)
-	@$(call SED_INSTALL,records-$*,debian/emacsen-startup,$(INST)/records-$*/etc/emacs/site-start.d/50records-$*.el,0644)
-
-	@$(call SED_INSTALL,records-$*,debian/postinst-emacsen,$(INST)/records-$*/DEBIAN/postinst,0755)
-	@$(call SED_INSTALL,records-$*,debian/prerm-emacsen,$(INST)/records-$*/DEBIAN/prerm,0755)
-
-binary-indep-records-common: test install-records-common \
-		make-debian-records-common \
-		make-maintscripts-records-common \
-		make-package-records-common
-
-binary-indep-records-gnuemacs: test install-records-gnuemacs \
-		make-debian-records-gnuemacs make-emacsen-gnuemacs \
-		make-package-records-gnuemacs
-
-binary-indep-records-xemacs: test install-records-xemacs \
-		make-debian-records-xemacs \
-		make-emacsen-xemacs \
-		make-package-records-xemacs
-
-binary-indep: binary-indep-records-common \
-	binary-indep-records-gnuemacs binary-indep-records-xemacs
-
-binary-arch:
+binary-arch: build install
 
 binary: binary-indep binary-arch
-
-.PHONY: testdir testroot test config info ps build clean \
-	install-records-common install-records-gnuemacs \
-	install-records-xemacs install binary-indep-records-common \
-	binary-indep-records-gnuemacs binary-indep-records-xemacs \
-	binary-indep binary-arch binary
+.PHONY: build clean binary-indep binary-arch binary install configure

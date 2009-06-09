@@ -1,14 +1,15 @@
-This package was debianized by Tommi Virtanen tv@debian.org on
-Thu,  3 Dec 1998 14:37:11 +0200.
+This package was debianized by Xavier Maillard xma@gnu.org on
+Wed,  10 Jun 2009 01:03:12 +0100.
 
-It was downloaded from http://sourceforge.net/projects/records
+It was downloaded from http://launchpad.net/records
 
-Upstream Author(s): Ashvin Goel <ashvin@users.sourceforge.net>
-				<ashvin@cse.ogi.edu> 
+Upstream Authors: Xavier Maillard <xma@gnu.org>
+                    Ashvin Goel <ashvin@users.sourceforge.net>
 
 Copyright:
 
-;;; Copyright (C) 1996 by Ashvin Goel
+;;; Copyright (C) 1995-2000 by Ashvin Goel
+;;; Copyright (C) 2009 by Xavier Maillard <xma@gnu.org>
 ;;;
 ;;; This file is under the Gnu Public License.
 

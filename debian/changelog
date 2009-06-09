@@ -1,3 +1,29 @@
+records (1.5.2-1.3) unstable; urgency=low
+
+  * debian/copyright: make lintian happy with upstream authors
+  declaration.
+
+ -- Xavier Maillard <xma@gnu.org>  Wed, 10 Jun 2009 01:07:01 +0100
+
+records (1.5.2-1.1) unstable; urgency=low
+
+  * debian/rules: use debhelper
+
+  * debian/control (Build-Depends): add it.
+  (Build-Depends-Indep): ditto.
+  (Standards-Version): upgrade to a more recent standard version.
+  (Depends): all packages we should depend on.
+  (Replaces): old debian records packages should be replaced by the
+  unique records-el package now.
+
+  * debian/compat: New file. Make dpkg-buildpackage happy.
+
+  * debian/emacsen-startup.in, debian/emacsen-remove.in,
+  debian/emacsen-install.in: Ditto. Have something working with
+  emacsen-common.
+
+ -- Xavier Maillard <xma@gnu.org>  Wed, 10 Jun 2009 00:56:29 +0100
+
 records (1.5.2-1.0) unstable; urgency=low
 
   * New upstream version.
@@ -13,8 +39,8 @@ records (1.5.1-1.0) unstable; urgency=low
   * Upstream moved to SourceForge.
 
   * rules: lisp source files are now in src/ and the documentation in
-	doc/. Ack. Added targets to build info and ps files.
-	Distribute *all* files (even zero sized one).
+    doc/. Ack. Added targets to build info and ps files.  Distribute
+    *all* files (even zero sized one).
 
  -- Xavier Maillard <xma@gnu.org>  Sun, 08 Jun 2009 11:04:15 +0100
 
