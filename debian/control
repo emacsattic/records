@@ -3,7 +3,7 @@ Section: editors
 Priority: optional
 Maintainer: Xavier Maillard <xma@gnu.org>
 Build-Depends: debhelper (>> 4.0.0)
-Build-Depends-Indep: texinfo, texlive | tetex-bin, emacs | emacs22 | emacs21, autoconf
+Build-Depends-Indep: texinfo (>= 4.2), texi2html, emacs | emacs22 | emacs21, autoconf
 Standards-Version: 3.7.3
 
 Package: records-el
