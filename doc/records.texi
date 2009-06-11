@@ -8,6 +8,11 @@
 @setchapternewpage off
 @c %**end of header
 
+@dircategory Emacs
+@direntry
+* records-el: (records). Records: personal diary software
+@end direntry
+
 @syncodeindex fn cp
 
 @include version.texi
