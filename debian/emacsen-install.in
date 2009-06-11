@@ -16,9 +16,9 @@ if [ -f "$ELCSTAMP" ]; then
     exit 0
 fi
 
-# if test "${FLAVOR}" = 'emacs' -o "$(echo ${FLAVOR} | cut -c-6)" = 'xemacs'; then
-#     exit 0
-# fi
+if test "${FLAVOR}" = 'emacs' -o "$(echo ${FLAVOR} | cut -c-6)" = 'xemacs'; then
+    exit 0
+fi
 
 echo "install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}"
 install -m 755 -d "${ELCDIR}"
@@ -27,15 +27,15 @@ LOG=`mktemp -t elc.XXXXXXXXXXXX`
 chmod 644 "$LOG"
 echo "install/$PACKAGE: byte-compiling for $FLAVOR, logged in $LOG"
 
-cd "${ELDIR}"
-FILES=`echo *.el`
+cd "${ELDIR}" 
+FILES="$(echo *.el)"
 cd ${ELCDIR}
 for i in ${FILES}; do
     ln -fs "/usr/share/emacs/site-lisp/${PACKAGE}/${i}"
 done
 
 cat << EOF > path.el
-(setq load-path (cons "/usr/share/${FAVOR}/site-lisp/mailcrypt" load-path))
+(setq load-path (cons "/usr/share/${FLAVOR}/site-lisp/mailcrypt" load-path))
 (add-to-list 'load-path ".")
 EOF
 "${FLAVOR}" ${FLAGS} ${FILES}
