@@ -11,9 +11,10 @@ LISPDIR = /usr/share/emacs/site-lisp/${PACKAGE}
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	[ -f configure ] || touch configure
-	autoconf
-	./configure --prefix=/usr
+	dh_auto_configure
+	# [ -f configure ] || touch configure
+	# autoconf
+	# ./configure --prefix=/usr
 	# grep '^Package: ' debian/control | head -1 | sed -e "s/^Package: //g" > debian/PACKAGE
 	# sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/README.Debian.in > debian/README.Debian
 	# sed -e "s/@PACKAGE@/$(PACKAGE)/g" debian/dirs.in > debian/dirs
@@ -25,7 +26,9 @@ configure-stamp:
 build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
-	$(MAKE) html
+	$(MAKE) autoloads
+	makeinfo doc/records.texi
+#	texi2html doc/records.texi
 	touch build-stamp
 
 clean:
@@ -41,8 +44,10 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
+	install -d $(PKGDIR)/usr/bin
 	install -d $(PKGDIR)$(LISPDIR)
 	install -d ${PKGDIR}${DOCDIR}
+	install -m 0755 src/recordsadmin $(PKGDIR)/usr/bin
 	install -m 0644 src/*.el $(PKGDIR)$(LISPDIR)
 	install -m 0644 ChangeLog ${PKGDIR}${DOCDIR}/changelog
 
@@ -50,7 +55,7 @@ binary-indep: build install
 	dh_testdir
 	dh_testroot
 	dh_installdocs
-#	dh_installinfo doc/records.info
+	dh_installinfo doc/records.info
 	dh_installemacsen --priority=61
 	dh_installchangelogs
 	dh_link
