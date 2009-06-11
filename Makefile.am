@@ -24,7 +24,7 @@
 # MA 02111-1307 USA
 
 # require 1.9
-AUTOMAKE_OPTIONS = 1.9
+AUTOMAKE_OPTIONS = 1.9 gnu
 
 SUBDIRS = src doc
 
@@ -34,12 +34,17 @@ MAINTAINERCLEANfILES = Makefile.in aclocal.m4 \
 	config.guess config.sub configure \
 	install-sh missing
 
+# Our special targets
+autoloads: src/Makefile
+	(cd src ; $(MAKE) records-autoloads.el)
+
+docs: src/Makefile.in
+	(cd doc ; $(MAKE) info html)
+
 # Courtesy of Tramp authors. Thank you.
 release:
-	for cl in ChangeLog */ChangeLog; do \
-	emacs -nw $$cl --eval \
+	emacs -nw ChangeLog --eval \
 	"(progn (add-change-log-entry nil nil nil t) \
 	(backward-delete-char 2) \
-	(insert \"Verion @PACKAGE_VERSION@ released.\") \
-	(save-buffer) (kill-emacs))" ; \
-	done
+	(insert \"Version @PACKAGE_VERSION@ released.\") \
+	(save-buffer) (kill-emacs))";

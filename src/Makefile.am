@@ -12,7 +12,11 @@ EXTRA_DIST = records-pkg.el.in
 # list of Lisp files that will not be installed
 # noinst_LISP = records-load.el
 
-CLEANFILES = records-pkg.el
+CLEANFILES = records-pkg.el records-autoloads.el
 
 MAINTAINERCLEANFILES = Makefile.in
 # MAINTAINERCLEANFILES = records-autoloads.el Makefile.in
+
+records-autoloads.el: $(my_lisp_sources)
+	@$(EMACS) -Q --batch --eval "(setq generated-autoload-file \"$(abs_builddir)/$@\")" \
+	 -f batch-update-autoloads $(abs_builddir)

@@ -16,6 +16,8 @@ use File::Basename;
 # global - should be set by makefile
 
 $homedir="$ENV{HOME}";
+$prefix="@prefix@";
+$datarootdir="@datarootdir@";
 $records_srcdirpath="@lispdir@";
 
 # handle cygwin windows environment
