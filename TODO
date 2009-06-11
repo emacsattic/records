@@ -1,7 +1,63 @@
--- Add more documentation.
--- Disable read-only text when it is copied somewhere.
--- Add more functionality in the index mode.
--- Simple key strokes on notes subjects.
--- records-directory-structure should have more possibilities:
+Records TODO --- list of tasks to do
+
+    Copyright (C) 2009 by Xavier Maillard <xma@gnu.org>
+    See end of this file for the license conditions.
+
+
+
+* records 
+** Add more documentation.
+** Disable read-only text when it is copied somewhere.
+** Add more functionality in the index mode.
+** Simple key strokes on notes subjects.
+** records-directory-structure should have more possibilities:
    - example concat (year, month).
--- emacs front end to recordsadmin.
+** emacs front end to recordsadmin.
+
+* build system
+** make dist should automatically sign the tarballs with something
+   like:
+
+   	  gpg --armor --sign --detach-sig <tarball>
+
+   this would produce <tarball>.asc
+   Sadly, automake dist-hook is run *before* the tarballs are
+   effectively created thus defeating our strategy.
+** make release could automatically update both our ChangeLog but also
+   automatically updat debian/changelog to get a new Debian package.
+** even more make targets could include
+*** automatic construction of debian package:
+   	  dpkg-buildpackage -v$(LASTUPLOAD) $(BUILDOPTS) \
+	    -us -uc -rfakeroot && \
+	  echo "Running lintian ..." && \
+	  lintian -i ../$(DEBNAME)_$(VERSION)*.deb || : && \
+	  echo "Done running lintian." && \
+	  debsign)
+*** upload to our launchpad.net account
+*** prepare a suitable announcement message
+
+
+
+----------------------------------------------------------------------
+This file is part of Records.
+
+Records is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+Records is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License
+along with Records.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Local variables:
+mode: text
+mode: outline
+paragraph-separate: "[  ^L]*$"
+fill-column: 72
+end:
