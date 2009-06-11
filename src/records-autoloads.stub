@@ -1,0 +1,12 @@
+;;;; records-autoloads.el --- automatically extracter autoloads
+;;
+;;; Code:
+
+
+(provide 'records-autoloads)
+;; Local Variables:
+;; version-control: never
+;; no-byte-compile: t
+;; no-update-autoloads: t
+;; End:
+;;; records-autoloads.el ends here
