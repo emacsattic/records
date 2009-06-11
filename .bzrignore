@@ -61,3 +61,11 @@
 ./records-1.5.1.zip
 ./records-1.5.1.tar.gz
 ./records-1.5.1.tar.bz2
+./debian/records-el.substvars
+./debian/records-el.prerm.debhelper
+./debian/records-el.postinst.debhelper
+./debian/records-el.debhelper.log
+./debian/records-el
+./debian/files
+./configure-stamp
+./build-stamp
